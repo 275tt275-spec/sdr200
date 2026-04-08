@@ -1,0 +1,7 @@
+Record=TopLevelDocument|FileName=FRONT_DDR.SchDoc|SheetNumber=4
+Record=NoMainPathDocument|SourceDocument=FRONT_DDR.SchDoc|FileName=FRONT_INTF.SchDoc|SheetNumber=7
+Record=NoMainPathDocument|SourceDocument=FRONT_DDR.SchDoc|FileName=FRONT_LCD.SchDoc|SheetNumber=3
+Record=NoMainPathDocument|SourceDocument=FRONT_DDR.SchDoc|FileName=FRONT_MCU.SchDoc|SheetNumber=6
+Record=NoMainPathDocument|SourceDocument=FRONT_DDR.SchDoc|FileName=FRONT_PL.SchDoc|SheetNumber=2
+Record=NoMainPathDocument|SourceDocument=FRONT_DDR.SchDoc|FileName=FRONT_PS.SchDoc|SheetNumber=5
+Record=NoMainPathDocument|SourceDocument=FRONT_DDR.SchDoc|FileName=FRONT_PWR.SchDoc|SheetNumber=1

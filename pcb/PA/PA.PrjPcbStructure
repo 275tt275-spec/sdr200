@@ -1,0 +1,3 @@
+Record=TopLevelDocument|FileName=PA_AMP.SchDoc|SheetNumber=1
+Record=NoMainPathDocument|SourceDocument=PA_AMP.SchDoc|FileName=PA_LPF.SchDoc|SheetNumber=2
+Record=NoMainPathDocument|SourceDocument=PA_AMP.SchDoc|FileName=PA_MCU.SchDoc|SheetNumber=3

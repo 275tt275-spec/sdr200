@@ -1,0 +1,7 @@
+Record=TopLevelDocument|FileName=MB_adc_clk.SchDoc|SheetNumber=5
+Record=NoMainPathDocument|SourceDocument=MB_adc_clk.SchDoc|FileName=MB_audio.SchDoc|SheetNumber=7
+Record=NoMainPathDocument|SourceDocument=MB_adc_clk.SchDoc|FileName=MB_dac.SchDoc|SheetNumber=6
+Record=NoMainPathDocument|SourceDocument=MB_adc_clk.SchDoc|FileName=MB_ddr.SchDoc|SheetNumber=3
+Record=NoMainPathDocument|SourceDocument=MB_adc_clk.SchDoc|FileName=MB_pl_io.SchDoc|SheetNumber=4
+Record=NoMainPathDocument|SourceDocument=MB_adc_clk.SchDoc|FileName=MB_ps_io.SchDoc|SheetNumber=2
+Record=NoMainPathDocument|SourceDocument=MB_adc_clk.SchDoc|FileName=MB_pwr_in_v2.SchDoc|SheetNumber=1
