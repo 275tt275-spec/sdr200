@@ -4,7 +4,7 @@
     "xci_name": "front_xbar_0",
     "cell_name": "ps7_0_axi_periph/xbar",
     "component_reference": "xilinx.com:ip:axi_crossbar:2.1",
-    "ip_revision": "30",
+    "ip_revision": "31",
     "gen_directory": "../../../../../../front.gen/sources_1/bd/front/ip/front_xbar_0",
     "parameters": {
       "component_parameters": {
@@ -1228,8 +1228,8 @@
         "C_AXI_WUSER_WIDTH": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_AXI_RUSER_WIDTH": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_AXI_BUSER_WIDTH": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
-        "C_M_AXI_WRITE_CONNECTIVITY": [ { "value": "0x0000000100000001", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
-        "C_M_AXI_READ_CONNECTIVITY": [ { "value": "0x0000000100000001", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
+        "C_M_AXI_WRITE_CONNECTIVITY": [ { "value": "0xFFFFFFFFFFFFFFFF", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
+        "C_M_AXI_READ_CONNECTIVITY": [ { "value": "0xFFFFFFFFFFFFFFFF", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_R_REGISTER": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_S_AXI_SINGLE_THREAD": [ { "value": "0x00000001", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_S_AXI_WRITE_ACCEPTANCE": [ { "value": "0x00000001", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
@@ -1237,7 +1237,7 @@
         "C_M_AXI_WRITE_ISSUING": [ { "value": "0x0000000100000001", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_M_AXI_READ_ISSUING": [ { "value": "0x0000000100000001", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_S_AXI_ARB_PRIORITY": [ { "value": "0x00000000", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
-        "C_M_AXI_SECURE": [ { "value": "0x0000000000000000", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
+        "C_M_AXI_SECURE": [ { "value": "0x00000000", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_CONNECTIVITY_MODE": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ]
       },
       "project_parameters": {
@@ -1255,12 +1255,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "30" } ],
+        "IPREVISION": [ { "value": "31" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../front.gen/sources_1/bd/front/ip/front_xbar_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "rtl" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2" } ],
+        "SWVERSION": [ { "value": "2023.2.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },
