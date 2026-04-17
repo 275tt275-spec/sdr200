@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ASCII"?>
+<sdkproject:SdkProject xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sdkproject="http://www.xilinx.com/sdkproject" name="front" location="E:/Projects/StationVT/Soft/Z7010/PS/front" platform="E:/Projects/StationVT/Soft/Z7010/PS/front_ps/export/front_ps/front_ps.xpfm" platformUID="xilinx:::0.0(custom)" systemProject="front_system" sysConfig="front_ps" runtime="C/C++" cpu="freertos10_xilinx_domain" cpuInstance="ps7_cortexa9_0" os="freertos10_xilinx" mssSignature="2e2b8f28b907b0bfc2320ae04e858ecb">
+  <configuration name="Debug" id="xilinx.gnu.armv7.exe.debug.727884835">
+    <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
+    <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
+  </configuration>
+  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.1307177557" dirty="true">
+    <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
+  </configuration>
+  <template appTemplateName="freertos_hello_world" hasBspSettings="true"/>
+</sdkproject:SdkProject>

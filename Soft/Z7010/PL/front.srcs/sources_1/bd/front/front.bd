@@ -26,7 +26,8 @@
       "rst_ps7_0_200M": "",
       "v_axi4s_vid_out_0": "",
       "v_tc_0": "",
-      "xlconstant_0": ""
+      "xlconstant_0": "",
+      "clk_wiz_0": ""
     },
     "interface_ports": {
       "DDR": {
@@ -2024,6 +2025,15 @@
         "xci_path": "ip\\front_v_tc_0_0\\front_v_tc_0_0.xci",
         "inst_hier_path": "v_tc_0",
         "parameters": {
+          "GEN_HACTIVE_SIZE": {
+            "value": "1024"
+          },
+          "GEN_VACTIVE_SIZE": {
+            "value": "468"
+          },
+          "VIDEO_MODE": {
+            "value": "Custom"
+          },
           "active_chroma_generation": {
             "value": "false"
           },
@@ -2047,6 +2057,48 @@
         "xci_name": "front_xlconstant_0_0",
         "xci_path": "ip\\front_xlconstant_0_0\\front_xlconstant_0_0.xci",
         "inst_hier_path": "xlconstant_0"
+      },
+      "clk_wiz_0": {
+        "vlnv": "xilinx.com:ip:clk_wiz:6.0",
+        "ip_revision": "13",
+        "xci_name": "front_clk_wiz_0_0",
+        "xci_path": "ip\\front_clk_wiz_0_0\\front_clk_wiz_0_0.xci",
+        "inst_hier_path": "clk_wiz_0",
+        "parameters": {
+          "CLKIN1_JITTER_PS": {
+            "value": "200.0"
+          },
+          "CLKOUT1_JITTER": {
+            "value": "234.462"
+          },
+          "CLKOUT1_PHASE_ERROR": {
+            "value": "233.132"
+          },
+          "CLKOUT1_REQUESTED_OUT_FREQ": {
+            "value": "65"
+          },
+          "MMCM_CLKFBOUT_MULT_F": {
+            "value": "40.625"
+          },
+          "MMCM_CLKIN1_PERIOD": {
+            "value": "20.000"
+          },
+          "MMCM_CLKIN2_PERIOD": {
+            "value": "10.0"
+          },
+          "MMCM_CLKOUT0_DIVIDE_F": {
+            "value": "15.625"
+          },
+          "MMCM_DIVCLK_DIVIDE": {
+            "value": "2"
+          },
+          "PRIM_IN_FREQ": {
+            "value": "50.000"
+          },
+          "USE_RESET": {
+            "value": "false"
+          }
+        }
       }
     },
     "interface_nets": {
@@ -2112,6 +2164,18 @@
       }
     },
     "nets": {
+      "clk_wiz_0_clk_out1": {
+        "ports": [
+          "clk_wiz_0/clk_out1",
+          "v_tc_0/clk"
+        ]
+      },
+      "clk_wiz_0_locked": {
+        "ports": [
+          "clk_wiz_0/locked",
+          "v_tc_0/clken"
+        ]
+      },
       "processing_system7_0_FCLK_CLK0": {
         "ports": [
           "processing_system7_0/FCLK_CLK0",
@@ -2122,7 +2186,8 @@
           "ps7_0_axi_periph/M00_ACLK",
           "axi_vdma_0/s_axi_lite_aclk",
           "v_tc_0/s_axi_aclk",
-          "ps7_0_axi_periph/M01_ACLK"
+          "ps7_0_axi_periph/M01_ACLK",
+          "clk_wiz_0/clk_in1"
         ]
       },
       "processing_system7_0_FCLK_CLK1": {
@@ -2133,8 +2198,7 @@
           "axi_vdma_0/m_axi_mm2s_aclk",
           "axi_vdma_0/m_axis_mm2s_aclk",
           "rst_ps7_0_200M/slowest_sync_clk",
-          "v_axi4s_vid_out_0/aclk",
-          "v_tc_0/clk"
+          "v_axi4s_vid_out_0/aclk"
         ]
       },
       "processing_system7_0_FCLK_RESET0_N": {
@@ -2181,13 +2245,17 @@
           "vid_vsync"
         ]
       },
+      "v_axi4s_vid_out_0_vtg_ce": {
+        "ports": [
+          "v_axi4s_vid_out_0/vtg_ce",
+          "v_tc_0/gen_clken"
+        ]
+      },
       "xlconstant_0_dout": {
         "ports": [
           "xlconstant_0/dout",
           "v_axi4s_vid_out_0/aclken",
-          "v_tc_0/clken",
-          "v_tc_0/s_axi_aclken",
-          "v_tc_0/gen_clken"
+          "v_tc_0/s_axi_aclken"
         ]
       }
     },
