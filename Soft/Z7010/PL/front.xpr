@@ -97,29 +97,11 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
-        <CompFileExtendedInfo CompFileName="front.bd" FileRelPathName="ip/front_axi_vdma_0_0/front_axi_vdma_0_0.xci">
-          <Proxy FileSetName="front_axi_vdma_0_0"/>
-        </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="front.bd" FileRelPathName="ip/front_clk_wiz_0_0/front_clk_wiz_0_0.xci">
           <Proxy FileSetName="front_clk_wiz_0_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="front.bd" FileRelPathName="ip/front_processing_system7_0_0/front_processing_system7_0_0.xci">
-          <Proxy FileSetName="front_processing_system7_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="front.bd" FileRelPathName="ip/front_rst_ps7_0_50M_0/front_rst_ps7_0_50M_0.xci">
-          <Proxy FileSetName="front_rst_ps7_0_50M_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="front.bd" FileRelPathName="ip/front_rst_ps7_0_50M_2/front_rst_ps7_0_50M_2.xci">
-          <Proxy FileSetName="front_rst_ps7_0_50M_2"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="front.bd" FileRelPathName="ip/front_v_axi4s_vid_out_0_1/front_v_axi4s_vid_out_0_1.xci">
-          <Proxy FileSetName="front_v_axi4s_vid_out_0_1"/>
-        </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="front.bd" FileRelPathName="ip/front_v_tc_0_0/front_v_tc_0_0.xci">
           <Proxy FileSetName="front_v_tc_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="front.bd" FileRelPathName="ip/front_xbar_0/front_xbar_0.xci">
-          <Proxy FileSetName="front_xbar_0"/>
         </CompFileExtendedInfo>
       </File>
       <File Path="$PGENDIR/sources_1/bd/front/hdl/front_wrapper.vhd">
@@ -166,14 +148,6 @@
     </FileSet>
     <FileSet Name="utils_1" Type="Utils" RelSrcDir="$PSRCDIR/utils_1" RelGenDir="$PGENDIR/utils_1">
       <Filter Type="Utils"/>
-      <File Path="$PSRCDIR/utils_1/imports/synth_1/front_wrapper.dcp">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedInSteps" Val="synth_1"/>
-          <Attr Name="AutoDcp" Val="1"/>
-        </FileInfo>
-      </File>
       <Config>
         <Option Name="TopAutoSet" Val="TRUE"/>
       </Config>
@@ -328,9 +302,7 @@
     </Run>
     <Run Id="front_clk_wiz_0_0_synth_1" Type="Ft3:Synth" SrcSet="front_clk_wiz_0_0" Part="xc7z010clg400-1" ConstrsSet="front_clk_wiz_0_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/front_clk_wiz_0_0_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/front_clk_wiz_0_0_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/front_clk_wiz_0_0_synth_1">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023">
-          <Desc>Vivado Synthesis Defaults</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023"/>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
@@ -477,9 +449,7 @@
     </Run>
     <Run Id="front_clk_wiz_0_0_impl_1" Type="Ft2:EntireDesign" Part="xc7z010clg400-1" ConstrsSet="front_clk_wiz_0_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="front_clk_wiz_0_0_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/front_clk_wiz_0_0_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/front_clk_wiz_0_0_impl_1">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023">
-          <Desc>Default settings for Implementation.</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023"/>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
