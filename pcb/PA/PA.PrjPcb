@@ -50,7 +50,7 @@ PrefsVaultGUID=
 PrefsRevisionGUID=
 
 [Document1]
-DocumentPath=PA_AMP.SchDoc
+DocumentPath=PA_AMP_v1.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -101,7 +101,7 @@ GenerateClassCluster=0
 DocumentUniqueId=HSQEIDGQ
 
 [Document4]
-DocumentPath=PA.PcbDoc
+DocumentPath=PA_v1.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -869,7 +869,7 @@ OutputDefault1=0
 Type1=1
 Type2=1
 Type3=1
-Type4=1
+Type4=0
 Type5=1
 Type6=1
 Type7=1
@@ -884,7 +884,7 @@ Type15=1
 Type16=1
 Type17=1
 Type18=1
-Type19=1
+Type19=0
 Type20=1
 Type21=1
 Type22=1

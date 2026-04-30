@@ -4,20 +4,26 @@
  *  Created on: Nov 30, 2025
  *      Author: user
  */
-
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "main.h"
 #include "cmd.h"
 #include "adc.h"
 #include "gpio.h"
 
-static uint8_t rx_buffer[256];
+static uint8_t 	rx_buffer[256];
 extern UART_HandleTypeDef huart3;
 extern DMA_HandleTypeDef hdma_usart3_rx;
 static __IO uint32_t old_pos;
 static uint32_t rx_ptr;
 static uint32_t rx_cmd_ptr;
-static char rx_cmd[256];
-static char rx_ch;
+static char 	rx_cmd[256];
+static char 	rx_ch;
+extern int16_t	pa_degC;
+extern uint16_t pa_ImA;
+extern uint16_t pa_VmV;
+static char 	out_buffer[32];
 
 static void cmd_parse(char* msg, size_t len);
 static void cmd_rx_data(const char* data, uint32_t len);
@@ -40,7 +46,6 @@ void cmd_stop(void)
 	HAL_UART_AbortReceive_IT(&huart3);
 	HAL_UART_DMAStop(&huart3);
 }
-
 
 void cmd_tick(void)
 {
@@ -99,14 +104,14 @@ static void cmd_parse(char* msg, size_t len)
 		if(msg[0] == 'P')
 		{
 			switch(msg[1]) {
-			case 'B' : // bypass
-//				gpio_set_baypass(msg[2] == '0' ? 0 : 1);
+			case 'B': // band
+				value[3] = 0;
+				memcpy(value, &msg[2], 2);
+				gpio_band((uint8_t)atoi(value));
 				break;
-			case 'C' : // capacitor select
-//				gpio_set_capacitor(msg[2] == '0' ? 0 : 1);
-				break;
-			case 'E' : // external amplifier
-//				gpio_set_external(msg[2] == '0' ? 0 : 1);
+			case 'G' : // get values
+				sprintf(out_buffer, "D%05d%05d%05d;", pa_degC, pa_ImA, pa_VmV);
+				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)out_buffer, strlen(out_buffer));
 				break;
 			}
 		}

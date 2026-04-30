@@ -4,6 +4,7 @@
 	<comment>Created by Vitis v2023.2</comment>
 	<projects>
 		<project>front_ps</project>
+		<project>lvgl</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

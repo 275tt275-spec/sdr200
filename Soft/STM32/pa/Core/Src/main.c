@@ -24,6 +24,7 @@
 #include "cmd.h"
 #include "adc.h"
 #include "gpio.h"
+#include "max6651.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -112,11 +113,14 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  gpio_tx_off();
+  max6651_init();
   cmd_start();
+  adc_start();
 
   HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 0);
-  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
   HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 0);
+  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
   HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
   /* USER CODE END 2 */
 
@@ -130,6 +134,7 @@ int main(void)
 	  cmd_tick();
 	  adc_tick();
 	  gpio_tick();
+	  max6651_tick();
   }
   /* USER CODE END 3 */
 }
