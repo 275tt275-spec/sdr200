@@ -34,6 +34,7 @@
 #define DEFAULT_IP_MASK         "255.255.255.0"
 #define DEFAULT_GW_ADDRESS      "10.1.1.254"
 
+#define EXTIO_COMMAND_SEARCH            1
 #define EXTIO_COMMAND_STARTHW           2
 #define EXTIO_COMMAND_STOPHW            3
 #define EXTIO_COMMAND_SETHWLO           4

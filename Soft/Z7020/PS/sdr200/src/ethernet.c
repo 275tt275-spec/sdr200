@@ -31,6 +31,7 @@ static uint32_t mServerIP = 0;
 static uint16_t mServerIQPort = PORT_DDC0_DEFAULT;
 #define ETH_LINK_DETECT_INTERVAL	250
 static int mEnableDDC = 0;
+static s_extio extioAnswer;
 
 extern void link_detect_thread(void *p);
 static void network_thread(void *p);
@@ -44,6 +45,8 @@ void ethernet_init(void)
 {
 	sys_thread_new("ethernet_thread", (void(*)(void*))ethernet_thread, NULL,
 			MAIN_THREAD_STACKSIZE, DEFAULT_THREAD_PRIO);
+
+	extioAnswer.cmd = EXTIO_COMMAND_SEARCH;
 }
 
 
@@ -93,10 +96,23 @@ static void udp_recv_traffic(void *arg, struct udp_pcb *tpcb,
 
 	uint64_t value64;
 	uint32_t value32;
+	uint16_t searchPort;
 	s_extio* pExtio = (s_extio*)p->payload;
 
 		switch(pExtio->cmd)
 		{
+		case EXTIO_COMMAND_SEARCH:
+		{
+			ip_addr_t *ip = &server_netif.ip_addr;
+			xil_printf("udp_recv_traffic: EXTIO_COMMAND_STOPHW\n");
+			mServerIP = addr->addr;
+			searchPort = atoi((char*)&pExtio->payload[6]);
+
+	    	sprintf((char*)extioAnswer.payload, "SDR200IP%d.%d.%d.%d:%d", ip4_addr1(ip), ip4_addr2(ip),
+	    				ip4_addr3(ip), ip4_addr4(ip), UDP_SERVER_PORT_IN);
+			ethernet_SendUdp(mServerIP,  searchPort, (uint8_t*)&extioAnswer, sizeof(extioAnswer));
+			break;
+		}
 		case EXTIO_COMMAND_STARTHW:
 			xil_printf("udp_recv_traffic: EXTIO_COMMAND_STARTHW\n");
 			mEnableDDC = 1;
@@ -113,6 +129,7 @@ static void udp_recv_traffic(void *arg, struct udp_pcb *tpcb,
 //			xil_printf("udp_recv_traffic: EXTIO_COMMAND_SETHWLO %u\n", (uint32_t)value64);
 			e_vars->vfoA = (uint32_t)value64;
 			hw_SetRXAFreq(e_vars->vfoA);
+			hw_SetExtAmpFreq(e_vars->vfoA);
 //			hw_SetTXAFreq((uint32_t)value64);
 			kenwood_SetFrequency((uint32_t)value64);
 			eeprom_vars_changed();

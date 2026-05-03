@@ -343,6 +343,7 @@ static void kenwood_UpdateFreq()
     if(vars.m_freq_tx != new_freq_tx)
     {
     	vars.m_freq_tx = new_freq_tx;
+    	hw_SetExtAmpFreq(vars.m_freq_tx);
 //        m_pModule->SendMessageHardware(MSG_HW_SET_TXA_FREQUENCY, 0, m_freq_tx);
     }
 }
@@ -432,7 +433,7 @@ static void kenwood_UpdateTune(uint8_t rx_in, uint8_t tx_in, uint8_t start)
 
 	if(start)
 	{
-		atu_tune(vars.m_freq_tx);
+		hw_StartTune(vars.m_freq_tx);
 		if(atu_GetBypass() == 0)
 			vars.m_ac[1] = vars.m_ac[0] = 1;
 		else

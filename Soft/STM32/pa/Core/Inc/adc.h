@@ -10,8 +10,8 @@
 
 #define MAX_TEMPERATURE		110
 #define MAX_CURRENT		    15000
-#define MAX_VOLTAGE		    32000
-#define MIN_VOLTAGE		    11000
+#define MAX_VOLTAGE		    3200
+#define MIN_VOLTAGE		    1100
 
 typedef struct tag_adc_values
 {

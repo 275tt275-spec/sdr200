@@ -32,6 +32,7 @@
 #define VREF_CORR_OFFSET	24881
 #define VREF_UPDATE_MS  	10000
 #define LINEAR_SET_DELAY	50
+#define TXA_TUNE_PWR		36
 
 typedef enum tag_trx_mode {
 	TRX_MODE_USB,
@@ -70,6 +71,7 @@ typedef struct tag_hw_device {
 	int TxOn;
 	char InternalSend[32];
 	uint8_t RFBand;
+	uint8_t TXAlpf;
 	uint8_t attMB1;
 	uint8_t attMB2;
 	uint8_t txaCorr;
@@ -85,6 +87,7 @@ void hw_Init(void);
 void hw_Start(void);
 void hw_SetRXAFreq(uint32_t hz);
 void hw_SetTXAFreq(uint32_t hz);
+void hw_SetExtAmpFreq(uint32_t hz);
 void hw_SetRXAAtt(float db);
 void hw_SetTXAPower(float dBm);
 void hw_SetTXAFBAtt(float db);
@@ -108,6 +111,7 @@ void hw_SetTestMode(int set);
 void hw_SetATUBypass(int set);
 void hw_SetATU(uint8_t dir, uint8_t maskL, uint8_t maskC);
 void hw_GetSWR(s_swr* swr);
+void hw_StartTune(uint32_t freq);
 
 void hw_SetLiner(int en);
 void hw_SetLinerDDSIn(double freq);

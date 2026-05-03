@@ -22,7 +22,7 @@ static char 	rx_cmd[256];
 static char 	rx_ch;
 extern int16_t	pa_degC;
 extern uint16_t pa_ImA;
-extern uint16_t pa_VmV;
+extern uint16_t pa_V10mV;
 static char 	out_buffer[32];
 
 static void cmd_parse(char* msg, size_t len);
@@ -110,7 +110,7 @@ static void cmd_parse(char* msg, size_t len)
 				gpio_band((uint8_t)atoi(value));
 				break;
 			case 'G' : // get values
-				sprintf(out_buffer, "D%05d%05d%05d;", pa_degC, pa_ImA, pa_VmV);
+				sprintf(out_buffer, "D%05d%05d%05d;", pa_degC, pa_ImA, pa_V10mV);
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)out_buffer, strlen(out_buffer));
 				break;
 			}

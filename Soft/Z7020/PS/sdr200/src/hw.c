@@ -28,6 +28,7 @@
 #include "ad9783.h"
 #include "uart_pl.h"
 #include "atu.h"
+#include "ext_amp.h"
 
 #define SPI_DEVICE_ID		XPAR_XSPIPS_0_DEVICE_ID
 #define SPI_INTR_ID			XPAR_XSPIPS_0_INTR
@@ -42,6 +43,7 @@
 extern XScuGic IntcInstance;
 s_hw_device hw_device;
 static s_linear linear = {0};
+static int isTuneMode = 0;
 
 static void SpiHandler(void *CallBackRef, u32 StatusEvent, unsigned int ByteCount);
 static void IICHandler(void *CallBackRef, u32 Event);
@@ -62,6 +64,7 @@ void hw_Init(void)
 	hw_device.xMaxBlockTime = pdMS_TO_TICKS( 4000 );
 	hw_device.IntcInstance = &IntcInstance;
 	hw_device.RFBand = 255;
+	hw_device.TXAlpf = 255;
 	hw_device.attMB1 = 255;
 	hw_device.attMB2 = 255;
 	hw_device.txaCorr = 255;
@@ -72,8 +75,8 @@ void hw_Init(void)
 	linear.agc_k = 5;
 	linear.phase_k = 5;
 	linear.diff = 0;
-	linear.prop = 10;
-	linear.stab = 10;
+	linear.prop = 6000;
+	linear.stab = 4000;
 	linear.dc_i = 0;
 	linear.dc_q = 0;
 	linear.gain_i = 32767;
@@ -347,6 +350,7 @@ void hw_SetTXAFreq(uint32_t hz)
     fpga_TXA_DDS(dds_data);
 
     uint8_t txaNewCorr = eeprom_txa_att(hz);
+    uint8_t LPFNew;
 
     if(txaNewCorr > 4) txaNewCorr -= 4;
 
@@ -357,10 +361,35 @@ void hw_SetTXAFreq(uint32_t hz)
 
 	hw_SetLinerDDSIn(hz);
 
-//    sprintf(m_InternalSend, "FA%011d;", (int)hz);
-//   uartPL_sendInternal((uint8_t*)m_InternalSend, strlen(m_InternalSend));
+	if(hz < 2200000)
+		LPFNew = 6;
+	else if(hz < 3900000)
+		LPFNew = 5;
+	else if(hz < 7400000)
+		LPFNew = 4;
+	else if(hz < 14500000)
+		LPFNew = 3;
+	else if(hz < 21700000)
+		LPFNew = 2;
+	else if(hz < 31000000)
+		LPFNew = 1;
+	else
+		LPFNew = 0;
 
+	if(LPFNew != hw_device.TXAlpf)
+	{
+		hw_device.TXAlpf = LPFNew;
+		xSemaphoreTake( hw_device.xUartSemaphore, ( TickType_t ) 100 );
+		sprintf(hw_device.InternalSend, "PB%02d;", hw_device.TXAlpf);
+		uartPL_sendInternal((uint8_t*)hw_device.InternalSend, strlen(hw_device.InternalSend));
+		xSemaphoreGive(hw_device.xUartSemaphore);
+		vTaskDelay(pdMS_TO_TICKS( 10 ));
+	}
+}
 
+inline void hw_SetExtAmpFreq(uint32_t hz)
+{
+	extAmpSetFreq(hz);
 }
 
 void hw_SetAttMB1(uint8_t value)
@@ -611,10 +640,12 @@ void hw_SetPTT(int on, e_tx_input in)
 		fpga_LinearEnable(&linear, 0);
 		if(in == TX_TUNE)
 		{
+			isTuneMode = 1;
 			hw_SetTXAMode(TRX_MODE_CW);
 		}
 		else
 		{
+			isTuneMode = 0;
 			hw_SetTXAMode(e_vars->mode);
 		}
 
@@ -667,6 +698,7 @@ void hw_SetRXAAtt(float db)
 void hw_SetTXAPower(float dBm)
 {
 	uint8_t value = (uint8_t)((53 - dBm) * 2);
+	if(isTuneMode == 1) value = TXA_TUNE_PWR;
 	if(value > 63) value = 63;
 
     sprintf(hw_device.InternalSend, "RT%02d;", value);
@@ -819,6 +851,12 @@ void hw_SetLinerCoeff(uint32_t kDiff, uint32_t kStab, uint32_t kProp)
 	linear.stab = kStab;
 	linear.prop = kProp;
 	fpga_LinearSetCoeff(&linear);
+}
+
+void hw_StartTune(uint32_t freq)
+{
+	hw_SetTXAPower(TXA_TUNE_PWR);
+	atu_tune(freq);
 }
 
 static void prvVrefTask( void *pvParameters )

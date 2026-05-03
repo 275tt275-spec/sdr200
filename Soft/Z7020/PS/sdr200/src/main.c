@@ -29,6 +29,7 @@
 #include "hw.h"
 #include "KenwoodCmd.h"
 #include "uart_pl.h"
+#include "ext_amp.h"
 
 #define INTC_DEVICE_ID		XPAR_SCUGIC_SINGLE_DEVICE_ID
 
@@ -91,6 +92,7 @@ static void prvMainTask( void *pvParameters )
 	audio_init();
 
 	kenwood_init();
+	extAmpInit();
 	hw_Start();
 
 	xil_printf( "prvMainTask: while\r\n" );

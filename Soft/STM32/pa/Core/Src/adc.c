@@ -22,20 +22,20 @@ static s_adc_values		    inValues;
 static __IO uint32_t 		status_flags = 0;
 #define	ADC_HALF_CPLT		(1 << 0)
 #define ADC_CONV_CPLT		(1 << 1)
-#define ADC_WEIGHT_FACTOR	8
+#define ADC_WEIGHT_FACTOR	1
 
 extern uint32_t 	dac_out[2];
 extern int 			isTxOn;
 int16_t				pa_degC = 0;
 uint16_t 			pa_ImA = 0;
-uint16_t 			pa_VmV = 0;
+uint16_t 			pa_V10mV = 0;
 static uint32_t 	acc_temperature = 0;
 static uint32_t 	acc_current = 0;
 static uint32_t 	acc_voltage = 0;
-static s_adc_poly	coeff_ImA = {0, 4.06504065 * (1 << 16), 0 * (1 << 16)};
-static s_adc_poly	coeff_VmV = {0, 4.06504065 * (1 << 16), 0 * (1 << 16)};
-static s_adc_poly	coeff_biasPA0 = {0, -1.3251 * (1 << 16), 2331 * (1 << 16)};
-static s_adc_poly	coeff_biasPA1 = {0, -1.3251 * (1 << 16), 2331 * (1 << 16)};
+static s_adc_poly	coeff_ImA = {0, 1.6 * (1 << 16), -10 * (1 << 16)};
+static s_adc_poly	coeff_V10mV = {0, 0.883 * (1 << 16), 0 * (1 << 16)};
+static s_adc_poly	coeff_biasPA0 = {0, -1.3251 * (1 << 16), 1771 * (1 << 16)};
+static s_adc_poly	coeff_biasPA1 = {0, -1.3251 * (1 << 16), 1771 * (1 << 16)};
 
 void adc_start(void)
 {
@@ -77,7 +77,7 @@ static void adc_measure(void)
 
 	pa_degC = ntc_get_t(ntcalug01t103fl, acc_temperature >> ADC_WEIGHT_FACTOR);
 	pa_ImA = (uint16_t)(adc_calculate(acc_current >> ADC_WEIGHT_FACTOR, &coeff_ImA) & 0xFFFF);
-	pa_VmV = (uint16_t)(adc_calculate(acc_voltage >> ADC_WEIGHT_FACTOR, &coeff_VmV) & 0xFFFF);
+	pa_V10mV = (uint16_t)(adc_calculate(acc_voltage >> ADC_WEIGHT_FACTOR, &coeff_V10mV) & 0xFFFF);
 
 	dac_out[0] = (uint16_t)adc_calculate(pa_degC, &coeff_biasPA0);
 	dac_out[1] = (uint16_t)adc_calculate(pa_degC, &coeff_biasPA1);
@@ -94,7 +94,7 @@ static void adc_measure(void)
 		{
 			gpio_set_fail();
 		}
-		if((pa_VmV > MAX_VOLTAGE) || (pa_VmV < MIN_VOLTAGE))
+		if((pa_V10mV > MAX_VOLTAGE) || (pa_V10mV < MIN_VOLTAGE))
 		{
 			gpio_set_fail();
 		}

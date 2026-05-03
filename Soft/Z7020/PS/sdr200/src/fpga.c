@@ -265,7 +265,7 @@ void fpga_LinearEnable(s_linear* lin, int enable)
     fpga_write(FPGA_LIN_CTRL, lin_ctrl);
 
     if(enable == 1)
-        lin_ctrl = FPGA_LINER_ON | FPGA_LINER_AGC | FPGA_LIN_PHASE_SLOW;
+        lin_ctrl = FPGA_LINER_ON | FPGA_LINER_AGC;
     else
         lin_ctrl = 0;
 
