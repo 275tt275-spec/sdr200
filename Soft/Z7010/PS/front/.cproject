@@ -61,11 +61,11 @@
                                 								
                                 <option id="xilinx.gnu.compiler.dircategory.includes.694892086" name="Include Paths" superClass="xilinx.gnu.compiler.dircategory.includes" useByScannerDiscovery="false" valueType="includePath">
                                     									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/lvgl/src}&quot;"/>
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/lvgl}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/lvgl/src}&quot;"/>
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/support}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:}\..\lvgl&quot;"/>
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
                                     								
@@ -109,17 +109,9 @@
                                 								
                                 <option id="xilinx.gnu.c.link.option.ldflags.1447128588" name="Linker Flags" superClass="xilinx.gnu.c.link.option.ldflags" useByScannerDiscovery="false" value=" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec" valueType="string"/>
                                 								
-                                <option id="xilinx.gnu.c.link.option.libs.1481825573" superClass="xilinx.gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-                                    									
-                                    <listOptionValue builtIn="false" value="lvgl"/>
-                                    								
-                                </option>
+                                <option id="xilinx.gnu.c.link.option.libs.1481825573" name="Libraries (-l)" superClass="xilinx.gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs"/>
                                 								
-                                <option id="xilinx.gnu.c.link.option.paths.2092939733" superClass="xilinx.gnu.c.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/lvgl/Debug}&quot;"/>
-                                    								
-                                </option>
+                                <option id="xilinx.gnu.c.link.option.paths.2092939733" name="Library search path (-L)" superClass="xilinx.gnu.c.link.option.paths" useByScannerDiscovery="false" valueType="libPaths"/>
                                 								
                                 <inputType id="xilinx.gnu.linker.input.565306997" superClass="xilinx.gnu.linker.input">
                                     									

@@ -40,3 +40,4 @@ bsp write
 bsp reload
 catch {bsp regenerate}
 platform generate -domains freertos10_xilinx_domain 
+platform generate
