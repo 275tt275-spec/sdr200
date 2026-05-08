@@ -27,6 +27,7 @@ static char 	out_buffer[32];
 
 static void cmd_parse(char* msg, size_t len);
 static void cmd_rx_data(const char* data, uint32_t len);
+static const char strStart[] = "PB0;";
 
 void cmd_start(void)
 {
@@ -39,6 +40,8 @@ void cmd_start(void)
 	rx_ptr = 0;
 	rx_cmd_ptr = 0;
 	HAL_UART_Receive_DMA(&huart3, &rx_buffer[0], sizeof(rx_buffer));
+
+	cmd_parse((char*)strStart, strlen(strStart));
 }
 
 void cmd_stop(void)

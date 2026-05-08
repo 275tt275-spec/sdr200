@@ -122,8 +122,9 @@ int main(void)
   HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 0);
   HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
   HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
-  /* USER CODE END 2 */
 
+  /* USER CODE END 2 */
+//  gpio_tx_on();
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
