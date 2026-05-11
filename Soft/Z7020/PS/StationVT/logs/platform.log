@@ -7410,3 +7410,378 @@ TRACE::2026-05-04.17:01:46::SCWMssOS::DEBUG:  swdes dump  E:/Projects/sdr200/Sof
 E:/Projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
 
 TRACE::2026-05-04.17:01:46::SCWMssOS::Sw design exists and opened at  E:/Projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:14::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:14::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:14::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:14::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:14::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:14::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:14::SCWPlatform::Do not have an existing db opened. 
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened new HwDB with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWReader::Active system found as  StationVT
+TRACE::2026-05-10.20:36:15::SCWReader::Handling sysconfig StationVT
+TRACE::2026-05-10.20:36:15::SCWDomain::checking for install qemu data   : 
+TRACE::2026-05-10.20:36:15::SCWDomain:: Using the QEMU Data from install at  : C:/Xilinx/Vitis/2023.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/
+TRACE::2026-05-10.20:36:15::SCWDomain:: Using the QEMU args  from install at  : C:/Xilinx/Vitis/2023.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWReader::Boot application domain added for zynq_fsbl
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  
+TRACE::2026-05-10.20:36:15::SCWMssOS::No sw design opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::mss exists loading the mss file  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::Opened the sw design from mss  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::Adding the swdes entry D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss with des name system
+TRACE::2026-05-10.20:36:15::SCWMssOS::updating the scw layer about changes
+TRACE::2026-05-10.20:36:15::SCWMssOS::Opened the sw design.  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS:: library already available in sw design:  xilffs:5.1
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS:: library already available in sw design:  xilrsa:1.7
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::Saving the mss changes D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::Found a swdesign opened with the mssfile.
+TRACE::2026-05-10.20:36:15::SCWMssOS::Completed writemss as part of save.
+TRACE::2026-05-10.20:36:15::SCWMssOS::Commit changes completed.
+TRACE::2026-05-10.20:36:15::SCWReader::Adding prebuilt librarypaths as   
+TRACE::2026-05-10.20:36:15::SCWReader::Adding prebuilt incpaths  as   
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWReader::No isolation master present  
+TRACE::2026-05-10.20:36:15::SCWDomain::checking for install qemu data   : 
+TRACE::2026-05-10.20:36:15::SCWDomain:: Using the QEMU Data from install at  : C:/Xilinx/Vitis/2023.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/
+TRACE::2026-05-10.20:36:15::SCWDomain:: Using the QEMU args  from install at  : C:/Xilinx/Vitis/2023.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::No sw design opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::mss exists loading the mss file  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::Opened the sw design from mss  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::Adding the swdes entry D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss with des name system_0
+TRACE::2026-05-10.20:36:15::SCWMssOS::updating the scw layer about changes
+TRACE::2026-05-10.20:36:15::SCWMssOS::Opened the sw design.  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS:: library already available in sw design:  lwip213:1.1
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS:: library already available in sw design:  xilffs:5.1
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS:: library already available in sw design:  xilflash:4.10
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::Saving the mss changes D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::Found a swdesign opened with the mssfile.
+TRACE::2026-05-10.20:36:15::SCWMssOS::Completed writemss as part of save.
+TRACE::2026-05-10.20:36:15::SCWMssOS::Commit changes completed.
+TRACE::2026-05-10.20:36:15::SCWReader::Adding prebuilt librarypaths as   
+TRACE::2026-05-10.20:36:15::SCWReader::Adding prebuilt incpaths  as   
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to open the hw design at D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA given D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA absoulate path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform::DSA directory D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Platform Path D:/projects/sdr200/Soft/Z7020/PS/StationVT/hw/XC7Z020_wrapper.xsa
+TRACE::2026-05-10.20:36:15::SCWPlatform:: Unique name xilinx:::0.0
+TRACE::2026-05-10.20:36:15::SCWPlatform::Trying to set the existing hwdb with name XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Opened existing hwdb XC7Z020_wrapper_4
+TRACE::2026-05-10.20:36:15::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2026-05-10.20:36:15::SCWMssOS::Checking the sw design at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWMssOS::DEBUG:  swdes dump  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss|system_0||
+D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2026-05-10.20:36:15::SCWMssOS::Sw design exists and opened at  D:/projects/sdr200/Soft/Z7020/PS/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/system.mss
+TRACE::2026-05-10.20:36:15::SCWReader::No isolation master present  

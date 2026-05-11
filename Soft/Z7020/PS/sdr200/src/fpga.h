@@ -91,10 +91,17 @@
 #define FPGA_LIN_PHASE_K            0x02AA
 
 /* read */
-// 0x00__  HW_ctrl
+// 0x00__  HW_cfg
+#define FPGA_HW_CTRL 		0x0001  /* status bits */
+#define FPGA_HW_CTRL_PTT    (1UL << 0)
+#define FPGA_HW_CTRL_CW     (1UL << 1)
+#define FPGA_HW_CTRL_DTR    (1UL << 2)
+#define FPGA_HW_CTRL_RTS	(1UL << 3)
+// 0x01__  TXA_cfg
+// 0x02__  TXA_cfg
 #define FPGA_TXA_OVER 		0x0200  /* over bits */
 #define FPGA_TXA_AUDIO_ABS 	0x0201  /* audio_max_abs */
-// 0x03__   SWR
+// 0x03__   SWR_cfg
 #define FPGA_REG_SWR		0x0300  /* swr 16 bit inc & 16 bit ref (absolute) */
 #define FPGA_REG_MAG		0x0301  /* magnitude 16 bit chan A & 16 bit chan B (absolute) */
 #define FPGA_REG_ANGLE		0x0302  /* angle 16 bit chan A & 16 bit chan B (signed) */
@@ -191,6 +198,7 @@ void fpga_LinearSetIQDC(s_linear* lin);
 void fpga_LinearSetShift(s_linear* lin);
 void fpga_LinearSetCoeff(s_linear* lin);
 void fpga_LinearSetIQPhi(s_linear* lin);
+uint32_t fpga_SetStatus(void);
 
 
 #endif /* SRC_FPGA_H_ */

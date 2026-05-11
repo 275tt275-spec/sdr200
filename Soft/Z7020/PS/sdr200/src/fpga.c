@@ -20,6 +20,8 @@
 static XBram Bram;
 static XLlFifo Fifo;
 static uint32_t iq_buffer[UDPIO_PACKET_SIZE/sizeof(uint32_t)];
+static uint32_t fpga_status;
+static int nOldPtt = 0;
 
 void fpga_init(void)
 {
@@ -71,6 +73,13 @@ void fpga_tick(void)
 	{
 		nReadStatus = 0;
 		status_update();
+	}
+
+	fpga_status = fpga_SetStatus();
+	if((fpga_status & FPGA_HW_CTRL_PTT) != nOldPtt)
+	{
+		nOldPtt = fpga_status & FPGA_HW_CTRL_PTT;
+		hw_SetPTT(nOldPtt, TX_INPUT);
 	}
 }
 
@@ -315,6 +324,11 @@ void fpga_LinearSetCoeff(s_linear* lin)
     fpga_write(FPGA_LIN_CORR_KPROP, lin->prop);
     fpga_write(FPGA_LIN_CORR_KDIFF, lin->diff);
     fpga_write(FPGA_LIN_CORR_KSTAB, lin->stab);
+}
+
+inline uint32_t fpga_SetStatus(void)
+{
+	return fpga_read(FPGA_HW_CTRL);
 }
 
 inline void fpga_write(uint16_t addr, uint32_t value)

@@ -57,6 +57,7 @@ static void kenwood_UpdatePower();
 static void kenwood_UpdateAtt(uint8_t att);
 static void kenwood_UpdateTone(int on);
 static void kenwood_UpdateAGC();
+static void tune_thread(void *p);
 
 void kenwood_init(void)
 {
@@ -433,13 +434,16 @@ static void kenwood_UpdateTune(uint8_t rx_in, uint8_t tx_in, uint8_t start)
 
 	if(start)
 	{
+		xTaskCreate( (void(*)(void*))tune_thread, "", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, NULL );
+/*		vars.m_isTx = 1;
 		hw_StartTune(vars.m_freq_tx);
+		vars.m_isTx = 0;
 		if(atu_GetBypass() == 0)
 			vars.m_ac[1] = vars.m_ac[0] = 1;
 		else
 			vars.m_ac[1] = vars.m_ac[0] = 0;
 
-    	vars.m_ac[2] = 0;
+    	vars.m_ac[2] = 0;*/
 	}
 }
 
@@ -1288,6 +1292,21 @@ static void uart_thread(void *p)
 				XUartPs_Send(&UartPs, (uint8_t*)m_out, strlen(m_out));
 		}
 	}
+
+	vTaskDelete(NULL);
+}
+
+static void tune_thread(void *p)
+{
+	vars.m_isTx = 1;
+	hw_StartTune(vars.m_freq_tx);
+	vars.m_isTx = 0;
+	if(atu_GetBypass() == 0)
+		vars.m_ac[1] = vars.m_ac[0] = 1;
+	else
+		vars.m_ac[1] = vars.m_ac[0] = 0;
+
+	vars.m_ac[2] = 0;
 
 	vTaskDelete(NULL);
 }

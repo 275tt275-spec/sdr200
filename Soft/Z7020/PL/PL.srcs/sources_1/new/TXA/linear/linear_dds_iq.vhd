@@ -319,17 +319,17 @@ inst_adc2zeroif : adc2zeroif
 			q_out => fir_q
 		);
 		
-debug_0 : ila_0
-    PORT MAP(
-        clk => aclk,
-        probe0 => din2c,
-        probe1 => fb_i(17 downto 2),
-        probe2 => fb_q(17 downto 2),
-        probe3 => din1_ir(17 downto 2),
-        probe4 => dout_i_int,
-        probe5 => dout_q_int,
-        probe6(0) => valid32
-    );
+--debug_0 : ila_0
+--    PORT MAP(
+--        clk => aclk,
+--        probe0 => din2c,
+--        probe1 => fb_i(17 downto 2),
+--        probe2 => fb_q(17 downto 2),
+--        probe3 => din1_ir(17 downto 2),
+--        probe4 => dout_i_int,
+--        probe5 => dout_q_int,
+--        probe6(0) => valid32
+--    );
 
 -- PHASE Block
 

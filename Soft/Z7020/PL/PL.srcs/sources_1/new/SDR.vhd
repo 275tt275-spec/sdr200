@@ -100,10 +100,10 @@ entity SDR is
         i2s_wclk : out STD_LOGIC;
         i2s_dout : out STD_LOGIC;
         i2s_din : in STD_LOGIC;
---        uart0_rx_data : in STD_LOGIC; 
---        uart0_tx_data : out STD_LOGIC; 
---        uart1_rx_data : in STD_LOGIC; 
---        uart1_tx_data : out STD_LOGIC; 
+        PTT : in STD_LOGIC;
+        CW_KEY : in STD_LOGIC;
+        CAT_DTR : in STD_LOGIC;
+        CAT_RTC : in STD_LOGIC;
         irq : out STD_LOGIC; 
         m_axis_ser0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_axis_ser0_tvalid : out STD_LOGIC;
@@ -316,12 +316,11 @@ begin
                   TXA_cfg_douta when cfg_addra(10 downto 8) = "010" or cfg_addr_r(10 downto 8) = "010" else 
                   SWR_cfg_douta when cfg_addra(10 downto 8) = "011" or cfg_addr_r(10 downto 8) = "011" else 
                   HW_cfg_douta;                                  
-                  
---    irq <= uart0_rx_enable or uart1_rx_enable;  
- --   HW_cfg_douta <= x"0000000" & uart0_tx_progress & uart1_tx_progress & uart0_rx_enable & uart1_rx_enable;   
+
+    HW_cfg_douta <= x"0000000" & CAT_DTR & CAT_RTC & CW_KEY & PTT;   
     
     gpio_out <= (others => '0');  
-    m_axis_ser1_tdata <= (others => '0');   
+    m_axis_ser1_tdata <= (others => '0');  
     
 cmd_process : process (aclk) is
 begin 

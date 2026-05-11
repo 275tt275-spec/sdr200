@@ -249,9 +249,9 @@ end process cmd_process;
 
     ovf <= ext(lim_over & resampler_over & linear_ovf, 32);
     
---    modulator_in_tdata <= speech_out_tdata;
---    modulator_in_tvalid <= speech_out_tvalid;
-    
+ --   modulator_in_tdata <= speech_out_tdata;
+ --   modulator_in_tvalid <= speech_out_tvalid;
+ --   
     modulator_in_tdata <= speech_in_tdata;
     modulator_in_tvalid <= speech_in_tvalid;
     

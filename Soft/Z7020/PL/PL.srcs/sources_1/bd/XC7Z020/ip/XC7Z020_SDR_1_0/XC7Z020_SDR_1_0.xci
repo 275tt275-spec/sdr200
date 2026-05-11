@@ -4,7 +4,7 @@
     "xci_name": "XC7Z020_SDR_1_0",
     "cell_name": "SDR_1",
     "component_reference": "xilinx.com:module_ref:SDR:1.0",
-    "ip_revision": "1775981906",
+    "ip_revision": "1778408253",
     "gen_directory": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_SDR_1_0",
     "parameters": {
       "component_parameters": {
@@ -25,7 +25,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "1775981906" } ],
+        "IPREVISION": [ { "value": "1778408253" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_SDR_1_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
@@ -66,6 +66,10 @@
         "i2s_wclk": [ { "direction": "out" } ],
         "i2s_dout": [ { "direction": "out" } ],
         "i2s_din": [ { "direction": "in" } ],
+        "PTT": [ { "direction": "in" } ],
+        "CW_KEY": [ { "direction": "in" } ],
+        "CAT_DTR": [ { "direction": "in" } ],
+        "CAT_RTC": [ { "direction": "in" } ],
         "irq": [ { "direction": "out" } ],
         "m_axis_ser0_tdata": [ { "direction": "out", "size_left": "31", "size_right": "0" } ],
         "m_axis_ser0_tvalid": [ { "direction": "out" } ],

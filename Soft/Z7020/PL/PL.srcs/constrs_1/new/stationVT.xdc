@@ -130,6 +130,10 @@ set_property -dict {PACKAGE_PIN W7 IOSTANDARD LVCMOS33} [get_ports uart_rtl_1_tx
 set_property -dict {PACKAGE_PIN V5 IOSTANDARD LVCMOS33} [get_ports TX_ON]
 set_property -dict {PACKAGE_PIN V7 IOSTANDARD LVCMOS33} [get_ports TX_FAIL]
 set_property -dict {PACKAGE_PIN T16 IOSTANDARD LVCMOS25} [get_ports DEBUG_UART]
+set_property -dict {PACKAGE_PIN V9 IOSTANDARD LVCMOS33} [get_ports PTT]
+set_property -dict {PACKAGE_PIN V8 IOSTANDARD LVCMOS33} [get_ports CW_KEY]
+set_property -dict {PACKAGE_PIN W8 IOSTANDARD LVCMOS33} [get_ports CAT_DTR]
+set_property -dict {PACKAGE_PIN U10 IOSTANDARD LVCMOS33} [get_ports CAT_RTC]
 
 set_property -dict {PACKAGE_PIN R18 IOSTANDARD LVDS_25} [get_ports RF_CLOCKOUT_P]
 set_property -dict {PACKAGE_PIN T18 IOSTANDARD LVDS_25} [get_ports RF_CLOCKOUT_N]
