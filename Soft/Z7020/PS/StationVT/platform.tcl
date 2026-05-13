@@ -42,3 +42,20 @@ catch {bsp regenerate}
 platform generate -domains freertos10_xilinx_domain 
 platform generate
 platform active {StationVT}
+platform active {StationVT}
+domain create -name {ps7_cortexa9_1} -os {standalone} -proc {ps7_cortexa9_1} -arch {32-bit} -display-name {ps7_cortexa9_1} -desc {} -runtime {cpp}
+platform generate -domains 
+platform write
+domain -report -json
+bsp reload
+bsp config stdin "none"
+bsp config stdout "none"
+bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
+bsp config dependency_flags "-MMD -MP"
+bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
+bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=neon -ffast-math -fsingle-precision-constant -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains ps7_cortexa9_1 
+catch {platform remove sdr}
