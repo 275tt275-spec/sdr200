@@ -21,6 +21,7 @@
 #include "xparameters.h"
 #include "xscugic.h"		/* Interrupt controller device driver */
 #include "xil_exception.h"
+#include "xil_cache.h"
 
 #include "audio.h"
 #include "fpga.h"
@@ -38,6 +39,12 @@
 #define DELAY_1_SECOND		1000UL
 #define DELAY_4_MSECOND		4UL
 
+#define OCM_SHARED_SECTION 0xFFFC0000
+#define SGI_TO_CORE1 0  // ID прерывания для Core 1
+#define TARGET_CORE1 2  // Битовая маска для Core 1 (Core 0 = 1, Core 1 = 2)
+#define CORE1_START_REG 0xFFFFFFF0
+extern void _boot();  // или адрес main Core 1
+
 /* The Tx and Rx tasks as described at the top of this file. */
 static void prvMainTask( void *pvParameters );
 /*-----------------------------------------------------------*/
@@ -48,6 +55,9 @@ static TaskHandle_t xMainTask;
 
 XScuGic IntcInstance;
 static int SetupIntrSystem(XScuGic *IntcInstancePtr);
+static void StartCore1(void);
+
+volatile uint32_t *shared_buffer = (volatile uint32_t *)OCM_SHARED_SECTION;
 
 int main( void )
 {
@@ -56,6 +66,7 @@ int main( void )
 	eeprom_init();
 
 	xil_printf( "SDR200 Start\r\n" );
+	StartCore1();
 
 	/* Create the two tasks.  The Tx task is given a lower priority than the
 	Rx task, so the Rx task will leave the Blocked state and pre-empt the Tx
@@ -137,5 +148,39 @@ static int SetupIntrSystem(XScuGic *IntcInstancePtr)
 	 */
 	Xil_ExceptionEnable();
 	return XST_SUCCESS;
+}
+
+void SendToCore1(uint32_t type, uint32_t len, uint8_t* value)
+{
+	static uint32_t counter = 0;
+
+	Xil_DCacheInvalidateRange((INTPTR)shared_buffer, 4);
+	if(shared_buffer[0] != counter)
+	{
+		vTaskDelay(pdMS_TO_TICKS( DELAY_4_MSECOND ));
+		Xil_DCacheInvalidateRange((INTPTR)shared_buffer, 4);
+		if(shared_buffer[0] != counter)
+		{
+			return;
+		}
+	}
+
+    shared_buffer[1] = ++counter;
+    shared_buffer[2] = type;
+    shared_buffer[3] = len;
+    memcpy((void*)&shared_buffer[4], value, len);
+
+    Xil_DCacheFlushRange((INTPTR)&shared_buffer[1], len + 3 * sizeof(uint32_t));
+    XScuGic_SoftwareIntr(&IntcInstance, SGI_TO_CORE1, TARGET_CORE1);
+}
+
+static void StartCore1(void)
+{
+	shared_buffer[0] = 0;
+
+	Xil_Out32(CORE1_START_REG,
+            	0x10000000);  // Адрес старта Core 1 в DDR (из lscript.ld)
+	dmb();                  // Data Memory Barrier
+	__asm__("sev");         // Send Event для пробуждения Core 1
 }
 

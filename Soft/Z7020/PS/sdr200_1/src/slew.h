@@ -51,5 +51,6 @@ void xuslew (USLEW a);
 void setBuffers_uslew (USLEW a, float* in, float* out);
 void setSamplerate_uslew (USLEW a, int rate);
 void setSize_uslew (USLEW a, int size);
+void SetTXAuSlewTime (int channel, float time);
 
 #endif

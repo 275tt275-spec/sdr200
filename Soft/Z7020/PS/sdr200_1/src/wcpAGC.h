@@ -157,6 +157,7 @@ extern AGCPORT void SetTXAALCSt (int channel, int state);
 extern AGCPORT void SetTXAALCAttack (int channel, int attack);
 extern AGCPORT void SetTXAALCDecay (int channel, int decay);
 extern AGCPORT void SetTXAALCHang (int channel, int hang);
+extern AGCPORT void SetTXAALCMaxGain (int channel, float maxgain);
 extern AGCPORT void SetTXALevelerSt (int channel, int state);
 extern AGCPORT void SetTXALevelerAttack (int channel, int attack);
 extern AGCPORT void SetTXALevelerDecay (int channel, int decay);

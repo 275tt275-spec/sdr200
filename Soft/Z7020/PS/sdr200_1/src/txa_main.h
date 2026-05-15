@@ -155,6 +155,7 @@ void set_dsp(int in_size, int dsp_size, int input_samplerate, int dsp_rate, int 
 void create_txa(int channel);
 void xtxa(int channel);
 void SetTXAMode(int channel, int mode);
+void SetTXABandpassFreqs (int channel, float f_low, float f_high);
 int TXAUslewCheck(int channel);
 void TXASetupBPFilters(int channel);
 // extern CRITICAL_SECTION csDSP;

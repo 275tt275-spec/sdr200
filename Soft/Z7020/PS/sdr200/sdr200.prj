@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <sdkproject:SdkProject xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sdkproject="http://www.xilinx.com/sdkproject" name="sdr200" location="D:/projects/StationVT/Soft/z7020/PS/sdr200" platform="D:/projects/sdr200/Soft/Z7020/PS/StationVT/export/StationVT/StationVT.xpfm" platformUID="xilinx:::0.0(custom)" systemProject="sdr200_system" sysConfig="StationVT" runtime="C/C++" cpu="freertos10_xilinx_domain" cpuInstance="ps7_cortexa9_0" os="freertos10_xilinx" mssSignature="f7ff8c97ed9ee5d78a24013d46c3f09c">
-  <configuration name="Debug" id="xilinx.gnu.armv7.exe.debug.387572817" dirty="true">
+  <configuration name="Debug" id="xilinx.gnu.armv7.exe.debug.387572817">
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
     <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>

@@ -141,17 +141,11 @@ typedef struct _gen
 } gen, *GEN;
 
 extern GEN create_gen (int run, int size, float* in, float* out, int rate, int mode);
-
 extern void destroy_gen (GEN a);
-
 extern void flush_gen (GEN a);
-
 extern void xgen (GEN a);
-
 extern void setBuffers_gen (GEN a, float* in, float* out);
-
 extern void setSamplerate_gen (GEN a, int rate);
-
 extern void setSize_gen (GEN a, int size);
 
 // TXA Properties

@@ -63,5 +63,6 @@ extern void flush_osctrl (OSCTRL a);
 extern void setBuffers_osctrl (OSCTRL a, float* in, float* out);
 extern void setSamplerate_osctrl (OSCTRL a, int rate);
 extern void setSize_osctrl (OSCTRL a, int size);
+void SetTXAosctrlRun (int channel, int run);
 
 #endif

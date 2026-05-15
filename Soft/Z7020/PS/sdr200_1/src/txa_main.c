@@ -556,6 +556,16 @@ void SetTXAMode(int channel, int mode)
 	}
 }
 
+void SetTXABandpassFreqs (int channel, float f_low, float f_high)
+{
+	if ((txa[channel].f_low != f_low) || (txa[channel].f_high != f_high))
+	{
+		txa[channel].f_low = f_low;
+		txa[channel].f_high = f_high;
+		TXASetupBPFilters (channel);
+	}
+}
+
 int TXAUslewCheck(int channel)
 {
 	return	(txa[channel].ammod.p->run == 1) ||

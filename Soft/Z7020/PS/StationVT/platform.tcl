@@ -59,3 +59,26 @@ bsp reload
 catch {bsp regenerate}
 platform generate -domains ps7_cortexa9_1 
 catch {platform remove sdr}
+bsp reload
+bsp reload
+domain active {zynq_fsbl}
+bsp reload
+bsp reload
+domain active {freertos10_xilinx_domain}
+bsp reload
+domain active {zynq_fsbl}
+bsp setlib -name openamp -ver 1.9
+bsp write
+bsp reload
+catch {bsp regenerate}
+bsp reload
+bsp removelib -name openamp
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate -domains zynq_fsbl 
+platform generate -domains 
+domain active {ps7_cortexa9_1}
+bsp reload
+bsp reload
+platform generate -domains 

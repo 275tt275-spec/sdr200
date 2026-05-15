@@ -4,6 +4,9 @@
     <configBuildOptions xsi:type="systemproject:SystemOptions">
       <applications name="sdr200" domainName="freertos10_xilinx_domain" domainPrettyName="freertos10_xilinx_domain" appBuildConfig="Debug"/>
     </configBuildOptions>
+    <lastBuildOptions xsi:type="systemproject:SystemOptions">
+      <applications name="sdr200" domainName="freertos10_xilinx_domain" domainPrettyName="freertos10_xilinx_domain" appBuildConfig="Debug"/>
+    </lastBuildOptions>
   </configuration>
   <configuration name="Release" id="com.xilinx.sdx.system.managedbuilder.releaseConfiguration.79241213">
     <configBuildOptions xsi:type="systemproject:SystemOptions">

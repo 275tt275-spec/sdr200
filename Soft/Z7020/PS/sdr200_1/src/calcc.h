@@ -143,6 +143,30 @@ extern void PSSaveCorrection(void* pargs);
 extern void PSRestoreCorrection(void* pargs);
 extern void doPSCalcCorrection(void* arg);
 extern void doPSTurnoff(void* arg);
+void SetPSRunCal(int channel, int run);
+void SetPSMox(int channel, int mox);
+void GetPSInfo(int channel, int* info);
+void SetPSReset(int channel, int reset);
+void SetPSMancal(int channel, int mancal);
+void SetPSAutomode(int channel, int automode);
+void SetPSTurnon(int channel, int turnon);
+void SetPSControl(int channel, int reset, int mancal, int automode, int turnon);
+void SetPSLoopDelay(int channel, float delay);
+void SetPSMoxDelay(int channel, float delay);
+float SetPSTXDelay(int channel, float delay);
+void psccF (int channel, int size, float *Itxbuff, float *Qtxbuff, float *Irxbuff, float *Qrxbuff, int mox, int solidmox);
+//void PSSaveCorr(int channel, string filename);
+//void PSRestoreCorr(int channel, string filename);
+void SetPSHWPeak(int channel, float peak);
+void GetPSHWPeak(int channel, float* peak);
+void GetPSMaxTX(int channel, float* maxtx);
+void SetPSPtol(int channel, float ptol);
+//void GetPSDisp(int channel, IntPtr x, IntPtr ym, IntPtr yc, IntPtr ys, IntPtr cm, IntPtr cc, IntPtr cs);
+void SetPSFeedbackRate(int channel, int rate);
+void SetPSPinMode(int channel, int pin);
+void SetPSMapMode(int channel, int map);
+void SetPSStabilize(int channel, int stbl);
+void SetPSIntsAndSpi(int channel, int ints, int spi);
 
 #endif
 
