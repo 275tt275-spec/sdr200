@@ -36,6 +36,7 @@ entity TXA_resampler is
     Port ( 
         m_axis_iq_tdata : out STD_LOGIC_VECTOR (47 downto 0);
         s_axis_modulator_tdata : in STD_LOGIC_VECTOR (47 downto 0);
+        s_axis_modulator_tready : out STD_LOGIC;
         s_axis_modulator_tvalid : in STD_LOGIC;
         gain : in STD_LOGIC_VECTOR (17 downto 0);              -- := "00" & x"7FFF";   100%
         out_over : out STD_LOGIC;
@@ -46,6 +47,23 @@ end TXA_resampler;
 
 architecture Behavioral of TXA_resampler is
 
+
+--component ila_2 IS
+--PORT (
+--    clk : IN STD_LOGIC;
+--    probe0 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+--    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+--    probe2 : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
+--    probe3 : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
+--    probe4 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+--    probe5 : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
+--    probe6 : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
+--    probe7 : IN STD_LOGIC_VECTOR(41 DOWNTO 0);
+--    probe8 : IN STD_LOGIC_VECTOR(41 DOWNTO 0);
+--    probe9 : IN STD_LOGIC_VECTOR(23 DOWNTO 0)
+--);
+--END component ila_2;
+
    component fir_duc_inter5 is
         port (
             aclk : in STD_LOGIC;
@@ -53,6 +71,7 @@ architecture Behavioral of TXA_resampler is
             s_axis_data_tready : out STD_LOGIC;
             s_axis_data_tdata : in STD_LOGIC_VECTOR ( 47 downto 0 );
             m_axis_data_tvalid : out STD_LOGIC;
+            m_axis_data_tready : in STD_LOGIC;
             m_axis_data_tdata : out STD_LOGIC_VECTOR ( 47 downto 0 )
         );
     end component fir_duc_inter5;
@@ -64,6 +83,7 @@ architecture Behavioral of TXA_resampler is
             s_axis_data_tready : out STD_LOGIC;
             s_axis_data_tdata : in STD_LOGIC_VECTOR ( 47 downto 0);
             m_axis_data_tvalid : out STD_LOGIC;
+            m_axis_data_tready : in STD_LOGIC;
             m_axis_data_tdata : out STD_LOGIC_VECTOR ( 47 downto 0 )
         );
     end component fir_duc_ciccomp;
@@ -104,23 +124,41 @@ architecture Behavioral of TXA_resampler is
     END COMPONENT round31to24;
     
     signal interpolator_tdata : std_logic_vector(47 downto 0);
-    signal interpolator_tvalid : std_logic;
+    signal interpolator_tvalid, interpolator_tready : std_logic;
     signal cic_in_tdata : std_logic_vector(47 downto 0);
     signal cic_in_tvalid : std_logic;
+    signal cic_in_tready, cic_in_tready_0, cic_in_tready_1 : std_logic;
     signal cic_out_tdata_0, cic_out_tdata_1 : std_logic_vector(23 downto 0);
     signal cic_out_tvalid_0, cic_out_tvalid_1 : std_logic;
     signal out_tdata42_0, out_tdata42_1 : std_logic_vector(41 downto 0);
     signal out_tdata24_0, out_tdata24_1 : std_logic_vector(23 downto 0);
 
 begin
+
+
+--debug_0 : ila_2
+--PORT MAP (
+--    clk => aclk,
+--    probe0 => s_axis_modulator_tdata,
+--    probe1(0) => s_axis_modulator_tvalid,
+--    probe2 => cic_in_tdata(23 downto 0),
+--    probe3 => cic_in_tdata(47 downto 24),
+--    probe4(0) => cic_in_tvalid,
+--    probe5 => cic_out_tdata_0,
+--    probe6 => cic_out_tdata_1,
+--    probe7 => out_tdata42_0,
+--    probe8 => out_tdata42_1,
+--    probe9 => out_tdata24_0
+--);
     
 fir_interpolator: component fir_duc_inter5
     port map (
         aclk => aclk,
         m_axis_data_tdata => interpolator_tdata,
         m_axis_data_tvalid => interpolator_tvalid,
+        m_axis_data_tready => interpolator_tready,
         s_axis_data_tdata => s_axis_modulator_tdata,
-        s_axis_data_tready => open,
+        s_axis_data_tready => s_axis_modulator_tready,
         s_axis_data_tvalid => s_axis_modulator_tvalid
     );
     
@@ -128,11 +166,14 @@ fir_ciccomp: component fir_duc_ciccomp
     port map (
         aclk => aclk,
         m_axis_data_tdata => cic_in_tdata,
+        m_axis_data_tready => cic_in_tready,
         m_axis_data_tvalid => cic_in_tvalid,
         s_axis_data_tdata => interpolator_tdata,
-        s_axis_data_tready => open,
+        s_axis_data_tready => interpolator_tready,
         s_axis_data_tvalid => interpolator_tvalid
     );
+    
+    cic_in_tready <= cic_in_tready_0 and cic_in_tready_1;
     
 txa_cic_0 : cic_txa
     PORT MAP (
@@ -140,7 +181,7 @@ txa_cic_0 : cic_txa
         aresetn => aresetn,
         s_axis_data_tdata => cic_in_tdata(23 downto 0),
         s_axis_data_tvalid => cic_in_tvalid,
-        s_axis_data_tready => open,
+        s_axis_data_tready => cic_in_tready_0,
         m_axis_data_tdata => cic_out_tdata_0,
         m_axis_data_tvalid => cic_out_tvalid_0
     );
@@ -151,7 +192,7 @@ txa_cic_1 : cic_txa
         aresetn => aresetn,
         s_axis_data_tdata => cic_in_tdata(47 downto 24),
         s_axis_data_tvalid => cic_in_tvalid,
-        s_axis_data_tready => open,
+        s_axis_data_tready => cic_in_tready_1,
         m_axis_data_tdata => cic_out_tdata_1,
         m_axis_data_tvalid => cic_out_tvalid_1
     );

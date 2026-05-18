@@ -3,7 +3,6 @@
 	<name>sdr200_1</name>
 	<comment>Created by Vitis v2023.2</comment>
 	<projects>
-		<project>StationVT</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

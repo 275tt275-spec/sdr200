@@ -314,6 +314,78 @@
                 "SV": "xilinx.com:ip:axi_fifo_mm_s:4.3",
                 "TM": "both",
                 "TU": "register"
+            },
+            "V10": {
+                "VT": "AC",
+                "BA": "0x43C20000",
+                "HA": "0x43C2FFFF",
+                "BP": "C_BASEADDR",
+                "HP": "C_HIGHADDR",
+                "MA": "Data",
+                "MX": "/processing_system7_0",
+                "MI": "M_AXI_GP0",
+                "MS": "SEG_axi_fifo_TXA_i2s_Mem0",
+                "MV": "xilinx.com:ip:processing_system7:5.5",
+                "SX": "/axi_fifo_TXA_i2s",
+                "SI": "S_AXI",
+                "SS": "Mem0",
+                "SV": "xilinx.com:ip:axi_fifo_mm_s:4.3",
+                "TM": "both",
+                "TU": "register"
+            },
+            "V11": {
+                "VT": "AC",
+                "BA": "0x43C30000",
+                "HA": "0x43C3FFFF",
+                "BP": "C_AXI4_BASEADDR",
+                "HP": "C_AXI4_HIGHADDR",
+                "MA": "Data",
+                "MX": "/processing_system7_0",
+                "MI": "M_AXI_GP0",
+                "MS": "SEG_axi_fifo_TXA_i2s_Mem1",
+                "MV": "xilinx.com:ip:processing_system7:5.5",
+                "SX": "/axi_fifo_TXA_i2s",
+                "SI": "S_AXI_FULL",
+                "SS": "Mem1",
+                "SV": "xilinx.com:ip:axi_fifo_mm_s:4.3",
+                "TM": "both",
+                "TU": "register"
+            },
+            "V12": {
+                "VT": "AC",
+                "BA": "0x43C40000",
+                "HA": "0x43C4FFFF",
+                "BP": "C_BASEADDR",
+                "HP": "C_HIGHADDR",
+                "MA": "Data",
+                "MX": "/processing_system7_0",
+                "MI": "M_AXI_GP0",
+                "MS": "SEG_axi_fifo_mm_s_1_Mem0",
+                "MV": "xilinx.com:ip:processing_system7:5.5",
+                "SX": "/axi_fifo_TXA_resampler",
+                "SI": "S_AXI",
+                "SS": "Mem0",
+                "SV": "xilinx.com:ip:axi_fifo_mm_s:4.3",
+                "TM": "both",
+                "TU": "register"
+            },
+            "V13": {
+                "VT": "AC",
+                "BA": "0x43C50000",
+                "HA": "0x43C5FFFF",
+                "BP": "C_AXI4_BASEADDR",
+                "HP": "C_AXI4_HIGHADDR",
+                "MA": "Data",
+                "MX": "/processing_system7_0",
+                "MI": "M_AXI_GP0",
+                "MS": "SEG_axi_fifo_mm_s_1_Mem1",
+                "MV": "xilinx.com:ip:processing_system7:5.5",
+                "SX": "/axi_fifo_TXA_resampler",
+                "SI": "S_AXI_FULL",
+                "SS": "Mem1",
+                "SV": "xilinx.com:ip:axi_fifo_mm_s:4.3",
+                "TM": "both",
+                "TU": "register"
             }
         },
         "edges": [
@@ -357,6 +429,26 @@
             },
             {
                 "src": "V9",
+                "trg": "V2",
+                "EH": "2"
+            },
+            {
+                "src": "V10",
+                "trg": "V2",
+                "EH": "2"
+            },
+            {
+                "src": "V11",
+                "trg": "V2",
+                "EH": "2"
+            },
+            {
+                "src": "V12",
+                "trg": "V2",
+                "EH": "2"
+            },
+            {
+                "src": "V13",
                 "trg": "V2",
                 "EH": "2"
             }

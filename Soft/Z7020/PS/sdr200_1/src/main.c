@@ -17,6 +17,10 @@
  *   ps7_uart    115200 (configured by bootrom/bsp)
  */
 
+#include "xparameters.h"
+#include "xbram.h"
+#include "xil_cache.h"
+#include "xllfifo.h"
 #include <stdio.h>
 #include "platform.h"
 #include "xscugic.h"
@@ -29,11 +33,15 @@
 #define IN_SIZE 32
 #define DSP_SIZE 32
 
-#define OCM_SHARED_SECTION 0xFFFC0000
+#define OCM_SHARED_SECTION 0xFFFF0000
 #define SGI_FROM_CORE0  0  // Core 1 слушает SGI 0 (настроенный контроллером Core 0)
 #define INTC_DEVICE_ID XPAR_SCUGIC_SINGLE_DEVICE_ID
+#define FIFO_DEV_I2S_ID	 XPAR_AXI_FIFO_1_DEVICE_ID
+#define FIFO_DEV_RESAMPLER_ID	 XPAR_AXI_FIFO_2_DEVICE_ID
 
 XScuGic InterruptController; /* Ёкземпл€р GIC */
+static XLlFifo fifo_i2s, fifo_resampler;
+static int in_ptr = 0;
 
 volatile uint32_t *shared_buffer = (volatile uint32_t *)OCM_SHARED_SECTION;
 volatile int data_ready = 0;
@@ -69,14 +77,56 @@ void Intc_Init(u32 sgi_id, void *Handler) {
 
 int main()
 {
+	int Status;
+	uint32_t data;
     init_platform();
+
+	struct _create_runs runs;
+	runs.rsmpin = 1;				// input resampler
+	runs.panel = 0;					// includes MIC gain
+	runs.phrot = 0;					// phase rotator
+	runs.micmeter = 0;				// MIC meter
+	runs.amsq = 0;					// downward expander capture
+	runs.eqp = 0;					// pre-EQ
+	runs.eqmeter = 0;				// EQ meter
+	runs.preemph = 0;				// FM pre-emphasis
+	runs.leveler = 0;				// Leveler
+	runs.lvlrmeter = 0;				// Leveler Meter
+	runs.cfcomp = 0;				// Continuous Frequency Compressor with post-EQ
+	runs.cfcmeter = 0;				// CFC+PostEQ Meter
+	runs.bp0 = 0;					// primary bandpass filter
+	runs.compressor = 0;			// COMP compressor
+	runs.osctrl = 0;				// CESSB Overshoot Control
+	runs.compmeter = 0;				// COMP meter
+	runs.alc = 0;					// ALC
+	runs.ammod = 0;					// AM Modulator
+	runs.fmmod = 0;					// FM Modulator
+	runs.alcmeter = 0;				// ALC Meter
+	runs.iqc = 0;					// PureSignal correction
+	runs.cfir = 0;					// compensating FIR filter (used Protocol_2 only)
+	runs.rsmpout = 1;				// output resampler
+	runs.outmeter = 0;				// output meter
 
     // »нициализаци€ прерывани€ SGI 0 дл€ Core 1
     Intc_Init(SGI_FROM_CORE0, Core1_SgiHandler);
 
+	XLlFifo_Config *FifoConfig = XLlFfio_LookupConfig(FIFO_DEV_I2S_ID);
+	Status = XLlFifo_CfgInitialize(&fifo_i2s, FifoConfig, FifoConfig->BaseAddress);
+	if (Status != XST_SUCCESS) {
+		return 0;
+	}
+	XLlFifo_IntClear(&fifo_i2s, 0xffffffff);
+
+	FifoConfig = XLlFfio_LookupConfig(FIFO_DEV_RESAMPLER_ID);
+	Status = XLlFifo_CfgInitialize(&fifo_resampler, FifoConfig, FifoConfig->BaseAddress);
+	if (Status != XST_SUCCESS) {
+		return 0;
+	}
+	XLlFifo_IntClear(&fifo_resampler, 0xffffffff);
+
 	int channel = 0;
 	set_dsp(IN_SIZE, DSP_SIZE, 16000, 16000, 16000);
-	create_txa(channel);
+	create_txa(channel, &runs);
 
     while(1)
     {
@@ -95,8 +145,27 @@ int main()
     	      Xil_DCacheFlushRange((INTPTR)shared_buffer, 1);
     	      data_ready = 0;  // —брос флага
     	}
+#if 0
+    	uint32_t world = XLlFifo_iRxOccupancy(&fifo_i2s);
+    	if(world)
+    	{
+    		data = XLlFifo_RxGetWord(&fifo_i2s);
+    		txa[channel].inbuff[in_ptr * 2] = *(float*)&data;
+    		txa[channel].inbuff[in_ptr * 2 + 1] = *(float*)&data;
 
-    	xtxa(channel);
+    		if(++in_ptr >= IN_SIZE)
+    		{
+    			in_ptr = 0;
+    			xtxa(channel);
+    			for(int n = 0; n < DSP_SIZE; n++)
+    			{
+					XLlFifo_TxPutWord(&fifo_resampler, *(uint32_t*)&txa[channel].outbuff[n * 2]);
+					XLlFifo_TxPutWord(&fifo_resampler, *(uint32_t*)&txa[channel].outbuff[n * 2 + 1]);
+					XLlFifo_iTxSetLen(&fifo_resampler, sizeof(complex));
+    			}
+    		}
+    	}
+#endif
     }
 
     cleanup_platform();

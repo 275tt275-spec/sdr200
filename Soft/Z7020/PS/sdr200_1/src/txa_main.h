@@ -54,6 +54,34 @@ struct _ch
 	int out_size;				// output buffsize (complex samples) in a fexchange() operation
 };
 
+struct _create_runs
+{
+	int rsmpin;					// input resampler
+	int panel;					// includes MIC gain
+	int phrot;					// phase rotator
+	int micmeter;				// MIC meter
+	int amsq;					// downward expander capture
+	int eqp;					// pre-EQ
+	int eqmeter;				// EQ meter
+	int preemph;				// FM pre-emphasis
+	int leveler;				// Leveler
+	int lvlrmeter;				// Leveler Meter
+	int cfcomp;					// Continuous Frequency Compressor with post-EQ
+	int cfcmeter;				// CFC+PostEQ Meter
+	int bp0;					// primary bandpass filter
+	int compressor;				// COMP compressor
+	int osctrl;					// CESSB Overshoot Control
+	int compmeter;				// COMP meter
+	int alc;					// ALC
+	int ammod;					// AM Modulator
+	int fmmod;					// FM Modulator
+	int alcmeter;				// ALC Meter
+	int iqc;					// PureSignal correction
+	int cfir;					// compensating FIR filter (used Protocol_2 only)
+	int rsmpout;				// output resampler
+	int outmeter;				// output meter
+};
+
 struct _txa
 {
 	float* inbuff;
@@ -148,11 +176,12 @@ struct _txa
 	{
 		CFIR p;
 	} cfir;
+	struct	_create_runs runs;
 };
 
 extern struct _txa txa[];
 void set_dsp(int in_size, int dsp_size, int input_samplerate, int dsp_rate, int output_samplerate);
-void create_txa(int channel);
+void create_txa(int channel, struct _create_runs* runs);
 void xtxa(int channel);
 void SetTXAMode(int channel, int mode);
 void SetTXABandpassFreqs (int channel, float f_low, float f_high);

@@ -2186,12 +2186,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\LvglPlatform\lvgl\examples\widgets\msgbox\lv_example_msgbox_2.c">
       <Filter>lvgl\examples\widgets\msgbox</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\LvglPlatform\lvgl\examples\widgets\obj\lv_example_obj_1.c">
-      <Filter>lvgl\examples\widgets\obj</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\LvglPlatform\lvgl\examples\widgets\obj\lv_example_obj_2.c">
-      <Filter>lvgl\examples\widgets\obj</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\LvglPlatform\lvgl\examples\widgets\roller\lv_example_roller_1.c">
       <Filter>lvgl\examples\widgets\roller</Filter>
     </ClCompile>
@@ -4049,9 +4043,6 @@
     </Filter>
     <Filter Include="lvgl\examples\widgets\msgbox">
       <UniqueIdentifier>{f12187d0-3851-4b19-a27e-c3968ce260c4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="lvgl\examples\widgets\obj">
-      <UniqueIdentifier>{4068090b-a754-4a5f-93d5-42c2bc1564be}</UniqueIdentifier>
     </Filter>
     <Filter Include="lvgl\examples\widgets\roller">
       <UniqueIdentifier>{c27828e6-3bc0-461e-8ea7-9d318a5adb64}</UniqueIdentifier>
@@ -8149,9 +8140,6 @@
     </None>
     <None Include="$(MSBuildThisFileDirectory)..\LvglPlatform\lvgl\examples\widgets\msgbox\index.rst">
       <Filter>lvgl\examples\widgets\msgbox</Filter>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)..\LvglPlatform\lvgl\examples\widgets\obj\index.rst">
-      <Filter>lvgl\examples\widgets\obj</Filter>
     </None>
     <None Include="$(MSBuildThisFileDirectory)..\LvglPlatform\lvgl\examples\widgets\roller\index.rst">
       <Filter>lvgl\examples\widgets\roller</Filter>

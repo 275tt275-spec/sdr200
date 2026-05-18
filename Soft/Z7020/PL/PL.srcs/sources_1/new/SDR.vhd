@@ -108,7 +108,13 @@ entity SDR is
         m_axis_ser0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_axis_ser0_tvalid : out STD_LOGIC;
         m_axis_ser1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_axis_ser1_tvalid : out STD_LOGIC;        
+        m_axis_ser1_tvalid : out STD_LOGIC;    
+        m_axis_i2s_tdata : out STD_LOGIC_VECTOR (23 downto 0);
+        m_axis_i2s_tvalid : out STD_LOGIC;   
+        m_axis_i2s_tlast : out STD_LOGIC; 
+        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
+        s_axis_iq_tvalid : in STD_LOGIC; 
+        s_axis_iq_tready : out STD_LOGIC;
         gpio_out : out STD_LOGIC_VECTOR (5 downto 0);
         TX_ON : out std_logic;
         TX_FAIL : in std_logic;
@@ -117,22 +123,6 @@ entity SDR is
 end SDR;
 
 architecture Behavioral of SDR is
-
---    component fpga_clk is
---    port ( 
---        FPGA_CLK_P : in std_logic; 
---        FPGA_CLK_N : in std_logic;
---        aclk : out std_logic 
---    );
---    end component fpga_clk;
-
---    component ila_0 IS
---    PORT (
---        clk : IN STD_LOGIC;
---        probe0 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
---        probe1 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
---    );
---    END component ila_0;
     
     COMPONENT clock_converter_2 is
         Port (
@@ -199,6 +189,9 @@ architecture Behavioral of SDR is
         s_axis_audio_tvalid : in STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
+        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
+        s_axis_iq_tvalid : in STD_LOGIC; 
+        s_axis_iq_tready : out STD_LOGIC; 
         DAC_DCI_N : out STD_LOGIC;
         DAC_DCI_P : out STD_LOGIC;
         DAC_DCO_P : in STD_LOGIC;
@@ -302,7 +295,7 @@ architecture Behavioral of SDR is
     
     ATTRIBUTE X_INTERFACE_INFO of aclk_122: SIGNAL is "xilinx.com:signal:clock:1.0 aclk_122 CLK";
     ATTRIBUTE X_INTERFACE_PARAMETER : STRING;
-    ATTRIBUTE X_INTERFACE_PARAMETER of aclk_122: SIGNAL is "ASSOCIATED_BUSIF m_axis_ser0:m_axis_ser1:m_axis_wb, FREQ_HZ 122880000"; 
+    ATTRIBUTE X_INTERFACE_PARAMETER of aclk_122: SIGNAL is "ASSOCIATED_BUSIF m_axis_ser0:m_axis_ser1:m_axis_wb:m_axis_i2s:s_axis_iq, FREQ_HZ 122880000"; 
 
     ATTRIBUTE X_INTERFACE_PARAMETER OF bram_rsta: SIGNAL IS "XIL_INTERFACENAME BRAM_PORTA, MASTER_TYPE BRAM_CTRL, MEM_SIZE 8192, MEM_WIDTH 32, MEM_ECC NONE, READ_WRITE_MODE READ_WRITE, READ_LATENCY 1";
     ATTRIBUTE X_INTERFACE_INFO of audio_clk: SIGNAL is "xilinx.com:signal:clock:1.0 audio_clk CLK";
@@ -443,13 +436,6 @@ clock_converter_1: clock_converter_2
         s_axis_tvalid => '1'
     );
     
---debug_0 : ila_0
---    PORT MAP (
---        clk => aclk,
---        probe0 => axis_adc0_tdata,
---        probe1 => axis_adc1_tdata
---    );
-    
 RXA_0: RXA
     port map ( 
         aclk => aclk,
@@ -506,6 +492,9 @@ TXA_0 : TXA
         s_axis_audio_tvalid => m_axis_audio_tvalid,
         s_adc_data_rx0 => m_axis_adc0_tdata,
         s_adc_data_rx1 => m_axis_adc1_tdata,
+        s_axis_iq_tdata => s_axis_iq_tdata,
+        s_axis_iq_tvalid => s_axis_iq_tvalid,
+        s_axis_iq_tready => s_axis_iq_tready,
         DAC_DCI_N => DAC_DCI_N,
         DAC_DCI_P => DAC_DCI_P,
         DAC_DCO_P => DAC_DCO_P,
@@ -521,6 +510,10 @@ TXA_0 : TXA
     );
     
     s_axis_audioR_tdata <= s_axis_audioL_tdata;
+    
+   m_axis_i2s_tdata <= m_axis_audioR_tdata;
+   m_axis_i2s_tvalid <= m_axis_audio_tvalid;
+   m_axis_i2s_tlast <= '1';
     
 audio_0 : i2s
     port map ( 

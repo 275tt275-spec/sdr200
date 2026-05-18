@@ -434,7 +434,7 @@ static void kenwood_UpdateTune(uint8_t rx_in, uint8_t tx_in, uint8_t start)
 
 	if(start)
 	{
-		xTaskCreate( (void(*)(void*))tune_thread, "", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, NULL );
+		xTaskCreate( (void(*)(void*))tune_thread, "Tune", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, NULL );
 /*		vars.m_isTx = 1;
 		hw_StartTune(vars.m_freq_tx);
 		vars.m_isTx = 0;

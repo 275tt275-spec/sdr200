@@ -13,7 +13,7 @@ BEGIN PROCESSOR
  PARAMETER DRIVER_NAME = cpu_cortexa9
  PARAMETER DRIVER_VER = 2.12
  PARAMETER HW_INSTANCE = ps7_cortexa9_1
- PARAMETER extra_compiler_flags = -mcpu=cortex-a9 -mfpu=neon -ffast-math -fsingle-precision-constant -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns
+ PARAMETER extra_compiler_flags = -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DUSE_AMP=1
 END
 
 
@@ -267,6 +267,18 @@ BEGIN DRIVER
  PARAMETER DRIVER_NAME = xadcps
  PARAMETER DRIVER_VER = 2.7
  PARAMETER HW_INSTANCE = ps7_xadc_0
+END
+
+BEGIN DRIVER
+ PARAMETER DRIVER_NAME = llfifo
+ PARAMETER DRIVER_VER = 5.6
+ PARAMETER HW_INSTANCE = axi_fifo_TXA_i2s
+END
+
+BEGIN DRIVER
+ PARAMETER DRIVER_NAME = llfifo
+ PARAMETER DRIVER_VER = 5.6
+ PARAMETER HW_INSTANCE = axi_fifo_TXA_resampler
 END
 
 

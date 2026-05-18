@@ -29,6 +29,7 @@
 #include "uart_pl.h"
 #include "atu.h"
 #include "ext_amp.h"
+#include "cmd.h"
 
 #define SPI_DEVICE_ID		XPAR_XSPIPS_0_DEVICE_ID
 #define SPI_INTR_ID			XPAR_XSPIPS_0_INTR
@@ -40,6 +41,7 @@
 #define IIC_SCLK_RATE		100000
 #define VREF_BIT		 	0x01
 
+extern void SendToCore1Uint32(uint32_t type, uint32_t value);
 extern XScuGic IntcInstance;
 s_hw_device hw_device;
 static s_linear linear = {0};
@@ -227,6 +229,7 @@ void hw_Start(void)
 	fpga_LinearSetIQDC(&linear);
 
 	fpga_TXA_ResamplerGain(38698);
+	//	fpga_TXA_ResamplerGain(9);
 }
 
 void hw_iic_write(uint16_t SlaveAddr, uint8_t* data, size_t len)
@@ -733,6 +736,8 @@ void hw_SetTXAMode(e_trx_mode mode)
 		switch (mode)
 		{
 		case TRX_MODE_USB:
+			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_USB);
+
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
 			fos_gain = 5;
@@ -742,6 +747,8 @@ void hw_SetTXAMode(e_trx_mode mode)
 			freq_offset = 6041; // 1475 Hz
 			break;
 		case TRX_MODE_LSB:
+			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_LSB);
+
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 1;
 			fos_gain = 5;
@@ -751,6 +758,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			freq_offset = 6041; // 1475 Hz
 			break;
 		case TRX_MODE_DIGITAL:
+			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_DIGU);
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
 			fos_gain = 7;
@@ -762,6 +770,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			audio_gain = 71000;
 			break;
 		case TRX_MODE_AM:
+			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_AM);
 			fpga_mode = FPGA_MOD_A3E;
 			fos_gain = 7;
 			fos_filter = fos_am;
@@ -769,6 +778,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			fpga_LIM_Enable(1);
 			break;
 		case TRX_MODE_CW:
+			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_CWU);
 			fpga_mode = FPGA_MOD_A1A;
 			fpga_lsb = 0;
 			fos_gain = 5;
@@ -777,6 +787,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			fpga_LIM_Enable(0);
 			break;
 		default:
+			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_USB);
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
 			fos_gain = 5;

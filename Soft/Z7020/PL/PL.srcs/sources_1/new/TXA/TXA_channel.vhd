@@ -34,6 +34,9 @@ entity TXA_channel is
         m_dacq_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC;
+        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
+        s_axis_iq_tvalid : in STD_LOGIC; 
+        s_axis_iq_tready : out STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
@@ -95,6 +98,7 @@ component fir_audio_0 IS
     Port ( 
         m_axis_iq_tdata : out STD_LOGIC_VECTOR (47 downto 0);
         s_axis_modulator_tdata : in STD_LOGIC_VECTOR (47 downto 0);
+        s_axis_modulator_tready : out STD_LOGIC;
         s_axis_modulator_tvalid : in STD_LOGIC;
         gain : in STD_LOGIC_VECTOR (17 downto 0);              -- := "00" & x"7FFF";   100%
         out_over : out STD_LOGIC;
@@ -157,7 +161,7 @@ component fir_audio_0 IS
     signal modulator_in_tdata : std_logic_vector(23 downto 0);
     signal modulator_in_tvalid : std_logic;
     signal resampler_in_tdata : std_logic_vector(47 downto 0);
-    signal resampler_in_tvalid : std_logic;
+    signal resampler_in_tvalid, resampler_in_tready : std_logic;
     signal modulator_out_tdata: std_logic_vector(47 downto 0);
     signal modulator_out_tvalid : std_logic;
     signal gain : STD_LOGIC_VECTOR ( 17 downto 0 ) := "00" & x"7FFF";
@@ -271,12 +275,17 @@ modulator_0 : TXA_modulator
 
     resampler_in_tvalid <= modulator_out_tvalid;
     resampler_in_tdata <= modulator_out_tdata;
+    
+--    resampler_in_tdata <= s_axis_iq_tdata;
+--    resampler_in_tvalid <= s_axis_iq_tvalid;
+    s_axis_iq_tready <= resampler_in_tready;
 
 resampler_0 : TXA_resampler
     PORT MAP  ( 
         m_axis_iq_tdata => iq_tdata,
         s_axis_modulator_tdata => resampler_in_tdata,
         s_axis_modulator_tvalid => resampler_in_tvalid,
+        s_axis_modulator_tready => resampler_in_tready,
         gain => gain,
         out_over => resampler_over,
         aresetn => aresetn,

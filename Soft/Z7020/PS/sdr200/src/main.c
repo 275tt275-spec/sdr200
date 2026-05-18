@@ -22,6 +22,7 @@
 #include "xscugic.h"		/* Interrupt controller device driver */
 #include "xil_exception.h"
 #include "xil_cache.h"
+#include "xil_mmu.h"
 
 #include "audio.h"
 #include "fpga.h"
@@ -31,6 +32,7 @@
 #include "KenwoodCmd.h"
 #include "uart_pl.h"
 #include "ext_amp.h"
+#include "cmd.h"
 
 #define INTC_DEVICE_ID		XPAR_SCUGIC_SINGLE_DEVICE_ID
 
@@ -39,7 +41,7 @@
 #define DELAY_1_SECOND		1000UL
 #define DELAY_4_MSECOND		4UL
 
-#define OCM_SHARED_SECTION 0xFFFC0000
+#define OCM_SHARED_SECTION 0xFFFF0000
 #define SGI_TO_CORE1 0  // ID прерывания для Core 1
 #define TARGET_CORE1 2  // Битовая маска для Core 1 (Core 0 = 1, Core 1 = 2)
 #define CORE1_START_REG 0xFFFFFFF0
@@ -55,25 +57,37 @@ static TaskHandle_t xMainTask;
 
 XScuGic IntcInstance;
 static int SetupIntrSystem(XScuGic *IntcInstancePtr);
-static void StartCore1(void);
+void SendToCore1(uint32_t type, uint32_t len, void* value);
 
 volatile uint32_t *shared_buffer = (volatile uint32_t *)OCM_SHARED_SECTION;
 
 int main( void )
 {
+#if 1
+    // 1. Срочно перенастраиваем регион OCM, чтобы он был доступен для записи
+    // 0x10C02 - Strongly Ordered (без кэша), Read/Write
+    Xil_SetTlbAttributes(0xFFF00000, 0x10C02);
+    Xil_Out32(OCM_SHARED_SECTION, 0);
+    Xil_Out32(OCM_SHARED_SECTION + 4, 0);
+
+    // 2. Теперь запись не должна вызывать Data Abort
+	Xil_Out32(CORE1_START_REG, 	0x10000000);  // Адрес старта Core 1 в DDR (из lscript.ld)
+	dmb();                  // Data Memory Barrier
+	__asm__("sev");         // Send Event для пробуждения Core 1
+#endif
  	SetupIntrSystem(&IntcInstance);
 
 	eeprom_init();
 
 	xil_printf( "SDR200 Start\r\n" );
-	StartCore1();
+//	StartCore1();
 
 	/* Create the two tasks.  The Tx task is given a lower priority than the
 	Rx task, so the Rx task will leave the Blocked state and pre-empt the Tx
 	task as soon as the Tx task places an item in the queue. */
-	xTaskCreate( 	prvMainTask, 					/* The function that implements the task. */
-					( const char * ) "Main", 		/* Text name for the task, provided to assist debugging only. */
-					2048, 	/* The stack allocated to the task. */
+	xTaskCreate( 	prvMainTask, 				/* The function that implements the task. */
+					( const char * ) "Main", 	/* Text name for the task, provided to assist debugging only. */
+					2048, 						/* The stack allocated to the task. */
 					NULL, 						/* The task parameter is not used, so set to NULL. */
 					tskIDLE_PRIORITY,			/* The task runs at the idle priority. */
 					&xMainTask );
@@ -88,7 +102,6 @@ int main( void )
 	for more details. */
 	for( ;; );
 }
-
 
 /*-----------------------------------------------------------*/
 static void prvMainTask( void *pvParameters )
@@ -107,6 +120,7 @@ static void prvMainTask( void *pvParameters )
 	hw_Start();
 
 	xil_printf( "prvMainTask: while\r\n" );
+
 	for( ;; )
 	{
 		fpga_tick();
@@ -150,7 +164,12 @@ static int SetupIntrSystem(XScuGic *IntcInstancePtr)
 	return XST_SUCCESS;
 }
 
-void SendToCore1(uint32_t type, uint32_t len, uint8_t* value)
+void SendToCore1Uint32(uint32_t type, uint32_t value)
+{
+	SendToCore1(type, sizeof(uint32_t), &value);
+}
+
+void SendToCore1(uint32_t type, uint32_t len, void* value)
 {
 	static uint32_t counter = 0;
 
@@ -169,18 +188,9 @@ void SendToCore1(uint32_t type, uint32_t len, uint8_t* value)
     shared_buffer[2] = type;
     shared_buffer[3] = len;
     memcpy((void*)&shared_buffer[4], value, len);
+    dmb();                  // Data Memory Barrier
 
     Xil_DCacheFlushRange((INTPTR)&shared_buffer[1], len + 3 * sizeof(uint32_t));
     XScuGic_SoftwareIntr(&IntcInstance, SGI_TO_CORE1, TARGET_CORE1);
-}
-
-static void StartCore1(void)
-{
-	shared_buffer[0] = 0;
-
-	Xil_Out32(CORE1_START_REG,
-            	0x10000000);  // Адрес старта Core 1 в DDR (из lscript.ld)
-	dmb();                  // Data Memory Barrier
-	__asm__("sev");         // Send Event для пробуждения Core 1
 }
 

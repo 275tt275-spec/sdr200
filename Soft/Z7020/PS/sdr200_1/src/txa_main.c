@@ -32,7 +32,7 @@ void set_dsp(int in_size, int dsp_size, int input_samplerate, int dsp_rate, int 
 		ch.out_size = ch.in_size * (ch.out_rate / ch.in_rate);
 }
 
-void create_txa(int channel)
+void create_txa(int channel, struct _create_runs* runs)
 {
 	InitializeCriticalSectionAndSpinCount(&csDSP, 2500);
 
@@ -41,9 +41,10 @@ void create_txa(int channel)
 	txa[channel].inbuff = (float*)malloc0(1 * ch.dsp_insize * sizeof(complex));
 	txa[channel].outbuff = (float*)malloc0(1 * ch.dsp_outsize * sizeof(complex));
 	txa[channel].midbuff = (float*)malloc0(2 * ch.dsp_size * sizeof(complex));
+	txa[channel].runs = *runs;
 
 	txa[channel].rsmpin.p = create_resample(
-		1,								// run - will be turned on below if needed
+		runs->rsmpin,								// run - will be turned on below if needed
 		ch.dsp_insize,					// input buffer size
 		txa[channel].inbuff,			// pointer to input buffer
 		txa[channel].midbuff,			// pointer to output buffer
@@ -63,7 +64,7 @@ void create_txa(int channel)
 
 	txa[channel].panel.p = create_panel(
 		channel,									// channel number
-		1,											// run
+		runs->panel,											// run
 		ch.dsp_size,								// size
 		txa[channel].midbuff,						// pointer to input buffer
 		txa[channel].midbuff,						// pointer to output buffer
@@ -74,7 +75,7 @@ void create_txa(int channel)
 		0);											// 0, no copy
 
 	txa[channel].phrot.p = create_phrot(
-		0,											// run
+		runs->phrot,											// run
 		ch.dsp_size,								// size
 		txa[channel].midbuff,						// input buffer
 		txa[channel].midbuff,						// output buffer
@@ -83,7 +84,7 @@ void create_txa(int channel)
 		8);											// number of stages
 
 	txa[channel].micmeter.p = create_meter(
-		0,											// run
+		runs->micmeter,											// run
 		0,											// optional pointer to another 'run'
 		ch.dsp_size,								// size
 		txa[channel].midbuff,						// pointer to buffer
@@ -98,7 +99,7 @@ void create_txa(int channel)
 		0);											// pointer for gain computation
 
 	txa[channel].amsq.p = create_amsq(
-		0,											// run
+		runs->amsq,											// run
 		ch.dsp_size,								// size
 		txa[channel].midbuff,						// input buffer
 		txa[channel].midbuff,						// output buffer
@@ -117,7 +118,7 @@ void create_txa(int channel)
 		float default_G[11] = { 0.0, -12.0f, -12.0f, -12.0f,  -1.0f,  +1.0f,   +4.0f,   +9.0f,  +12.0f,  -10.0f,   -10.0f };
 		//double default_G[11] =   {0.0,   0.0,   0.0,   0.0,   0.0,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0};
 		txa[channel].eqp.p = create_eqp(
-			1,											// run - OFF by default
+			runs->eqp,											// run - OFF by default
 			ch.dsp_size,									// size
 			max(2048, ch.dsp_size),						// number of filter coefficients
 			0,											// minimum phase flag
@@ -132,7 +133,7 @@ void create_txa(int channel)
 	}
 
 	txa[channel].eqmeter.p = create_meter(
-		0,											// run
+		runs->eqmeter,											// run
 		&(txa[channel].eqp.p->run),					// pointer to eqp 'run'
 		ch.dsp_size,								// size
 		txa[channel].midbuff,						// pointer to buffer
@@ -147,7 +148,7 @@ void create_txa(int channel)
 		0);											// pointer for gain computation
 
 	txa[channel].preemph.p = create_emphp(
-		0,											// run
+		runs->preemph,											// run
 		1,											// position
 		ch.dsp_size,								// size
 		max(DEFAULT_COEFF, ch.dsp_size),						// number of filter coefficients
@@ -160,7 +161,7 @@ void create_txa(int channel)
 		3000.0f);									// f_high
 
 	txa[channel].leveler.p = create_wcpagc(
-		1,											// run - OFF by default
+		runs->leveler,											// run - OFF by default
 		5,											// mode
 		0,											// 0 for max(I,Q), 1 for envelope
 		txa[channel].midbuff,						// input buff pointer
@@ -185,7 +186,7 @@ void create_txa(int channel)
 		0.100f);										// tau_hang_decay
 
 	txa[channel].lvlrmeter.p = create_meter(
-		0,											// run
+		runs->lvlrmeter,											// run
 		&(txa[channel].leveler.p->run),				// pointer to leveler 'run'
 		ch.dsp_size,								// size
 		txa[channel].midbuff,						// pointer to buffer
@@ -204,7 +205,7 @@ void create_txa(int channel)
 		float default_G[5] = { 0.0f, 5.0f, 10.0f, 10.0f, 5.0f };
 		float default_E[5] = { 7.0f, 7.0f, 7.0f, 7.0f, 7.0f };
 		txa[channel].cfcomp.p = create_cfcomp(
-			1,											// run
+			runs->cfcomp,											// run
 			0,											// position
 			0,											// post-equalizer run
 			ch.dsp_size,								// size
@@ -226,7 +227,7 @@ void create_txa(int channel)
 	}
 
 	txa[channel].cfcmeter.p = create_meter(
-		0,											// run
+		runs->cfcmeter,											// run
 		&(txa[channel].cfcomp.p->run),				// pointer to eqp 'run'
 		ch.dsp_size,						// size
 		txa[channel].midbuff,						// pointer to buffer
@@ -241,7 +242,7 @@ void create_txa(int channel)
 		&txa[channel].cfcomp.p->gain);				// pointer for gain computation
 
 	txa[channel].bp0.p = create_bandpass(
-		1,											// always runs
+		runs->bp0,											// always runs
 		0,											// position
 		ch.dsp_size,						// size
 		max(DEFAULT_COEFF, ch.dsp_size),			// number of coefficients
@@ -255,14 +256,14 @@ void create_txa(int channel)
 		2.0f);										// gain
 
 	txa[channel].compressor.p = create_compressor(
-		1,											// run - OFF by default
+		runs->compressor,											// run - OFF by default
 		ch.dsp_size,						// size
 		txa[channel].midbuff,						// pointer to input buffer
 		txa[channel].midbuff,						// pointer to output buffer
 		3.0f);										// gain
 
 	txa[channel].bp1.p = create_bandpass(
-		1,											// ONLY RUNS WHEN COMPRESSOR IS USED
+		runs->compressor,											// ONLY RUNS WHEN COMPRESSOR IS USED
 		0,											// position
 		ch.dsp_size,						// size
 		max(DEFAULT_COEFF, ch.dsp_size),			// number of coefficients
@@ -276,7 +277,7 @@ void create_txa(int channel)
 		2.0f);										// gain	
 
 	txa[channel].osctrl.p = create_osctrl(
-		1,											// run
+		runs->osctrl,											// run
 		ch.dsp_size,						// size
 		txa[channel].midbuff,						// input buffer
 		txa[channel].midbuff,						// output buffer
@@ -284,7 +285,7 @@ void create_txa(int channel)
 		1.95f);										// gain for clippings
 
 	txa[channel].bp2.p = create_bandpass(
-		1,											// ONLY RUNS WHEN COMPRESSOR IS USED
+		runs->osctrl,											// ONLY RUNS WHEN COMPRESSOR IS USED
 		0,											// position
 		ch.dsp_size,						// size
 		max(DEFAULT_COEFF, ch.dsp_size),			// number of coefficients
@@ -298,7 +299,7 @@ void create_txa(int channel)
 		1.0f);										// gain
 
 	txa[channel].compmeter.p = create_meter(
-		0,											// run
+		runs->compmeter,											// run
 		&(txa[channel].compressor.p->run),			// pointer to compressor 'run'
 		ch.dsp_size,						// size
 		txa[channel].midbuff,						// pointer to buffer
@@ -313,7 +314,7 @@ void create_txa(int channel)
 		0);											// pointer for gain computation
 
 	txa[channel].alc.p = create_wcpagc(
-		1,											// run - always ON
+		runs->alc,											// run - always ON
 		5,											// mode
 		1,											// 0 for max(I,Q), 1 for envelope
 		txa[channel].midbuff,						// input buff pointer
@@ -338,7 +339,7 @@ void create_txa(int channel)
 		0.100f);										// tau_hang_decay
 
 	txa[channel].ammod.p = create_ammod(
-		0,											// run - OFF by default
+		runs->ammod,											// run - OFF by default
 		0,											// mode:  0=>AM, 1=>DSB
 		ch.dsp_size,						// size
 		txa[channel].midbuff,						// pointer to input buffer
@@ -347,7 +348,7 @@ void create_txa(int channel)
 
 
 	txa[channel].fmmod.p = create_fmmod(
-		0,											// run - OFF by default
+		runs->fmmod,											// run - OFF by default
 		ch.dsp_size,						// size
 		txa[channel].midbuff,						// pointer to input buffer
 		txa[channel].midbuff,						// pointer to input buffer
@@ -381,7 +382,7 @@ void create_txa(int channel)
 		0.005f);										// upslew time
 
 	txa[channel].alcmeter.p = create_meter(
-		0,											// run
+		runs->alcmeter,											// run
 		0,											// optional pointer to a 'run'
 		ch.dsp_size,						// size
 		txa[channel].midbuff,						// pointer to buffer
@@ -426,7 +427,7 @@ void create_txa(int channel)
 		0.9f);										// alpha
 
 	txa[channel].iqc.p0 = txa[channel].iqc.p1 = create_iqc(
-		0,											// run
+		runs->iqc,											// run
 		ch.dsp_size,						// size
 		txa[channel].midbuff,						// input buffer
 		txa[channel].midbuff,						// output buffer
@@ -436,7 +437,7 @@ void create_txa(int channel)
 		256);										// spi
 
 	txa[channel].cfir.p = create_cfir(
-		0,											// run
+		runs->cfir,											// run
 		ch.dsp_size,								// size
 		max(DEFAULT_COEFF, ch.dsp_size),						// number of filter coefficients
 		0,											// minimum phase flag
@@ -453,7 +454,7 @@ void create_txa(int channel)
 		0);											// window type
 
 	txa[channel].rsmpout.p = create_resample(
-		1,											// run - will be turned ON below if needed
+		runs->rsmpout,											// run - will be turned ON below if needed
 		ch.dsp_size,						// input size
 		txa[channel].midbuff,						// pointer to input buffer
 		txa[channel].outbuff,						// pointer to output buffer
@@ -464,7 +465,7 @@ void create_txa(int channel)
 		0.980f);									// gain
 
 	txa[channel].outmeter.p = create_meter(
-		1,											// run
+		runs->outmeter,											// run
 		0,											// optional pointer to another 'run'
 		ch.dsp_outsize,					// size
 		txa[channel].outbuff,						// pointer to buffer
@@ -527,6 +528,7 @@ void SetTXAMode(int channel, int mode)
 		txa[channel].ammod.p->run = 0;
 		txa[channel].fmmod.p->run = 0;
 		txa[channel].preemph.p->run = 0;
+
 		switch (mode)
 		{
 		case TXA_AM:
@@ -551,6 +553,37 @@ void SetTXAMode(int channel, int mode)
 
 			break;
 		}
+
+		switch (mode)
+		{
+		case TXA_DIGU:
+		case TXA_DIGL:
+			txa[channel].eqp.p->run = 0;
+			txa[channel].eqmeter.p->run = 0;
+			txa[channel].leveler.p->run = 0;
+			txa[channel].lvlrmeter.p->run = 0;
+			txa[channel].cfcomp.p->run = 0;
+			txa[channel].cfcmeter.p->run = 0;
+			txa[channel].compressor.p->run = 0;
+			txa[channel].bp1.p->run = 0;
+			txa[channel].osctrl.p->run = 0;
+			txa[channel].bp2.p->run = 0;
+			txa[channel].compmeter.p->run = 0;
+			break;
+		default:
+			txa[channel].eqp.p->run = txa[channel].runs.eqp;
+			txa[channel].eqmeter.p->run = txa[channel].runs.eqmeter;
+			txa[channel].leveler.p->run = txa[channel].runs.leveler;
+			txa[channel].lvlrmeter.p->run = txa[channel].runs.lvlrmeter;
+			txa[channel].cfcomp.p->run = txa[channel].runs.cfcomp;
+			txa[channel].cfcmeter.p->run = txa[channel].runs.cfcmeter;
+			txa[channel].compressor.p->run = txa[channel].runs.compressor;
+			txa[channel].bp1.p->run = txa[channel].runs.compressor;
+			txa[channel].osctrl.p->run = txa[channel].runs.osctrl;
+			txa[channel].bp2.p->run = txa[channel].runs.osctrl;
+			txa[channel].compmeter.p->run = txa[channel].runs.compmeter;
+		}
+
 		TXASetupBPFilters(channel);
 		LeaveCriticalSection(&csDSP);
 	}
@@ -585,8 +618,6 @@ void TXASetupBPFilters(int channel)
 	case TXA_USB:
 	case TXA_CWL:
 	case TXA_CWU:
-	case TXA_DIGL:
-	case TXA_DIGU:
 	case TXA_SPEC:
 	case TXA_DRM:
 		CalcBandpassFilter(txa[channel].bp0.p, txa[channel].f_low, txa[channel].f_high, 2.0);
@@ -597,6 +628,20 @@ void TXASetupBPFilters(int channel)
 			if (txa[channel].osctrl.p->run)
 			{
 				CalcBandpassFilter(txa[channel].bp2.p, txa[channel].f_low, txa[channel].f_high, 1.0);
+				txa[channel].bp2.p->run = 1;
+			}
+		}
+		break;
+	case TXA_DIGL:
+	case TXA_DIGU:
+		CalcBandpassFilter(txa[channel].bp0.p, 150.f, 4500.f, 2.0);
+		if (txa[channel].compressor.p->run)
+		{
+			CalcBandpassFilter(txa[channel].bp1.p, 150.f, 4500.f, 2.0);
+			txa[channel].bp1.p->run = 1;
+			if (txa[channel].osctrl.p->run)
+			{
+				CalcBandpassFilter(txa[channel].bp2.p, 150.f, 4500.f, 1.0);
 				txa[channel].bp2.p->run = 1;
 			}
 		}

@@ -53,6 +53,24 @@
 #define SET_TXA_SET_PS_STABILIZE	92
 #define SET_TXA_SET_PS_INTSSPI		93
 
+typedef enum tag_txaMode
+{
+	MODE_TXA_LSB,
+	MODE_TXA_USB,
+	MODE_TXA_DSB,
+	MODE_TXA_CWL,
+	MODE_TXA_CWU,
+	MODE_TXA_FM,
+	MODE_TXA_AM,
+	MODE_TXA_DIGU,
+	MODE_TXA_SPEC,
+	MODE_TXA_DIGL,
+	MODE_TXA_SAM,
+	MODE_TXA_DRM,
+	MODE_TXA_AM_LSB,
+	MODE_TXA_AM_USB
+} e_txaMode;
+
 typedef struct tag_wxpAGC {
 	int state;
 	int attack;

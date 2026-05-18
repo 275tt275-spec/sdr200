@@ -14,35 +14,6 @@ platform create -name {StationVT}\
 
 platform write
 platform generate -domains 
-bsp reload
-domain active {zynq_fsbl}
-bsp reload
-bsp config stdin "none"
-bsp config stdout "none"
-bsp write
-bsp reload
-catch {bsp regenerate}
-bsp reload
-domain active {freertos10_xilinx_domain}
-bsp setlib -name lwip213 -ver 1.1
-bsp setlib -name xilffs -ver 5.1
-bsp setlib -name xilflash -ver 4.10
-bsp config stdin "none"
-bsp config stdout "axi_uartlite_2"
-bsp config api_mode "SOCKET_API"
-bsp write
-bsp reload
-catch {bsp regenerate}
-platform generate
-bsp reload
-bsp config lwip_dhcp "true"
-bsp write
-bsp reload
-catch {bsp regenerate}
-platform generate -domains freertos10_xilinx_domain 
-platform generate
-platform active {StationVT}
-platform active {StationVT}
 domain create -name {ps7_cortexa9_1} -os {standalone} -proc {ps7_cortexa9_1} -arch {32-bit} -display-name {ps7_cortexa9_1} -desc {} -runtime {cpp}
 platform generate -domains 
 platform write
@@ -50,35 +21,54 @@ domain -report -json
 bsp reload
 bsp config stdin "none"
 bsp config stdout "none"
-bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
-bsp config dependency_flags "-MMD -MP"
-bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
-bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=neon -ffast-math -fsingle-precision-constant -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 bsp write
 bsp reload
 catch {bsp regenerate}
-platform generate -domains ps7_cortexa9_1 
-catch {platform remove sdr}
-bsp reload
-bsp reload
 domain active {zynq_fsbl}
 bsp reload
+bsp config stdin "none"
+bsp config stdout "none"
+bsp write
+bsp reload
+catch {bsp regenerate}
+domain active {freertos10_xilinx_domain}
+bsp reload
+bsp setlib -name lwip213 -ver 1.1
+bsp config stdin "none"
+bsp config stdout "none"
+bsp config api_mode "SOCKET_API"
+bsp config lwip_dhcp "true"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform generate
+domain active {ps7_cortexa9_1}
+bsp reload
+bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
+bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DUSE_AMP1"
+bsp config extra_compiler_flags "-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DUSE_AMP=1"
+bsp write
+bsp reload
+catch {bsp regenerate}
+platform active {StationVT}
+domain active {zynq_fsbl}
+bsp reload
+bsp reload
+domain create -name {standalone_a9_0} -os {standalone} -proc {ps7_cortexa9_0} -arch {32-bit} -display-name {standalone_a9_0} -desc {} -runtime {cpp}
+platform generate -domains 
+platform write
+domain -report -json
+platform generate -domains standalone_a9_0,ps7_cortexa9_1 
+platform active {StationVT}
+domain active {zynq_fsbl}
 bsp reload
 domain active {freertos10_xilinx_domain}
 bsp reload
-domain active {zynq_fsbl}
-bsp setlib -name openamp -ver 1.9
-bsp write
 bsp reload
-catch {bsp regenerate}
-bsp reload
-bsp removelib -name openamp
-bsp write
-bsp reload
-catch {bsp regenerate}
-platform generate -domains zynq_fsbl 
-platform generate -domains 
-domain active {ps7_cortexa9_1}
-bsp reload
-bsp reload
-platform generate -domains 
+platform active {StationVT}
+platform config -updatehw {D:/projects/sdr200/Soft/Z7020/PL/XC7Z020_wrapper.xsa}
+platform clean
+platform generate
+platform config -updatehw {D:/projects/sdr200/Soft/Z7020/PL/XC7Z020_wrapper.xsa}
+platform clean
+platform generate

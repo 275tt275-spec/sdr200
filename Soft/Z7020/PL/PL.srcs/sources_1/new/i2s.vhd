@@ -51,16 +51,6 @@ entity i2s is
 end i2s;
 
 architecture Behavioral of i2s is
-
-    component ila_0 IS
-    PORT (
-        clk : IN STD_LOGIC;
-        probe0 : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
-        probe1 : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
-        probe2 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe3 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
-    );
-    END component ila_0;
     
     component fifo_32x16 IS
     PORT (
@@ -256,16 +246,6 @@ begin
         end if;
     end if;
 end process;
-
-
---debug_0 : ila_0
---    PORT MAP (
---        clk => aclk,
---        probe0 => d_audio,
---        probe1 => bit_cnt,
---        probe2(0) => bclk,
---        probe3(0) => d_audio_valid
---    );
 
 end Behavioral;
 

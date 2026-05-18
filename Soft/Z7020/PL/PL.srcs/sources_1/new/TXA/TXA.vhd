@@ -37,6 +37,9 @@ entity TXA is
         s_axis_audio_tvalid : in STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
+        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
+        s_axis_iq_tvalid : in STD_LOGIC; 
+        s_axis_iq_tready : out STD_LOGIC; 
         DAC_DCI_N : out STD_LOGIC;
         DAC_DCI_P : out STD_LOGIC;
         DAC_DCO_P : in STD_LOGIC;
@@ -60,6 +63,9 @@ component TXA_channel is
         m_dacq_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC;
+        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
+        s_axis_iq_tvalid : in STD_LOGIC; 
+        s_axis_iq_tready : out STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
@@ -106,6 +112,9 @@ TXA_channel_0 : TXA_channel
         m_dacq_tdata => dacq_tdata,
         s_axis_audio_tdata => s_axis_audio_tdata,
         s_axis_audio_tvalid => s_axis_audio_tvalid,
+        s_axis_iq_tdata => s_axis_iq_tdata,
+        s_axis_iq_tvalid => s_axis_iq_tvalid,
+        s_axis_iq_tready => s_axis_iq_tready,
         s_adc_data_rx0 => s_adc_data_rx0,
         s_adc_data_rx1 => s_adc_data_rx1,
         s_axis_cfg_tdata => cfg_dina,

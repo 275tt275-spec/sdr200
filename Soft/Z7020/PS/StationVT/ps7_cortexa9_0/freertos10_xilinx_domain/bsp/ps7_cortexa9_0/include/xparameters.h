@@ -22,7 +22,6 @@
 #define PLATFORM_ZYNQ
  
 /******************************************************************/
-#define STDOUT_BASEADDRESS 0x42C20000
 
 /******************************************************************/
 
@@ -394,7 +393,7 @@
 /******************************************************************/
 
 /* Definitions for driver LLFIFO */
-#define XPAR_XLLFIFO_NUM_INSTANCES 1U
+#define XPAR_XLLFIFO_NUM_INSTANCES 3U
 
 /* Definitions for peripheral AXI_FIFO_MM_S_0 */
 #define XPAR_AXI_FIFO_MM_S_0_DEVICE_ID 0U
@@ -411,6 +410,42 @@
 #define XPAR_AXI_FIFO_0_AXI4_BASEADDR 0x43C10000U
 #define XPAR_AXI_FIFO_0_AXI4_HIGHADDR 0x43C1FFFFU
 #define XPAR_AXI_FIFO_0_DATA_INTERFACE_TYPE 1U
+
+
+
+/* Definitions for peripheral AXI_FIFO_TXA_I2S */
+#define XPAR_AXI_FIFO_TXA_I2S_DEVICE_ID 1U
+#define XPAR_AXI_FIFO_TXA_I2S_BASEADDR 0x43C20000U
+#define XPAR_AXI_FIFO_TXA_I2S_HIGHADDR 0x43C2FFFFU
+#define XPAR_AXI_FIFO_TXA_I2S_AXI4_BASEADDR 0x43C30000U
+#define XPAR_AXI_FIFO_TXA_I2S_AXI4_HIGHADDR 0x43C3FFFFU
+#define XPAR_AXI_FIFO_TXA_I2S_DATA_INTERFACE_TYPE 1U
+
+/* Canonical definitions for peripheral AXI_FIFO_TXA_I2S */
+#define XPAR_AXI_FIFO_1_DEVICE_ID 1U
+#define XPAR_AXI_FIFO_1_BASEADDR 0x43C20000U
+#define XPAR_AXI_FIFO_1_HIGHADDR 0x43C2FFFFU
+#define XPAR_AXI_FIFO_1_AXI4_BASEADDR 0x43C30000U
+#define XPAR_AXI_FIFO_1_AXI4_HIGHADDR 0x43C3FFFFU
+#define XPAR_AXI_FIFO_1_DATA_INTERFACE_TYPE 1U
+
+
+
+/* Definitions for peripheral AXI_FIFO_TXA_RESAMPLER */
+#define XPAR_AXI_FIFO_TXA_RESAMPLER_DEVICE_ID 2U
+#define XPAR_AXI_FIFO_TXA_RESAMPLER_BASEADDR 0x43C40000U
+#define XPAR_AXI_FIFO_TXA_RESAMPLER_HIGHADDR 0x43C4FFFFU
+#define XPAR_AXI_FIFO_TXA_RESAMPLER_AXI4_BASEADDR 0x43C50000U
+#define XPAR_AXI_FIFO_TXA_RESAMPLER_AXI4_HIGHADDR 0x43C5FFFFU
+#define XPAR_AXI_FIFO_TXA_RESAMPLER_DATA_INTERFACE_TYPE 1U
+
+/* Canonical definitions for peripheral AXI_FIFO_TXA_RESAMPLER */
+#define XPAR_AXI_FIFO_2_DEVICE_ID 2U
+#define XPAR_AXI_FIFO_2_BASEADDR 0x43C40000U
+#define XPAR_AXI_FIFO_2_HIGHADDR 0x43C4FFFFU
+#define XPAR_AXI_FIFO_2_AXI4_BASEADDR 0x43C50000U
+#define XPAR_AXI_FIFO_2_AXI4_HIGHADDR 0x43C5FFFFU
+#define XPAR_AXI_FIFO_2_DATA_INTERFACE_TYPE 1U
 
 
 
@@ -695,12 +730,4 @@
 
 /******************************************************************/
 
-/* Xilinx FAT File System Library (XilFFs) User Settings */
-#define FILE_SYSTEM_USE_MKFS
-#define FILE_SYSTEM_NUM_LOGIC_VOL 2
-#define FILE_SYSTEM_USE_STRFUNC 0
-#define FILE_SYSTEM_SET_FS_RPATH 0
-#define FILE_SYSTEM_WORD_ACCESS
-/* Xilinx EDK Parallel Flash Library (XilFlash) User Settings */
-#define XPAR_XFL_DEVICE_FAMILY_INTEL
 #endif  /* end of protection macro */
