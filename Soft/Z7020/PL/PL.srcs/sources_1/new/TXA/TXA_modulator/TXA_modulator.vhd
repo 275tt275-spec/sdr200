@@ -76,15 +76,6 @@ architecture Behavioral of TXA_modulator is
     );
     END COMPONENT cmpy_24_16;
 
-    component dsp_24m18_1 is
-        port (
-            CLK : in STD_LOGIC;
-            A : in STD_LOGIC_VECTOR ( 23 downto 0 );
-            B : in STD_LOGIC_VECTOR ( 17 downto 0 );
-            P : out STD_LOGIC_VECTOR ( 41 downto 0 )
-        );
-    end component dsp_24m18_1;
-
     COMPONENT TXA_fos is
         Port ( 
            aclk : in  STD_LOGIC;     

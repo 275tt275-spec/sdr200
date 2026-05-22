@@ -93,13 +93,13 @@ architecture Behavioral of lim_limiter is
      
     signal delay_addr_in: std_logic_vector(4 DOWNTO 0) := "10101"; 
     signal delay_addr_out: std_logic_vector(4 DOWNTO 0) := "00000";  
-    signal delay_out_0, delay_out_1 : std_logic_vector(23 downto 0);   
-    signal dividend_tdata : std_logic_vector(47 downto 0);  
+    signal delay_out_0, delay_out_1 : std_logic_vector(23 downto 0) := (others => '0');   
+    signal dividend_tdata : std_logic_vector(47 downto 0) := (others => '0');  
     signal cordic_in: std_logic_vector(47 downto 0);
     signal cordic_out: std_logic_vector(31 downto 0);
     signal cordic_tvalid, cordic_tvalid_r : std_logic;
     signal divin_tvalid : std_logic := '0';  
-    signal divisor : std_logic_vector(15 downto 0);  
+    signal divisor : std_logic_vector(15 downto 0) := x"0001";  
     signal divout_0, divout_1 : std_logic_vector(23 downto 0); 
     signal divout_valid_0, divout_valid_1 : std_logic;
     signal div_over_0, div_over_1 : std_logic;
@@ -221,6 +221,6 @@ fir_0 : lim_lpf_fir
         event_s_reload_tlast_unexpected => open
     );
     
-    m_axis_data_tdata <= fir_out_tdata(63) & fir_out_tdata(56 downto 34) & fir_out_tdata(31) & fir_out_tdata(24 downto 2);
+    m_axis_data_tdata <= fir_out_tdata(63) & fir_out_tdata(54 downto 32) & fir_out_tdata(31) & fir_out_tdata(22 downto 0);
 
 end Behavioral;

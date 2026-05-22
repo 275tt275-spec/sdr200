@@ -4,7 +4,7 @@
     "xci_name": "XC7Z020_iq_set_0_0",
     "cell_name": "iq_set_0",
     "component_reference": "xilinx.com:module_ref:iq_set:1.0",
-    "ip_revision": "1779046151",
+    "ip_revision": "1",
     "gen_directory": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_iq_set_0_0",
     "parameters": {
       "component_parameters": {
@@ -25,12 +25,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "1779046151" } ],
+        "IPREVISION": [ { "value": "1" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_iq_set_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OOC_HIERARCHICAL" } ]
       }
     },

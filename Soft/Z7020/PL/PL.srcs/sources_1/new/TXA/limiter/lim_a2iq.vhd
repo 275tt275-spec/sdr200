@@ -25,7 +25,8 @@ entity lim_a2iq is
         m_axis_iq_tvalid : out STD_LOGIC;
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC; 
-        phase_accum : in STD_LOGIC_VECTOR (15 downto 0);
+        dds_data : in STD_LOGIC_VECTOR (31 downto 0);
+        dds_tvalid : in STD_LOGIC;
         fir_reload_tdata : STD_LOGIC_VECTOR(23 DOWNTO 0);
         fir_reload_tvalid : STD_LOGIC;
         fir_reload_tlast : STD_LOGIC;
@@ -36,17 +37,17 @@ end lim_a2iq;
 
 architecture Behavioral of lim_a2iq is
 
-COMPONENT lim_rotate24_24_cordic
-    PORT (
-        aclk : IN STD_LOGIC;
-        s_axis_phase_tvalid : IN STD_LOGIC;
-        s_axis_phase_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
-        s_axis_cartesian_tvalid : IN STD_LOGIC;
-        s_axis_cartesian_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-        m_axis_dout_tvalid : OUT STD_LOGIC;
-        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
-    );
-END COMPONENT lim_rotate24_24_cordic;
+COMPONENT cmpy_16_24
+  PORT (
+    aclk : IN STD_LOGIC;
+    s_axis_a_tvalid : IN STD_LOGIC;
+    s_axis_a_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+    s_axis_b_tvalid : IN STD_LOGIC;
+    s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    m_axis_dout_tvalid : OUT STD_LOGIC;
+    m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+  );
+END COMPONENT cmpy_16_24;
 
 COMPONENT lim_lpf_fir IS
     PORT (
@@ -68,38 +69,31 @@ COMPONENT lim_lpf_fir IS
     );
 END COMPONENT  lim_lpf_fir;
 
-    signal cordic_phase : std_logic_vector(23 downto 0);
-    signal cordic_in_data : std_logic_vector(47 downto 0) := (others => '0');
-    signal cordic_in_tvalid : std_logic := '0';
-    signal cordic_out_data : std_logic_vector(47 downto 0);
-    signal cordic_out_tvalid : std_logic;
+    signal mult_in_data : std_logic_vector(47 downto 0);
     signal firin_tdata : STD_LOGIC_VECTOR(47 DOWNTO 0);
+    signal firin_tvalid : std_logic;
     signal firout_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0);
     signal firout_tvalid : STD_LOGIC;
 
 begin
 
-    cordic_phase <= phase_accum(15) & phase_accum(15) & phase_accum(15 downto 0) & "000000";
-    cordic_in_data <= s_axis_audio_tdata(23) & s_axis_audio_tdata(23 downto 1) & s_axis_audio_tdata(23) & s_axis_audio_tdata(23 downto 1);
-    cordic_in_tvalid <= s_axis_audio_tvalid;
+    mult_in_data <= s_axis_audio_tdata & s_axis_audio_tdata;
 
-cordic_0 : lim_rotate24_24_cordic
-    PORT MAP (
-        aclk => aclk,
-        s_axis_phase_tvalid => '1',
-        s_axis_phase_tdata => cordic_phase,
-        s_axis_cartesian_tvalid => cordic_in_tvalid,
-        s_axis_cartesian_tdata => cordic_in_data,
-        m_axis_dout_tvalid => cordic_out_tvalid,
-        m_axis_dout_tdata => cordic_out_data
-    );
-    
-    firin_tdata <= cordic_out_data(47) & cordic_out_data(45 downto 24) & "0" & cordic_out_data(23) & cordic_out_data(21 downto 0) & "0";
+mult_0 : cmpy_16_24
+  PORT MAP (
+    aclk => aclk,
+    s_axis_a_tvalid => s_axis_audio_tvalid,
+    s_axis_a_tdata => mult_in_data,
+    s_axis_b_tvalid => '1',
+    s_axis_b_tdata => dds_data,
+    m_axis_dout_tvalid => firin_tvalid,
+    m_axis_dout_tdata => firin_tdata
+  );
 
 fir_0 : lim_lpf_fir
     PORT MAP (
         aclk => aclk,
-        s_axis_data_tvalid => cordic_out_tvalid,
+        s_axis_data_tvalid => firin_tvalid,
         s_axis_data_tready => open,
         s_axis_data_tdata => firin_tdata,
         s_axis_config_tvalid => fir_config_tvalid,
@@ -115,7 +109,7 @@ fir_0 : lim_lpf_fir
         event_s_reload_tlast_unexpected => open
     );
     
-    m_axis_iq_tdata  <= firout_tdata(63) & firout_tdata(56 downto 34) & firout_tdata(31) & firout_tdata(24 downto 2);
+    m_axis_iq_tdata  <= firout_tdata(63) & firout_tdata(54 downto 32) & firout_tdata(31) & firout_tdata(22 downto 0);
     m_axis_iq_tvalid <= firout_tvalid;
 
 end Behavioral;

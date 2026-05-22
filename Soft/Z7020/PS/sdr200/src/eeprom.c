@@ -540,6 +540,9 @@ static void eeprom_set_vars(void)
 	e_vars->RFPower = 40;
 	e_vars->RXAATT = 10;
 	e_vars->vRef = 0;
+	e_vars->lim_en = 0;
+	e_vars->lim_in = 50;
+	e_vars->lim_out = 50;
 }
 
 uint8_t eeprom_rxa_att(uint32_t freq)

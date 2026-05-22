@@ -259,6 +259,20 @@ void fpga_LIM_Enable(int enable)
 	fpga_write(FPGA_LIM_CTRL, ctrl_reg);
 }
 
+void fpga_LIM_Set(s_limiter* lim)
+{
+	fpga_write(FPGA_LIM_IN, lim->in_gain);
+	fpga_write(FPGA_LIM_LIMIT, lim->limit);
+	fpga_write(FPGA_LIM_OUT, lim->out_gain);
+	fpga_write(FPGA_LIM_PHASE, lim->dds_phase);
+	fpga_write(FPGA_LIM_OVER, lim->overshoot);
+}
+
+void fpga_LIM_FIR(const uint32_t* p)
+{
+
+}
+
 void fpga_LinearReset(void)
 {
     uint32_t lin_ctrl = 0;

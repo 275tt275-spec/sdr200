@@ -107,8 +107,9 @@ void kenwood_init(void)
 	fValue = pow(10, fValue);
 	fValue = fValue / 1000.;
 	vars.m_pc = (uint8_t)fValue;
-	memset(vars.m_pl, 0, sizeof(vars.m_pl));
-	vars.m_pr = 0;
+	vars.m_pl[0] = e_vars->lim_in;
+	vars.m_pl[1] = e_vars->lim_out;
+	vars.m_pr = e_vars->lim_en;
 	vars.m_ps = 1;
 	memset(vars.m_qr, 0, sizeof(vars.m_qr));
 	vars.m_ra = 0;
@@ -307,12 +308,10 @@ void kenwood_SetPtt(int on, uint8_t source)
     }
 }
 
-void kenwood_SetSpeech(int en, uint32_t in, uint32_t out)
+void kenwood_SetSpeech(int en)
 {
     if(en == 1) vars.m_pr = 1;
     else vars.m_pr = 0;
-    vars.m_pl[0] = (uint8_t)in;
-    vars.m_pl[1] = (uint8_t)out;
 }
 
 void kenwood_SetMG(uint32_t level)
@@ -345,7 +344,6 @@ static void kenwood_UpdateFreq()
     {
     	vars.m_freq_tx = new_freq_tx;
     	hw_SetExtAmpFreq(vars.m_freq_tx);
-//        m_pModule->SendMessageHardware(MSG_HW_SET_TXA_FREQUENCY, 0, m_freq_tx);
     }
 }
 
@@ -960,6 +958,9 @@ char* kenwood_RcvCmd(char* in)
             vars.m_pl[0] = atoi(value);
             memcpy(value, &in[5], 3); value[3] = 0;
             vars.m_pl[1] = atoi(value);
+        	e_vars->lim_in = vars.m_pl[0];
+        	e_vars->lim_out = vars.m_pl[1];
+            hw_SetSpeechInOut(vars.m_pl[0], vars.m_pl[1]);
         }
     }
     else if(memcmp(in, "PR", 2) == 0) /* Sets or reads the Speech Processor function ON/ OFF. */
@@ -969,7 +970,7 @@ char* kenwood_RcvCmd(char* in)
         else
         {
         	vars.m_pr = (in[2] == 0x30) ? 0 : 1;
-//            m_pModule->SendMessageHardware(MSG_HW_SET_SPEECH, m_pr, 0);
+        	hw_SetSpeech(vars.m_pr);
         }
     }
     else if(memcmp(in, "PS", 2) == 0) /* Sets or reads the Power ON/ OFF status */
@@ -1096,14 +1097,14 @@ char* kenwood_RcvCmd(char* in)
         if(len == 2)                /* Read */
             sprintf(m_out, "SH%02d;", vars.m_sh);
         else
-        	vars.m_sh = in[2] - 0x30;;
+        	vars.m_sh = in[2] - 0x30;
     }
     else if(memcmp(in, "SL", 2) == 0) /* Sets or reads the DSP filter settings. */
     {
         if(len == 2)                /* Read */
             sprintf(m_out, "SL%02d;", vars.m_sl);
         else
-        	vars.m_sl = in[2] - 0x30;;
+        	vars.m_sl = in[2] - 0x30;
     }
     else if(memcmp(in, "SM", 2) == 0) /* Reads the S-meter status */
     {

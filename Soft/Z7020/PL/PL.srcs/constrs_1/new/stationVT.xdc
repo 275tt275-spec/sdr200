@@ -1,3 +1,88 @@
+set_false_path -to [get_pins [list XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync6/PRE]]
+set_false_path -to [get_pins [list XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync6/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync1/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync2/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync3/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync4/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync5/PRE \
+          XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync6/PRE]]
+set_false_path -to [get_pins {XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync1/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync2/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync3/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync4/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync5/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_XC7Z020_gmii_to_rgmii_0_0_resets/idelayctrl_reset_gen/reset_sync6/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync1/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync2/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync3/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync4/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync5/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync6/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync1/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync2/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync3/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync4/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync5/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_90_reset/reset_sync6/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync1/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync2/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync3/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync4/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync5/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/gmii_to_rgmii_core_non_versal.i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync6/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync1/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync2/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync3/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync4/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync5/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_mgmt_reset/reset_sync6/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync1/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync2/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync3/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync4/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync5/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_rx_reset/reset_sync6/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync1/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync2/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync3/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync4/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync5/PRE XC7Z020_i/gmii_to_rgmii_0/U0/i_gmii_to_rgmii_block/XC7Z020_gmii_to_rgmii_0_0_core/i_gmii_to_rgmii/i_reset_sync_tx_reset/reset_sync6/PRE}]
 set_property BITSTREAM.GENERAL.COMPRESS True [current_design]
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 3.3 [current_design]
@@ -15,7 +100,8 @@ set_property IOSTANDARD LVDS_25 [get_ports DAC_DCO_*]
 create_clock -period 8.000 -name RGMII_rxc -waveform {0.000 4.000} [get_ports RGMII_rxc]
 create_clock -period 8.000 -name RGMII_txc -waveform {0.000 4.000} [get_ports RGMII_txc]
 create_clock -period 8.138 -name ADC1_CLK -waveform {0.000 4.069} [get_ports ADC1_CLK_clk_p]
-set_input_jitter ADC1_CLK 0.1
+create_clock -period 8.138 -name ADC0_CLK_clk_p -waveform {0.000 4.069} [get_ports ADC0_CLK_clk_p]
+set_input_jitter ADC1_CLK 0.100
 create_clock -period 8.138 -name DAC_DCO -waveform {0.000 4.069} [get_ports DAC_DCO_P]
 #False path constraints to async inputs coming directly to synchronizer
 set_false_path -to [get_pins -hier -filter {name =~ *idelayctrl_reset_gen/*reset_sync*/PRE }]
@@ -135,8 +221,27 @@ set_property -dict {PACKAGE_PIN V8 IOSTANDARD LVCMOS33} [get_ports CW_KEY]
 set_property -dict {PACKAGE_PIN W8 IOSTANDARD LVCMOS33} [get_ports CAT_DTR]
 set_property -dict {PACKAGE_PIN U10 IOSTANDARD LVCMOS33} [get_ports CAT_RTC]
 
-set_property -dict {PACKAGE_PIN R18 IOSTANDARD LVDS_25} [get_ports RF_CLOCKOUT_P]
-set_property -dict {PACKAGE_PIN T18 IOSTANDARD LVDS_25} [get_ports RF_CLOCKOUT_N]
-set_property -dict {PACKAGE_PIN V13 IOSTANDARD LVDS_25} [get_ports RF_DATAOUT_P]
-set_property -dict {PACKAGE_PIN W13 IOSTANDARD LVDS_25} [get_ports RF_DATAOUT_N]
 
+
+
+create_generated_clock -name XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/audio_proc_0/s_axis_data_tvalid -source [get_pins XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/audio_proc_0/lim_in_tvalid_reg/C] -divide_by 1 [get_pins XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/audio_proc_0/lim_in_tvalid_reg/Q]
+create_generated_clock -name XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/modulator_0/s_axis_a_tvalid -source [get_pins XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/modulator_0/audio_data_valid_reg/C] -divide_by 1 [get_pins XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/modulator_0/audio_data_valid_reg/Q]
+create_generated_clock -name DAC_DCI_P -source [get_pins XC7Z020_i/SDR_1/U0/TXA_0/dac_out_0/dci_oddr/C] -divide_by 1 [get_ports DAC_DCI_P]
+set_input_delay -clock [get_clocks ADC0_CLK_clk_p] -min -add_delay 12.069 [get_ports {ADC0_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC0_CLK_clk_p] -max -add_delay 12.069 [get_ports {ADC0_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports {ADC1_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports {ADC1_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports CAT_DTR]
+set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports CAT_DTR]
+set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports CAT_RTC]
+set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports CAT_RTC]
+set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports CW_KEY]
+set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports CW_KEY]
+set_input_delay -clock [get_clocks clk_fpga_1] -min -add_delay 7.500 [get_ports MDIO_PHY_mdio_io]
+set_input_delay -clock [get_clocks clk_fpga_1] -max -add_delay 7.500 [get_ports MDIO_PHY_mdio_io]
+set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports PTT]
+set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports PTT]
+set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports uart_rtl_0_rxd]
+set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports uart_rtl_0_rxd]
+set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports uart_rtl_1_rxd]
+set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports uart_rtl_1_rxd]

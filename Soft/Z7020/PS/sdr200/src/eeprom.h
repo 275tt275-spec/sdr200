@@ -53,6 +53,9 @@ typedef struct tag_eeprom_vars
 	uint8_t RFPower;
 	uint8_t RXAATT;
 	int16_t vRef;
+	uint8_t lim_en;
+	uint8_t lim_in;
+	uint8_t lim_out;
 } s_eeprom_vars;
 
 extern s_eeprom_vars* e_vars;

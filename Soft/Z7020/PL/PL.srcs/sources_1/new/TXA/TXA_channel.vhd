@@ -238,26 +238,26 @@ begin
    end if;
 end process cmd_process;
 
---audio_proc_0 : audio_proc
---    PORT MAP ( 
---        m_axis_audio_tdata => speech_out_tdata,
---        m_axis_audio_tvalid => speech_out_tvalid,
---        s_axis_audio_tdata => speech_in_tdata,
---        s_axis_audio_tvalid => speech_in_tvalid,
---        s_axis_cfg_tdata => s_axis_cfg_tdata,
---        s_axis_cfg_tdest => s_axis_cfg_tdest(2 downto 0),
---        s_axis_cfg_tvalid => lim_proc_cfg_tvalid,
---        lim_over => lim_over,
---        aclk => aclk
---    );
+audio_proc_0 : audio_proc
+    PORT MAP ( 
+        m_axis_audio_tdata => speech_out_tdata,
+        m_axis_audio_tvalid => speech_out_tvalid,
+        s_axis_audio_tdata => speech_in_tdata,
+        s_axis_audio_tvalid => speech_in_tvalid,
+        s_axis_cfg_tdata => s_axis_cfg_tdata,
+        s_axis_cfg_tdest => s_axis_cfg_tdest(2 downto 0),
+        s_axis_cfg_tvalid => lim_proc_cfg_tvalid,
+        lim_over => lim_over,
+        aclk => aclk
+    );
 
     ovf <= ext(lim_over & resampler_over & linear_ovf, 32);
     
- --   modulator_in_tdata <= speech_out_tdata;
- --   modulator_in_tvalid <= speech_out_tvalid;
- --   
-    modulator_in_tdata <= speech_in_tdata;
-    modulator_in_tvalid <= speech_in_tvalid;
+    modulator_in_tdata <= speech_out_tdata;
+    modulator_in_tvalid <= speech_out_tvalid;
+    
+--    modulator_in_tdata <= speech_in_tdata;
+--    modulator_in_tvalid <= speech_in_tvalid;
     
 modulator_0 : TXA_modulator
     PORT MAP ( 

@@ -45,6 +45,7 @@ extern void SendToCore1Uint32(uint32_t type, uint32_t value);
 extern XScuGic IntcInstance;
 s_hw_device hw_device;
 static s_linear linear = {0};
+static s_limiter limiter = {0x3FFF, 0x1FFF, 0x0400, 0x1000, 0x1D9A};
 static int isTuneMode = 0;
 
 static void SpiHandler(void *CallBackRef, u32 StatusEvent, unsigned int ByteCount);
@@ -829,6 +830,28 @@ void hw_SetATU(uint8_t dir, uint8_t maskL, uint8_t maskC)
 inline void hw_GetSWR(s_swr* swr)
 {
 	fpga_GetSWR(swr);
+}
+
+void hw_SetSpeech(int en)
+{
+	switch(e_vars->mode) {
+	case TRX_MODE_USB:
+	case TRX_MODE_LSB:
+	case TRX_MODE_AM:
+	case TRX_MODE_FM:
+		e_vars->lim_en = en;
+		fpga_LIM_Enable(en);
+		break;
+	default:
+		break;
+	}
+}
+
+void hw_SetSpeechInOut(uint8_t in, uint8_t out)
+{
+	limiter.in_gain = in * 32767 / 100;
+	limiter.out_gain = in * 16383 / 100;
+	fpga_LIM_Set(&limiter);
 }
 
 inline void hw_SetLiner(int en)

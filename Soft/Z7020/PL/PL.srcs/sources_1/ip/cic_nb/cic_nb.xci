@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "cic_nb",
     "component_reference": "xilinx.com:ip:cic_compiler:4.0",
-    "ip_revision": "18",
+    "ip_revision": "17",
     "gen_directory": "../../../../PL.gen/sources_1/ip/cic_nb",
     "parameters": {
       "component_parameters": {
@@ -30,7 +30,7 @@
         "Input_Data_Width": [ { "value": "24", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "Quantization": [ { "value": "Truncation", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
         "Output_Data_Width": [ { "value": "40", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "Use_Xtreme_DSP_Slice": [ { "value": "true", "resolve_type": "user", "format": "bool", "usage": "all" } ],
+        "Use_Xtreme_DSP_Slice": [ { "value": "false", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "Use_Streaming_Interface": [ { "value": "true", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "HAS_ACLKEN": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "HAS_ARESETN": [ { "value": "true", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
@@ -44,7 +44,7 @@
         "C_RATE": [ { "value": "1536", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_INPUT_WIDTH": [ { "value": "24", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_OUTPUT_WIDTH": [ { "value": "40", "resolve_type": "generated", "format": "long", "usage": "all" } ],
-        "C_USE_DSP": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
+        "C_USE_DSP": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_HAS_ROUNDING": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_NUM_CHANNELS": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_RATE_TYPE": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -90,12 +90,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
-        "IPREVISION": [ { "value": "18" } ],
+        "IPREVISION": [ { "value": "17" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../PL.gen/sources_1/ip/cic_nb" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },

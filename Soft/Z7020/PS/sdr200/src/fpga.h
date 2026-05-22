@@ -50,7 +50,7 @@
 #define FPGA_LIM_PHASE 		0x0223 /* phase_step default x"1D9A"  -- 1850 Hz */
 #define FPGA_LIM_OVER 		0x0224 /* limit_overshoot default x"1000"  */
 #define FPGA_LIM_FIR 		0x0225 /* LP FIR */
-#define FPGA_LIM_CTRL 		0x0226 /*CTRL bit 0 - enable */
+#define FPGA_LIM_CTRL 		0x0226 /* CTRL bit 0 - enable */
 
 // 0x024_  /* modulator */
 #define FPGA_TXA_MOD 		0x0240  /* MODULATION */
@@ -160,6 +160,15 @@ typedef struct tag_linear
 	uint32_t phi_cos;
 } s_linear;
 
+typedef struct tag_limiter
+{
+	uint32_t in_gain;
+	uint32_t out_gain;
+	uint32_t limit;
+	uint32_t overshoot;
+	uint32_t dds_phase;
+} s_limiter;
+
 void fpga_init(void);
 void fpga_tick(void);
 void fpga_write(uint16_t addr, uint32_t value);
@@ -189,6 +198,8 @@ void fpga_TXA_FOSGAIN(uint32_t value);
 void fpga_TXA_ResamplerGain(uint32_t value);
 void fpga_GetSWR(s_swr* swr);
 void fpga_LIM_Enable(int enable);
+void fpga_LIM_Set(s_limiter* lim);
+void fpga_LIM_FIR(const uint32_t* p);
 void fpga_LinearReset(void);
 void fpga_LinearInit(s_linear* lin);
 void fpga_LinearEnable(s_linear* lin, int enable);

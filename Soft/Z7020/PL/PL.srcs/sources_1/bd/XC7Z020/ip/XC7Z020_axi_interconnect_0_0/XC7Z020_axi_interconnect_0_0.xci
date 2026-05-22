@@ -4,13 +4,13 @@
     "xci_name": "XC7Z020_axi_interconnect_0_0",
     "cell_name": "axi_interconnect_0",
     "component_reference": "xilinx.com:ip:axi_interconnect:2.1",
-    "ip_revision": "31",
+    "ip_revision": "30",
     "gen_directory": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_axi_interconnect_0_0",
     "parameters": {
       "component_parameters": {
         "NUM_SI": [ { "value": "1", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "NUM_MI": [ { "value": "11", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "STRATEGY": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "STRATEGY": [ { "value": "2", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "ENABLE_ADVANCED_OPTIONS": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "ENABLE_PROTOCOL_CHECKERS": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "XBAR_DATA_WIDTH": [ { "value": "32", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -162,7 +162,7 @@
         "S13_HAS_REGSLICE": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S14_HAS_REGSLICE": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S15_HAS_REGSLICE": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "S00_HAS_DATA_FIFO": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "S00_HAS_DATA_FIFO": [ { "value": "2", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S01_HAS_DATA_FIFO": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S02_HAS_DATA_FIFO": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S03_HAS_DATA_FIFO": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -339,12 +339,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator_AppCore" } ],
-        "IPREVISION": [ { "value": "31" } ],
+        "IPREVISION": [ { "value": "30" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_axi_interconnect_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "GLOBAL" } ]
       }
     }

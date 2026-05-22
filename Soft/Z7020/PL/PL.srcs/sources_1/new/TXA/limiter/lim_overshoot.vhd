@@ -108,8 +108,8 @@ component lim_translate_cordic
     signal cordic_tvalid : std_logic;
     signal magnitude, magnitude1, magnitude2, magnitude3, magnitude4 : std_logic_vector(15 downto 0)  := (others => '0');  
 --    signal max, max1, max2, max3 : std_logic_vector(15 downto 0); 
-    signal max : std_logic_vector(15 downto 0);
-    signal corr, corr1, denom : std_logic_vector(15 downto 0); 
+    signal max : std_logic_vector(15 downto 0) := (others => '0');
+    signal corr, corr1, denom : std_logic_vector(15 downto 0) := x"0001";
     signal divout_0, divout_1 : std_logic_vector(23 downto 0); 
     signal divout_valid_0, divout_valid_1 : std_logic;
     signal div_over_0, div_over_1 : std_logic;
@@ -289,6 +289,6 @@ fir_0 : lim_lpf_fir
         event_s_reload_tlast_unexpected => open
     );
     
-    m_axis_data_tdata <= fir_out_tdata(63) & fir_out_tdata(56 downto 34) & fir_out_tdata(31) & fir_out_tdata(24 downto 2);
+    m_axis_data_tdata <= fir_out_tdata(63) & fir_out_tdata(54 downto 32) & fir_out_tdata(31) & fir_out_tdata(22 downto 0);
 
 end Behavioral;

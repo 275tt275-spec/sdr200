@@ -53,6 +53,18 @@ architecture Behavioral of lim_proc is
         m_axis_data_tdata : out STD_LOGIC_VECTOR ( 23 downto 0 )
     );
     end component lim_eq_fir;
+    
+    COMPONENT dds_16 IS
+    PORT (
+        aclk : IN STD_LOGIC;
+        s_axis_config_tvalid : IN STD_LOGIC;
+        s_axis_config_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+        m_axis_data_tvalid : OUT STD_LOGIC;
+        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+        m_axis_phase_tvalid : OUT STD_LOGIC;
+        m_axis_phase_tdata : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
+    );
+    END COMPONENT dds_16;
 
     COMPONENT lim_a2iq is
     Port ( 
@@ -60,7 +72,8 @@ architecture Behavioral of lim_proc is
         m_axis_iq_tvalid : out STD_LOGIC;
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC; 
-        phase_accum : in STD_LOGIC_VECTOR (15 downto 0);
+        dds_data : in STD_LOGIC_VECTOR (31 downto 0);
+        dds_tvalid : in STD_LOGIC;
         fir_reload_tdata : STD_LOGIC_VECTOR(23 DOWNTO 0);
         fir_reload_tvalid : STD_LOGIC;
         fir_reload_tlast : STD_LOGIC;
@@ -121,7 +134,8 @@ architecture Behavioral of lim_proc is
         m_axis_audio_tvalid : out STD_LOGIC;
         s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
         s_axis_iq_tvalid : in STD_LOGIC; 
-        phase_accum : in STD_LOGIC_VECTOR (15 downto 0);
+        dds_data : in STD_LOGIC_VECTOR (31 downto 0);
+        dds_tvalid : in STD_LOGIC;
         aclk : in STD_LOGIC
     );
     END COMPONENT  lim_iq2a;
@@ -133,9 +147,9 @@ architecture Behavioral of lim_proc is
     signal fir1_tvalid : std_logic;
     signal multin_tdata : std_logic_vector(23 downto 0);
     signal multout_tdata : std_logic_vector(41 downto 0);    
-    signal multout_tvalid, multout_tvalid_r : std_logic; 
+    signal multout_tvalid, multout_tvalid_r : std_logic := '0'; 
     signal lim_in_tdata : std_logic_vector(23 downto 0);
-    signal lim_in_tvalid : std_logic;
+    signal lim_in_tvalid : std_logic := '0';
 	signal limiter_tdata : std_logic_vector(47 downto 0);
     signal limiter_tvalid : std_logic;
     signal limiter_out_tdata : std_logic_vector(47 downto 0);
@@ -143,17 +157,20 @@ architecture Behavioral of lim_proc is
     signal overshoot_out_tdata : std_logic_vector(47 downto 0);
     signal overshoot_out_tvalid : std_logic;
     signal mult2in_tdata : std_logic_vector(47 downto 0);
-    signal mult2in_tvalid, mult2in_tvalid_r : std_logic; 
-    signal audio_out_tdata : std_logic_vector(23 downto 0);
-    signal audio_out_tvalid : std_logic;
-    signal audio_out : std_logic_vector(41 downto 0);
+    signal mult2in_tvalid, mult2in_tvalid_r : std_logic := '0';
+ --   signal audio_out_tdata : std_logic_vector(23 downto 0);
+ --   signal audio_out_tvalid : std_logic;
+ --   signal audio_out : std_logic_vector(41 downto 0);
     
     signal lim_in_gain : std_logic_vector(17 downto 0) := "00" & x"3FFF";
     signal lim_limit : STD_LOGIC_VECTOR (15 downto 0) := x"0400";
     signal limit_overshoot : STD_LOGIC_VECTOR (15 downto 0) := x"1000";
     signal lim_out_gain : STD_LOGIC_VECTOR (17 downto 0) := "00" & x"1FFF";
-    signal phase_accumulator : std_logic_vector(15 downto 0) := (others => '0');  
+--    signal phase_accumulator : std_logic_vector(15 downto 0) := (others => '0');  
     signal phase_step : std_logic_vector(15 downto 0) := x"1D9A"; -- 1850 Hz
+    signal phase_step_valid, phase_step_change  : STD_LOGIC := '0';   
+    signal dds_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0); 
+    signal dds_tvalid : STD_LOGIC;
     
     signal fir_reload_tdata : STD_LOGIC_VECTOR(23 DOWNTO 0) := (others => '0');
     signal fir_reload_tvalid : STD_LOGIC := '0';
@@ -165,7 +182,7 @@ architecture Behavioral of lim_proc is
     
     signal iq_out_0, iq_out_1 : std_logic_vector(41 downto 0);
     signal iq_out_tdata : std_logic_vector(47 downto 0);
-    signal iq_out_valid : STD_LOGIC;
+    signal iq_out_valid : STD_LOGIC := '0';
     signal lim_en : STD_LOGIC := '1';
 	
 begin
@@ -213,7 +230,11 @@ process(aclk)
 begin
 	if rising_edge(aclk) then  
 	   if s_axis_audio_tvalid = '1' then
-	       phase_accumulator <= phase_accumulator + phase_step;
+	       phase_step_valid <= '0';
+	       if phase_step_change = '1' then
+	           phase_step_change <= '0';
+	           phase_step_valid <= '1';
+	       end if;
 	   end if;
 	   if s_axis_cfg_tvalid = '1' then 
           if s_axis_cfg_tdest = "000" then
@@ -224,6 +245,7 @@ begin
              lim_out_gain <= s_axis_cfg_tdata(17 downto 0);
           elsif s_axis_cfg_tdest = "011" then
              phase_step <= s_axis_cfg_tdata(15 downto 0);
+             phase_step_change <= '1';
           elsif s_axis_cfg_tdest = "100" then
              limit_overshoot <= s_axis_cfg_tdata(15 downto 0);
           elsif s_axis_cfg_tdest = "110" then
@@ -233,7 +255,17 @@ begin
 	end if;
 end process;
 
--- ������������ � �������� ������� ������ �� 12 ��
+dds_0 : dds_16
+    PORT MAP (
+        aclk => s_axis_audio_tvalid,
+        s_axis_config_tvalid => phase_step_valid,
+        s_axis_config_tdata => phase_step,
+        m_axis_data_tvalid => dds_tvalid,
+        m_axis_data_tdata => dds_tdata,
+        m_axis_phase_tvalid => open,
+        m_axis_phase_tdata => open
+    );
+
 fir_in_0: component lim_eq_fir
     port map (
         aclk => aclk,
@@ -246,14 +278,7 @@ fir_in_0: component lim_eq_fir
     
     multin_tdata <= s_axis_audio_tdata when lim_en = '0' else fir1_tdata;
     multout_tvalid <= s_axis_audio_tvalid when lim_en = '0' else fir1_tvalid;
-    
---mult_0: component lim_dsp_24m18
---    port map (
---        CLK => aclk,
---        A => multin_tdata,
---        B => lim_in_gain,
---        P => multout_tdata
---    );      
+ 
     
 process(aclk)
 begin
@@ -280,7 +305,8 @@ a2iq_0 : lim_a2iq
         m_axis_iq_tvalid => limiter_tvalid,
         s_axis_audio_tdata => lim_in_tdata,
         s_axis_audio_tvalid => lim_in_tvalid,
-        phase_accum => phase_accumulator,
+        dds_data => dds_tdata,
+        dds_tvalid => dds_tvalid,
         fir_reload_tdata => fir_reload_tdata,
         fir_reload_tvalid => fir_reload_tvalid,
         fir_reload_tlast => fir_reload_tlast,
@@ -325,26 +351,7 @@ PORT MAP (
     
     mult2in_tdata <= limiter_tdata when lim_en = '0' else overshoot_out_tdata;
     mult2in_tvalid <= limiter_tvalid when lim_en = '0' else overshoot_out_tvalid;
-    
---mult_1: component lim_dsp_24m18
---    port map (
---        CLK => aclk,
---        A => mult2in_tdata(47 downto 24),
---        B => lim_out_gain,
---        P => iq_out_0
---    );
---    
---mult_2: component lim_dsp_24m18
---    port map (
---        CLK => aclk,
---        A => mult2in_tdata(23 downto 0),
---        B => lim_out_gain,
---        P => iq_out_1
---    );
-    
---   iq_out_0 <= mult2in_tdata(47 downto 24) * lim_out_gain;
---   iq_out_1 <= mult2in_tdata(23 downto 0) * lim_out_gain;
-    
+        
 process(aclk)
 begin
 	if rising_edge(aclk) then   
@@ -384,7 +391,8 @@ iq2a_0 : lim_iq2a
         m_axis_audio_tvalid => m_axis_audio_tvalid,
         s_axis_iq_tdata => iq_out_tdata,
         s_axis_iq_tvalid => iq_out_valid,
-        phase_accum => phase_accumulator,
+        dds_data => dds_tdata,
+        dds_tvalid => dds_tvalid,
         aclk => aclk
     );
 

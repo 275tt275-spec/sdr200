@@ -138,7 +138,6 @@ void kenwood_SetATT(float dBm);
 void kenwood_SetSMeter(int value);
 void kenwood_SetMeter(int source, int value);
 void kenwood_SetPtt(int on, uint8_t source);
-void kenwood_SetSpeech(int en, uint32_t in, uint32_t out);
 void kenwood_SetMG(uint32_t level);
 void kenwood_ATUTuneCb();
 

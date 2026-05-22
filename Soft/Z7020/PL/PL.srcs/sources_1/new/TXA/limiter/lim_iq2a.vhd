@@ -5,7 +5,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.std_logic_unsigned.all;
+use ieee.std_logic_signed.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -22,24 +22,25 @@ entity lim_iq2a is
         m_axis_audio_tvalid : out STD_LOGIC;
         s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
         s_axis_iq_tvalid : in STD_LOGIC; 
-        phase_accum : in STD_LOGIC_VECTOR (15 downto 0);
+        dds_data : in STD_LOGIC_VECTOR (31 downto 0);
+        dds_tvalid : in STD_LOGIC;
         aclk : in STD_LOGIC
     );
 end lim_iq2a;
 
 architecture Behavioral of lim_iq2a is
 
-COMPONENT lim_rotate24_24_cordic
-    PORT (
-        aclk : IN STD_LOGIC;
-        s_axis_phase_tvalid : IN STD_LOGIC;
-        s_axis_phase_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
-        s_axis_cartesian_tvalid : IN STD_LOGIC;
-        s_axis_cartesian_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-        m_axis_dout_tvalid : OUT STD_LOGIC;
-        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
-    );
-END COMPONENT lim_rotate24_24_cordic;
+COMPONENT cmpy_16_24
+  PORT (
+    aclk : IN STD_LOGIC;
+    s_axis_a_tvalid : IN STD_LOGIC;
+    s_axis_a_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+    s_axis_b_tvalid : IN STD_LOGIC;
+    s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    m_axis_dout_tvalid : OUT STD_LOGIC;
+    m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+  );
+END COMPONENT cmpy_16_24;
 
 component audio_base_fir is
     port (
@@ -52,35 +53,39 @@ component audio_base_fir is
     );
 end component audio_base_fir;
 
-    signal cordic_phase : std_logic_vector(23 downto 0);
-    signal cordic_in_data : std_logic_vector(47 downto 0) := (others => '0');
-	signal cordic_out_tdata : std_logic_vector(47 downto 0);
-	signal summa_tdata : std_logic_vector(23 downto 0);
+    signal multin_tdata : STD_LOGIC_VECTOR(47 DOWNTO 0);
+    signal multout_tdata : STD_LOGIC_VECTOR(47 DOWNTO 0);
+    signal multout_tvalid : std_logic;	
+    signal summa_tdata : std_logic_vector(23 downto 0);
 	signal fir_out_tdata : std_logic_vector(31 downto 0);
-	signal cordic_out_tvalid : std_logic;
+--	signal multout40_tdata_0, multout40_tdata_1 : STD_LOGIC_VECTOR(39 DOWNTO 0);
 
 begin
 
-    cordic_phase <= phase_accum(15) & phase_accum(15) & phase_accum(15 downto 0) & "000000";
-    cordic_in_data <= s_axis_iq_tdata(23) & s_axis_iq_tdata(23 downto 1) & s_axis_iq_tdata(47) & s_axis_iq_tdata(47 downto 25);
+    multin_tdata <= s_axis_iq_tdata(23 downto 0) & s_axis_iq_tdata(47 downto 24);
 
-cordic_0 : lim_rotate24_24_cordic
-    PORT MAP (
-        aclk => aclk,
-        s_axis_phase_tvalid => '1',
-        s_axis_phase_tdata => cordic_phase,
-        s_axis_cartesian_tvalid => s_axis_iq_tvalid,
-        s_axis_cartesian_tdata => cordic_in_data,
-        m_axis_dout_tvalid => cordic_out_tvalid,
-        m_axis_dout_tdata => cordic_out_tdata
-    );
-	
-	summa_tdata <= cordic_out_tdata(47 downto 24) + cordic_out_tdata(23 downto 0);
+mult_0 : cmpy_16_24
+  PORT MAP (
+    aclk => aclk,
+    s_axis_a_tvalid => s_axis_iq_tvalid,
+    s_axis_a_tdata => multin_tdata,
+    s_axis_b_tvalid => '1',
+    s_axis_b_tdata => dds_data,
+    m_axis_dout_tvalid => multout_tvalid,
+    m_axis_dout_tdata => multout_tdata
+  );
+
+ --   multout40_tdata_0 <= s_axis_iq_tdata(47 downto 24) * dds_data(31 downto 16);
+ --   multout40_tdata_1 <= s_axis_iq_tdata(23 downto 0) * dds_data(15 downto 0);
+ --   summa_tdata <= multout40_tdata_0(39 downto 16) + multout40_tdata_1(39 downto 16);
+ --   multout_tvalid <= s_axis_iq_tvalid;
+ 	
+  summa_tdata <= multout_tdata(47 downto 24) + multout_tdata(23 downto 0);
 	
 fir_0 : audio_base_fir
     PORT MAP (
         aclk => aclk,
-        s_axis_data_tvalid => cordic_out_tvalid,
+        s_axis_data_tvalid => multout_tvalid,
         s_axis_data_tready => open,
         s_axis_data_tdata => summa_tdata,
         m_axis_data_tvalid => m_axis_audio_tvalid,
