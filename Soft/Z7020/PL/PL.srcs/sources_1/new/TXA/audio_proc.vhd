@@ -63,8 +63,6 @@ component lim_proc is
     );
     end component lim_proc;    
     
-    signal downsample : std_logic := '0';
-    signal lim_in_tvalid : STD_LOGIC := '0';
     signal lim_out_tdata : std_logic_vector(23 downto 0);
     signal lim_out_tvalid : std_logic;
     signal over : STD_LOGIC_VECTOR (3 downto 0);
@@ -86,20 +84,6 @@ end process;
     m_axis_audio_tvalid <= s_axis_audio_tvalid when lim_en = '0' else lim_out_tvalid;
     m_axis_audio_tdata <= s_axis_audio_tdata when lim_en = '0' else lim_out_tdata;
     lim_over <= "0000" when lim_en = '0' else over; 
-
-process(aclk)
-begin
-	if rising_edge(aclk) then	  
--- Down from 32 KSamples to 16 KSamples	
-        lim_in_tvalid <= '0';    	
-		  if s_axis_audio_tvalid = '1' then
-		    downsample <= not downsample;
-		    if downsample = '1' then
-		        lim_in_tvalid <= '1';
-		    end if;
-		  end if;       		         		   
-	end if;
-end process;  
     
 limiter_0 : lim_proc
     PORT MAP (  
@@ -108,7 +92,7 @@ limiter_0 : lim_proc
         m_axis_iq_tdata => open,
         m_axis_iq_tvalid => open,
         s_axis_audio_tdata => s_axis_audio_tdata,
-        s_axis_audio_tvalid => lim_in_tvalid,  -- 16 KSamples	
+        s_axis_audio_tvalid => s_axis_audio_tvalid,  -- 16 KSamples	
         s_axis_cfg_tdata => s_axis_cfg_tdata,
         s_axis_cfg_tdest => s_axis_cfg_tdest,
         s_axis_cfg_tvalid => s_axis_cfg_tvalid,

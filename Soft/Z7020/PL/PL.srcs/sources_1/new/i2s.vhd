@@ -21,12 +21,12 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_arith.ALL;
-use IEEE.STD_LOGIC_signed.ALL;
+--use IEEE.STD_LOGIC_arith.ALL;
+--use IEEE.STD_LOGIC_signed.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -65,8 +65,8 @@ architecture Behavioral of i2s is
     );
     END component fifo_32x16;
 
-    constant MCLK_DIVIDER : integer := 4;   -- 122.88 / 10 = 12.288
-    constant BCLK_DIVIDER : integer := 5;   -- 0.016 * 32 * 2 MHz = 1.024 MHz
+    constant MCLK_DIVIDER : std_logic_vector(4 downto 0) := "0" & x"4";   -- 122.88 / 10 = 12.288
+    constant BCLK_DIVIDER : std_logic_vector(3 downto 0) := x"5";   -- 0.016 * 32 * 2 MHz = 1.024 MHz
     constant WCLK_DIVIDER : integer := 383; -- 0.016 MHz
     signal mclk_cnt : std_logic_vector(4 downto 0) := (others => '0');
     signal bclk_cnt : std_logic_vector(3 downto 0) := (others => '0');
@@ -75,7 +75,7 @@ architecture Behavioral of i2s is
     signal dout_left, dout_right : std_logic_vector (23 downto 0);
     signal CLKFBIN : STD_LOGIC;
     signal rd_fifo : STD_LOGIC;
-    signal bit_cnt : std_logic_vector(5 downto 0) := (others => '0');
+    signal bit_cnt : unsigned(5 downto 0) := (others => '0');
     signal audio_valid, audio_valid_r : STD_LOGIC;
     signal d_audio_valid : STD_LOGIC;
     signal d_audio : std_logic_vector (23 downto 0);
@@ -155,7 +155,7 @@ begin
             mclk_cnt <= (others => '0');
             mclk <= not mclk;
         else
-            mclk_cnt <= mclk_cnt + 1;
+            mclk_cnt <= std_logic_vector(unsigned(mclk_cnt) + 1);
         end if;
     end if;
 end process;
@@ -167,7 +167,7 @@ begin
             bclk_cnt <= (others => '0');
             bclk <= not bclk;
         else
-            bclk_cnt <= bclk_cnt + 1;
+            bclk_cnt  <= std_logic_vector(unsigned(bclk_cnt) + 1);
         end if;
     end if;
 end process;
@@ -217,9 +217,7 @@ begin
             bit_cnt <= bit_cnt + 1;
             if bit_cnt = 31 then
                 wclk <= '0';
-                dout_shift <= dout_right(23) & dout_right(23) & dout_right(23) & dout_right(23) &
-                                dout_right(23) & dout_right(23) & dout_right(23) & dout_right(23) &
-                                dout_right; 
+                dout_shift <= std_logic_vector(resize(signed(dout_left), 32));
                 m_axis_audioL_tdata <= din_shift(23 downto 0);
                 d_audio <= din_shift(23 downto 0); 
             elsif bit_cnt = 30 then

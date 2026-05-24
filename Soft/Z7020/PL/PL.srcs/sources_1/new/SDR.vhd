@@ -123,6 +123,17 @@ entity SDR is
 end SDR;
 
 architecture Behavioral of SDR is
+
+    COMPONENT ila_0 IS
+    PORT (
+    clk : IN STD_LOGIC;
+    probe0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe2 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe3 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+    probe4 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
+    );
+    END COMPONENT ila_0;
     
     COMPONENT clock_converter_2 is
         Port (
@@ -302,6 +313,16 @@ architecture Behavioral of SDR is
     ATTRIBUTE X_INTERFACE_PARAMETER of audio_clk: SIGNAL is "FREQ_HZ 122880000"; 
 
 begin 
+
+debug_0 : ila_0
+    PORT MAP(
+    clk => aclk,
+    probe0 => axis_swrnb0_tdata,
+    probe1 => axis_swrnb0_tuser,
+    probe2(0) => axis_swrnb0_tvalid,
+    probe3 => axis_adc0_tdata,
+    probe4 => axis_adc1_tdata
+    );
 
     aclk_122 <= aclk;
     cfg_addra <= bram_addra(12 downto 2);

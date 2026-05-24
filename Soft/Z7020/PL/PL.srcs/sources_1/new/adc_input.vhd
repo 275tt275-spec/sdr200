@@ -90,9 +90,9 @@ end generate;
     m_axis_data_tdata <= adc_out_data;    
     adc_max_value <= std_logic_vector(adc_max);
 
-process(adc_clk)
+process(adc_clk1)
 begin
-	if rising_edge(adc_clk) then
+	if rising_edge(adc_clk1) then
 	   adc_abs <= abs(signed(adc_out_data));
 	   if adc_max_rst = '1' then
 	       adc_max <= x"0000";

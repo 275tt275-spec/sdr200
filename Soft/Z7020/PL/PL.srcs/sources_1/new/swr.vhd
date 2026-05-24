@@ -21,7 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.std_logic_signed.all;
+--use ieee.std_logic_signed.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -62,7 +62,7 @@ architecture Behavioral of swr is
     END COMPONENT cordic_translate_24;
 
     signal i_data0_in, q_data0_in, i_data1_in, q_data1_in : std_logic_vector(31 downto 0);
-    signal i_add, i_sub, q_add, q_sub : std_logic_vector(31 downto 0);
+--    signal i_add, i_sub, q_add, q_sub : std_logic_vector(31 downto 0);
     signal cordic_in_tdata_ch0, cordic_in_tdata_ch1 : STD_LOGIC_VECTOR(47 DOWNTO 0);
     signal cordic_out_tdata_ch0, cordic_out_tdata_ch1 : STD_LOGIC_VECTOR(47 DOWNTO 0);
     signal cordic_out_tvalid_ch0, cordic_out_tvalid_ch1 : STD_LOGIC;
@@ -76,6 +76,15 @@ architecture Behavioral of swr is
     signal axis_magnitude_tdata : STD_LOGIC_VECTOR (31 downto 0);  -- 16 bit chan A & 16 bit chan B (absolute)
     signal axis_angle_tdata : STD_LOGIC_VECTOR (31 downto 0);      -- 16 bit chan A & 16 bit chan B (signed) 
     signal axis_swr_tdata : STD_LOGIC_VECTOR (31 downto 0);        -- 16 bit inc & 16 bit ref (absolute)
+    
+    -- Промежуточные сигналы для безопасной арифметики
+    signal i_add_ext, i_sub_ext : std_logic_vector(32 downto 0);
+    signal q_add_ext, q_sub_ext : std_logic_vector(32 downto 0);
+    
+    -- Добавьте промежуточные сигналы в секцию signal (для защелкивания данных)
+    signal mag_ch0_reg, mag_ch1_reg : std_logic_vector(15 downto 0);
+    signal ang_ch0_reg, ang_ch1_reg : std_logic_vector(15 downto 0);
+    signal swr_inc_reg, swr_ref_reg : std_logic_vector(15 downto 0);
 
 begin
 
@@ -104,13 +113,22 @@ cordic_1 : cordic_translate_24
         m_axis_dout_tdata => cordic_out_tdata_ch1
     );
 
-    i_add <= i_data0_in + i_data1_in;
-    i_sub <= i_data0_in - i_data1_in;
-    q_add <= q_data0_in + q_data1_in;
-    q_sub <= q_data0_in - q_data1_in;
-    cordic_in_tdata_0 <= i_add(31) & i_add(31 downto 9) & q_add(31) & q_add(31 downto 9);
-    cordic_in_tdata_1 <= i_sub(31) & i_sub(31 downto 9) & q_sub(31) & q_sub(31 downto 9);
+--   i_add <= i_data0_in + i_data1_in;
+--   i_sub <= i_data0_in - i_data1_in;
+--   q_add <= q_data0_in + q_data1_in;
+--   q_sub <= q_data0_in - q_data1_in;
 
+ --   cordic_in_tdata_0 <= i_add(31) & i_add(31 downto 9) & q_add(31) & q_add(31 downto 9);
+ --   cordic_in_tdata_1 <= i_sub(31) & i_sub(31 downto 9) & q_sub(31) & q_sub(31 downto 9);
+    
+    -- Сложение и вычитание с расширением знака (защита от переполнения)
+    i_add_ext <= std_logic_vector(signed(i_data0_in(31) & i_data0_in) + signed(i_data1_in(31) & i_data1_in));
+    i_sub_ext <= std_logic_vector(signed(i_data0_in(31) & i_data0_in) - signed(i_data1_in(31) & i_data1_in));
+    q_add_ext <= std_logic_vector(signed(q_data0_in(31) & q_data0_in) + signed(q_data1_in(31) & q_data1_in));
+    q_sub_ext <= std_logic_vector(signed(q_data0_in(31) & q_data0_in) - signed(q_data1_in(31) & q_data1_in));
+    cordic_in_tdata_0 <= i_add_ext(31) & i_add_ext(31 downto 9) & q_add_ext(31) & q_add_ext(31 downto 9);
+    cordic_in_tdata_1 <= i_sub_ext(31) & i_sub_ext(31 downto 9) & q_sub_ext(31) & q_sub_ext(31 downto 9);
+    
 process(aclk)
 begin
 	if rising_edge(aclk) then	
@@ -158,34 +176,52 @@ cordic_3 : cordic_translate_24
         m_axis_dout_tdata => cordic_out_tdata_1
     );
     
+-- Процесс сбора и синхронной выдачи
 process(aclk)
 begin
-	if rising_edge(aclk) then
-	    if out_valid = "1111" then
-	       out_valid <= "0000";
-	       chan_tvalid <= '1';
-	    else
-	       chan_tvalid <= '0';   
-	    end if;
-			
-		if cordic_out_tvalid_ch0 = '1' then	
-		    out_valid(0) <= '1';
-            axis_magnitude_tdata <= cordic_out_tdata_ch0(22 downto 7) & cordic_out_tdata_ch1(22 downto 7);
-        end if;  
-        if cordic_out_tvalid_ch1 = '1' then	
-            out_valid(1) <= '1';
-            axis_angle_tdata <= cordic_out_tdata_ch0(46 downto 31) & cordic_out_tdata_ch1(46 downto 31);
-        end if; 
-        if cordic_out_tvalid_0 = '1' then	
-            out_valid(2) <= '1';
-            axis_swr_tdata(31 downto 16) <= cordic_out_tdata_0(22 downto 7);
-        end if;
-        if cordic_out_tvalid_1 = '1' then	
-            out_valid(3) <= '1';
-            axis_swr_tdata(15 downto 0) <= cordic_out_tdata_1(22 downto 7);
-        end if;   
-    end if;
-end process;  
+    if rising_edge(aclk) then
+        if aresetn = '0' then
+            out_valid <= (others => '0');
+            chan_tvalid <= '0';
+        else
+            -- 1. Сбор данных по мере готовности от каждого CORDIC
+            if cordic_out_tvalid_ch0 = '1' then
+                out_valid(0) <= '1';
+                mag_ch0_reg <= cordic_out_tdata_ch0(22 downto 7);
+                ang_ch0_reg <= cordic_out_tdata_ch0(46 downto 31);
+            end if;
 
+            if cordic_out_tvalid_ch1 = '1' then
+                out_valid(1) <= '1';
+                mag_ch1_reg <= cordic_out_tdata_ch1(22 downto 7);
+                ang_ch1_reg <= cordic_out_tdata_ch1(46 downto 31);
+            end if;
+
+            if cordic_out_tvalid_0 = '1' then
+                out_valid(2) <= '1';
+                swr_inc_reg <= cordic_out_tdata_0(22 downto 7);
+            end if;
+
+            if cordic_out_tvalid_1 = '1' then
+                out_valid(3) <= '1';
+                swr_ref_reg <= cordic_out_tdata_1(22 downto 7);
+            end if;
+
+            -- 2. СИНХРОННОЕ ОБНОВЛЕНИЕ: только когда ВСЕ 4 блока ответили
+            if out_valid = "1111" then
+                out_valid <= "0000";
+                chan_tvalid <= '1'; -- Импульс готовности всего пакета данных
+                
+                -- Теперь в выходных шинах данные только из одного временного среза
+                axis_magnitude_tdata <= mag_ch0_reg & mag_ch1_reg;
+                axis_angle_tdata     <= ang_ch0_reg & ang_ch1_reg;
+                axis_swr_tdata       <= swr_inc_reg & swr_ref_reg;
+            else
+                chan_tvalid <= '0';
+            end if;
+        end if;
+    end if;
+end process;
+    
 
 end Behavioral;

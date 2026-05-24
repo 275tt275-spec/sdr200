@@ -21,7 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.std_logic_signed.all;
+--use ieee.std_logic_signed.all;
 use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
@@ -79,16 +79,12 @@ architecture Behavioral of agc is
     signal m_axis_rssi_tdata : STD_LOGIC_VECTOR (31 downto 0);
     signal m_axis_rssi_tvalid : STD_LOGIC;
     signal gain_tdata : STD_LOGIC_VECTOR (31 downto 0);
-    signal gain : STD_LOGIC_VECTOR (17 downto 0) := (others => '0');
+
     signal gain_data : STD_LOGIC_VECTOR (47 downto 0);
     signal rssi_max : STD_LOGIC_VECTOR (31 downto 0) := x"10000000";
     signal rssi_max_fast : STD_LOGIC_VECTOR (31 downto 0) := x"20000000";
     signal rssi_min : STD_LOGIC_VECTOR (31 downto 0) := x"10000000";
     signal rssi_min_fast : STD_LOGIC_VECTOR (31 downto 0) := x"20000000";
-    signal gain_inc : STD_LOGIC_VECTOR (15 downto 0) := x"0001";
-    signal gain_dec : STD_LOGIC_VECTOR (15 downto 0) := x"0001";
-    signal gain_inc_fast : STD_LOGIC_VECTOR (15 downto 0) := x"0002";
-    signal gain_dec_fast : STD_LOGIC_VECTOR (15 downto 0) := x"0002";
     signal wr_addr : STD_LOGIC_VECTOR (5 downto 0) := (others => '0');
     signal rd_addr : STD_LOGIC_VECTOR (5 downto 0) := (others => '0');
     signal rssi_rd : STD_LOGIC_VECTOR (31 downto 0);
@@ -97,6 +93,12 @@ architecture Behavioral of agc is
     signal agc_on : STD_LOGIC := '1';
     signal rf_gain : STD_LOGIC_VECTOR (15 downto 0) := x"0020";
     signal rf_gain_old : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
+    
+    signal gain : signed (17 downto 0) := (others => '0');
+    signal gain_inc : signed (15 downto 0) := x"0001";
+    signal gain_dec : signed (15 downto 0) := x"0001";
+    signal gain_inc_fast : signed (15 downto 0) := x"0002";
+    signal gain_dec_fast : signed (15 downto 0) := x"0002";
 
 begin
 
@@ -132,11 +134,11 @@ begin
             elsif cfg_addra = "101" then
                 rssi_min_fast <= cfg_dina; 
             elsif cfg_addra = "110" then
-                gain_inc_fast <= cfg_dina(31 downto 16); 
-                gain_inc <= cfg_dina(15 downto 0); 
-            elsif cfg_addra = x"111" then
-                gain_dec_fast <= cfg_dina(31 downto 16); 
-                gain_dec <= cfg_dina(15 downto 0); 
+                gain_inc_fast <= signed(cfg_dina(31 downto 16)); 
+                gain_inc <= signed(cfg_dina(15 downto 0)); 
+            elsif cfg_addra = "111" then
+                gain_dec_fast <= signed(cfg_dina(31 downto 16)); 
+                gain_dec <= signed(cfg_dina(15 downto 0)); 
             end if; 
         end if;
    end if;
@@ -148,7 +150,7 @@ begin
 	    s_tvalid_r <= s_axis_tvalid;
         s_tuser_r <= s_axis_tuser;
 		if s_axis_tvalid = '1' then
-		    gain_data <= s_axis_tdata * gain(17 downto 2);          
+		    gain_data <= std_logic_vector(signed(s_axis_tdata) * signed(gain(17 downto 2)));          
 		end if;  
 	end if;
 end process;
@@ -202,7 +204,7 @@ begin
                gain_tdata <= gain_data(35 downto 4); -- Cordic in demodulator
                if agc_on = '0' then
                    if rf_gain_old /= rf_gain then
-                       gain <= rf_gain & "00";
+                       gain <= signed(rf_gain & "00");
                        rf_gain_old <= rf_gain;
                    end if;  
                elsif s_tuser_r = "1" then         
@@ -283,13 +285,13 @@ process(aclk)
 begin 
    if rising_edge(aclk) then
         if m_axis_rssi_tvalid = '1' then
-            wr_addr <= wr_addr + 1;
+            wr_addr <= std_logic_vector(signed(wr_addr) + 1);
             rssi_max_value <= rssi_rd;
             rd_addr <= (others => '0');
             rssi_max_valid <= '0';
         end if;
         if rssi_max_valid = '0' and rd_addr /= "111111" then
-            rd_addr <= rd_addr + 1;
+            rd_addr <= std_logic_vector(signed(rd_addr) + 1);
             if rssi_max_value < rssi_rd then
                 rssi_max_value <= rssi_rd;
             end if; 

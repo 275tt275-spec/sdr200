@@ -60,9 +60,7 @@ architecture Behavioral of lim_proc is
         s_axis_config_tvalid : IN STD_LOGIC;
         s_axis_config_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         m_axis_data_tvalid : OUT STD_LOGIC;
-        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-        m_axis_phase_tvalid : OUT STD_LOGIC;
-        m_axis_phase_tdata : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
+        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
     );
     END COMPONENT dds_16;
 
@@ -261,9 +259,7 @@ dds_0 : dds_16
         s_axis_config_tvalid => phase_step_valid,
         s_axis_config_tdata => phase_step,
         m_axis_data_tvalid => dds_tvalid,
-        m_axis_data_tdata => dds_tdata,
-        m_axis_phase_tvalid => open,
-        m_axis_phase_tdata => open
+        m_axis_data_tdata => dds_tdata
     );
 
 fir_in_0: component lim_eq_fir

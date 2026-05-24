@@ -21,11 +21,11 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.std_logic_signed.all;
+--use ieee.std_logic_signed.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -216,8 +216,8 @@ txa_cic_1 : cic_txa
 process(aclk)
 begin
 	if rising_edge(aclk) then   
-        out_tdata42_0 <= cic_out_tdata_0 * gain;
-        out_tdata42_1 <= cic_out_tdata_1 * gain;
+        out_tdata42_0 <= std_logic_vector(signed(cic_out_tdata_0) * signed(gain));
+        out_tdata42_1 <= std_logic_vector(signed(cic_out_tdata_1) * signed(gain));
     end if;
 end process;
     

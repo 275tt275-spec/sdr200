@@ -356,8 +356,6 @@ void hw_SetTXAFreq(uint32_t hz)
     uint8_t txaNewCorr = eeprom_txa_att(hz);
     uint8_t LPFNew;
 
-    if(txaNewCorr > 4) txaNewCorr -= 4;
-
 	if(txaNewCorr != hw_device.txaCorr)
 	{
 		hw_SetTXACorrect(txaNewCorr);
@@ -655,14 +653,7 @@ void hw_SetPTT(int on, e_tx_input in)
 
 		hw_SetTXAPower(e_vars->RFPower);
 		hw_SetTXAFreq(e_vars->vfoA);
-		uint8_t att_value = eeprom_txafbV_att(e_vars->vfoA);
-		att_value += 2 * (53 - e_vars->RFPower);
-		if(att_value >= 63 ) att_value = 63;
-		hw_SetAttMB1(att_value);
-		att_value = eeprom_txafbC_att(e_vars->vfoA);
-		att_value += 2 * (53 - e_vars->RFPower);
-		if(att_value >= 63 ) att_value = 63;
-		hw_SetAttMB2(att_value);
+
 		hw_device.TxOn = 1;
 		fpga_TXA_Enable(1);
 		if(hw_device.lin == 1)
@@ -707,9 +698,26 @@ void hw_SetRXAAtt(float db)
 
 void hw_SetTXAPower(float dBm)
 {
-	uint8_t value = (uint8_t)((53 - dBm) * 2);
+	uint8_t attV, attC, attMin;
+	int deltaPWR;
+
+	uint8_t value = 63;
+
+    sprintf(hw_device.InternalSend, "RT%02d;", value);
+    uartPL_sendInternal((uint8_t*)hw_device.InternalSend, strlen(hw_device.InternalSend));
+
+	value = (uint8_t)((53 - dBm) * 2);
 	if(isTuneMode == 1) value = TXA_TUNE_PWR;
 	if(value > 63) value = 63;
+
+	deltaPWR = 2 * (53 - e_vars->RFPower);
+	attV = eeprom_txafbV_att(e_vars->vfoA);
+	attC = eeprom_txafbC_att(e_vars->vfoA);
+	attMin = (attV < attC) ? attV : attC;
+	if(deltaPWR > attMin) deltaPWR = attMin;
+	attV = attV - deltaPWR;
+	attC = attC - deltaPWR;
+	hw_SetFBAtt(attV, attC);
 
     sprintf(hw_device.InternalSend, "RT%02d;", value);
     uartPL_sendInternal((uint8_t*)hw_device.InternalSend, strlen(hw_device.InternalSend));

@@ -57,6 +57,7 @@ architecture Behavioral of TXA_modulator is
     COMPONENT dds_16_16 IS
     PORT (
         aclk : IN STD_LOGIC;
+        aclken : IN STD_LOGIC;
         s_axis_config_tvalid : IN STD_LOGIC;
         s_axis_config_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         m_axis_data_tvalid : OUT STD_LOGIC;
@@ -161,7 +162,8 @@ end process;
 
 dds_0 : dds_16_16
     PORT MAP (
-        aclk => audio_data_valid,
+        aclk => aclk,
+        aclken => audio_data_valid,
         s_axis_config_tvalid => freq_offset_valid,
         s_axis_config_tdata => freq_offset_data,
         m_axis_data_tvalid => open,
