@@ -33,7 +33,6 @@ architecture Behavioral of adc2zeroif is
 		clk : IN std_logic;
 		clr_s : IN std_logic;
 		din : IN std_logic_vector(15 downto 0);          
-		tst : OUT std_logic_vector(15 downto 0);
 		dout : OUT std_logic_vector(15 downto 0)
 	);
 	END COMPONENT;
@@ -86,7 +85,6 @@ inst_dc_remover : dc_remover
 			clk => clk,
 			clr_s => '0',
 			din => din,
-			tst => open,
 			dout => adc_no_dc
 		);
 --adc_no_dc <= din;

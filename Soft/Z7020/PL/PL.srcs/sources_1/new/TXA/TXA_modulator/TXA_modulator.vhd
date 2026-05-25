@@ -103,7 +103,7 @@ architecture Behavioral of TXA_modulator is
     signal mult_out_valid : std_logic;
     signal carrier_level : STD_LOGIC_VECTOR (23 downto 0) :=  x"3FFFFF";      -- := x"3FFFFF";        100%
     signal modulation : STD_LOGIC_VECTOR (1 downto 0) := "00";
-    signal A3E_data : STD_LOGIC_VECTOR (23 downto 0);
+    signal A3E_envelope : STD_LOGIC_VECTOR (23 downto 0);
     signal J3E_data : std_logic_vector(47 DOWNTO 0);
     signal iq_in_tdata : STD_LOGIC_VECTOR (47 downto 0);
     signal fos_in_tdata : STD_LOGIC_VECTOR (47 downto 0);
@@ -184,12 +184,14 @@ mply_0 : cmpy_24_16
     );
 
     a3e_mod <= '1' when modulation = "01" else '0';
-    A3E_data <= carrier_level + audio_data;  
+    -- audio_data должен быть симметричен относительно 0
+    -- A3E_envelope — это всегда положительная величина (несущая + звук)
+    A3E_envelope <= carrier_level + audio_data;  
     j3e_data <= mult_out_data(62 downto 39) & mult_out_data(30 downto 7) when lsb_select = '1' else
                 mult_out_data(30 downto 7) & mult_out_data(62 downto 39);
-    iq_in_tdata <= A3E_data & A3E_data when (a3e_mod = '1') else j3e_data;
+    iq_in_tdata <= A3E_envelope & x"000000" when (a3e_mod = '1') else j3e_data;
           
-    audio_abs_in <= A3E_data when a3e_mod = '1' else audio_data;                                  
+    audio_abs_in <= A3E_envelope when a3e_mod = '1' else audio_data;                                  
     audio_max_abs <= std_logic_vector(abs(signed(audio_abs_in)));
     
     fos_in_tdata <= x"400000" & x"400000" when modulation = "10" else iq_in_tdata;

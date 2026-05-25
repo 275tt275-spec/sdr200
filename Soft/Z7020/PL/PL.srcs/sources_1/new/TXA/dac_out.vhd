@@ -136,25 +136,24 @@ port map (
     
 lbl : for k in 0 to 15 generate
 begin
- data_oddr : ODDR2
+ data_oddr : ODDR
    generic map(
-      DDR_ALIGNMENT => "C1", -- Sets output alignment to "NONE", "C0", "C1" 
+      DDR_CLK_EDGE => "OPPOSITE_EDGE",
       INIT => '0', -- Sets initial state of the Q output to '0' or '1'
       SRTYPE => "ASYNC") -- Specifies "SYNC" or "ASYNC" set/reset
    port map (
       Q => dout(k), -- 1-bit output data
-      C0 => dco_clk, -- 1-bit clock input
-      C1 => nclk, -- 1-bit clock input
+      C => dco_clk, -- 1-bit clock input
       CE => '1',  -- 1-bit clock enable input
-      D0 => dout_i(k),   -- 1-bit data input (associated with C0)
-      D1 => dout_q(k),   -- 1-bit data input (associated with C1)
+      D1 => dout_i(k),   -- 1-bit data input (associated with C0)
+      D2 => dout_q(k),   -- 1-bit data input (associated with C1)
       R => '0',    -- 1-bit reset input
       S => '0'     -- 1-bit set input
    );
 data_obufdf : OBUFDS
 generic map (
    IOSTANDARD => "DEFAULT", -- Specify the output I/O standard
-   SLEW => "SLOW")          -- Specify the output slew rate
+   SLEW => "FAST")          -- Specify the output slew rate
 port map (
    O => m_dout_p(k),     -- Diff_p output (connect directly to top-level port)
    OB => m_dout_n(k),   -- Diff_n output (connect directly to top-level port)
@@ -162,18 +161,17 @@ port map (
 );
 end generate;
 
-dci_oddr : ODDR2
+dci_oddr : ODDR
    generic map(
-      DDR_ALIGNMENT => "C1", -- Sets output alignment to "NONE", "C0", "C1" 
+      DDR_CLK_EDGE => "OPPOSITE_EDGE",
       INIT => '0', -- Sets initial state of the Q output to '0' or '1'
       SRTYPE => "ASYNC") -- Specifies "SYNC" or "ASYNC" set/reset
    port map (
       Q => dci, -- 1-bit output data
-      C0 => dco_clk, -- 1-bit clock input
-      C1 => nclk, -- 1-bit clock input
+      C => dco_clk, -- 1-bit clock input
       CE => '1',  -- 1-bit clock enable input
-      D0 => '1',   -- 1-bit data input (associated with C0)
-      D1 => '0',   -- 1-bit data input (associated with C1)
+      D1 => '1',   -- 1-bit data input (associated with C0)
+      D2 => '0',   -- 1-bit data input (associated with C1)
       R => '0',    -- 1-bit reset input
       S => '0'     -- 1-bit set input
    );
@@ -181,7 +179,7 @@ dci_oddr : ODDR2
 dci_obufdf : OBUFDS
 generic map (
    IOSTANDARD => "DEFAULT", -- Specify the output I/O standard
-   SLEW => "SLOW")          -- Specify the output slew rate
+   SLEW => "FAST")          -- Specify the output slew rate
 port map (
    O => m_dci_p,     -- Diff_p output (connect directly to top-level port)
    OB => m_dci_n,   -- Diff_n output (connect directly to top-level port)

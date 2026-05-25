@@ -21,12 +21,9 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.std_logic_signed.all;
 use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.VComponents.all;
-use IEEE.STD_LOGIC_ARITH.ALL;
-use IEEE.STD_LOGIC_SIGNED.ALL;
 
 entity TXA_channel is
     Port ( 
@@ -166,12 +163,13 @@ component fir_audio_0 IS
     signal modulator_out_tvalid : std_logic;
     signal gain : STD_LOGIC_VECTOR ( 17 downto 0 ) := "00" & x"7FFF";
     signal iq_tdata : std_logic_vector(47 downto 0);
+    signal fb_forward : STD_LOGIC_VECTOR (16 downto 0);
     signal linear_din2 : STD_LOGIC_VECTOR (15 downto 0);
     signal linear_in_i, linear_in_q : std_logic_vector(23 downto 0);
     signal linear_out_i, linear_out_q : std_logic_vector(23 downto 0);
     signal linear_cfg_tvalid : STD_LOGIC;
     signal dds_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0);
-    signal dds_cfg_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0);
+    signal dds_cfg_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0) := (others => '0');
     signal dds_cfg_tvalid : std_logic := '0';
     signal mult_in_tdata, mult_out_tdata : std_logic_vector(47 downto 0);
     signal dac_tdata : STD_LOGIC_VECTOR (15 downto 0);
@@ -181,10 +179,9 @@ component fir_audio_0 IS
     signal lim_proc_cfg_tvalid : STD_LOGIC;
     signal modulator_cfg_tvalid : STD_LOGIC;
     signal resampler_cfg_tvalid : STD_LOGIC;
-    signal lim_over : STD_LOGIC_VECTOR(3 DOWNTO 0);
+    signal lim_over : STD_LOGIC_VECTOR(3 DOWNTO 0) := (others => '0');
     signal cfg_addr : std_logic_vector(3 downto 0);
-    signal cfg_wr : std_logic := '0';
-    signal lin_rdata : std_logic_vector(31 downto 0);    
+    signal cfg_wr : std_logic := '0';  
     signal resampler_over : std_logic;
     signal linear_ovf : std_logic_vector(3 downto 0);
 
@@ -294,8 +291,9 @@ resampler_0 : TXA_resampler
     
     linear_in_q <= iq_tdata(47 downto 24);
     linear_in_i <= iq_tdata(23 downto 0);   
-    
-    linear_din2 <= s_adc_data_rx0 - s_adc_data_rx1;   
+    fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) - resize(signed(s_adc_data_rx1), 17)); -- Сигналы в противофазе
+--    fb_forward <= s_adc_data_rx0 - s_adc_data_rx1; 
+    linear_din2 <= fb_forward(16 downto 1); -- проверить там раньше было 14 бит  
         
 linear_0 : linear_dds_iq
     PORT MAP  ( 
@@ -337,7 +335,7 @@ cmply_0 : cmpy_24_24
         m_axis_dout_tvalid => open
     );
     
-    dac_tdata24 <= (mult_out_tdata(47 downto 24) + mult_out_tdata(23 downto 0)) when txa_on = '1' else (others => '0'); 
+    dac_tdata24 <= std_logic_vector(signed(mult_out_tdata(47 downto 24)) + signed(mult_out_tdata(23 downto 0))) when txa_on = '1' else (others => '0'); 
 
 process(aclk)
 begin

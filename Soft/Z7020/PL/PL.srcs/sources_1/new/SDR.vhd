@@ -123,17 +123,6 @@ entity SDR is
 end SDR;
 
 architecture Behavioral of SDR is
-
-    COMPONENT ila_0 IS
-    PORT (
-    clk : IN STD_LOGIC;
-    probe0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe2 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe3 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    probe4 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
-    );
-    END COMPONENT ila_0;
     
     COMPONENT clock_converter_2 is
         Port (
@@ -256,7 +245,9 @@ architecture Behavioral of SDR is
     signal aclk1 : std_logic;
     signal aresetn : std_logic := '1';
     signal rst_sig : std_logic := '0';
-    signal rst_r, rst_r1 : std_logic := '0';
+--    signal rst_r, rst_r1 : std_logic := '0';
+    signal reset_counter : integer range 0 to 63 := 63; -- Счетчик для удлинения сброса
+    signal aresetn_i     : std_logic := '0';           -- Внутренний сигнал сброса
     
     signal adc0_max_rst : std_logic := '0';
     signal adc0_max_value : std_logic_vector(15 downto 0);
@@ -289,6 +280,7 @@ architecture Behavioral of SDR is
     signal axis_wb_tdata : STD_LOGIC_VECTOR (31 downto 0);
     signal axis_wb_tvalid : STD_LOGIC;
     signal audio_clk : STD_LOGIC;
+    signal reg_read_data : std_logic_vector(31 downto 0);
 
     ATTRIBUTE X_INTERFACE_INFO : string;
     ATTRIBUTE X_INTERFACE_INFO OF bram_addra: SIGNAL IS "xilinx.com:interface:bram:1.0 BRAM_PORTA ADDR";
@@ -314,90 +306,151 @@ architecture Behavioral of SDR is
 
 begin 
 
-debug_0 : ila_0
-    PORT MAP(
-    clk => aclk,
-    probe0 => axis_swrnb0_tdata,
-    probe1 => axis_swrnb0_tuser,
-    probe2(0) => axis_swrnb0_tvalid,
-    probe3 => axis_adc0_tdata,
-    probe4 => axis_adc1_tdata
-    );
-
     aclk_122 <= aclk;
     cfg_addra <= bram_addra(12 downto 2);
-    bram_douta <= RXA_cfg_douta when cfg_addra(10 downto 8) = "001" or cfg_addr_r(10 downto 8) = "001" else 
-                  TXA_cfg_douta when cfg_addra(10 downto 8) = "010" or cfg_addr_r(10 downto 8) = "010" else 
-                  SWR_cfg_douta when cfg_addra(10 downto 8) = "011" or cfg_addr_r(10 downto 8) = "011" else 
-                  HW_cfg_douta;                                  
+--    bram_douta <= RXA_cfg_douta when cfg_addra(10 downto 8) = "001" or cfg_addr_r(10 downto 8) = "001" else 
+--                  TXA_cfg_douta when cfg_addra(10 downto 8) = "010" or cfg_addr_r(10 downto 8) = "010" else 
+--                  SWR_cfg_douta when cfg_addra(10 downto 8) = "011" or cfg_addr_r(10 downto 8) = "011" else 
+--                  HW_cfg_douta;                                  
 
     HW_cfg_douta <= x"0000000" & CAT_DTR & CAT_RTC & CW_KEY & PTT;   
     
     gpio_out <= (others => '0');  
     m_axis_ser1_tdata <= (others => '0');  
     
+    
+    -- Назначаем результат чтения на выход порта
+    bram_douta <= reg_read_data;
+    
+--cmd_process : process (aclk) is
+--begin 
+--   if rising_edge(aclk) then
+--        HW_wr <= '0';    
+--        RXA_wr <= '0';
+--        TXA_wr <= '0';   
+--        SWR_wr <= '0';   
+--        UART0_wr <= '0'; 
+--        UART1_wr <= '0';
+--        if bram_ena = '1' then
+--            cfg_addr_r <= cfg_addra;  
+--            if bram_wea = x"F" then 
+--                if cfg_addra(10 downto 8) = "000" then
+--                    HW_wr <= '1';    
+--                elsif cfg_addra(10 downto 8) = "001" then
+--                    RXA_wr <= '1';
+--                elsif cfg_addra(10 downto 8) = "010" then
+--                    TXA_wr <= '1';  
+--                    if  cfg_addra(7 downto 0) = x"01" then
+--                        TX_ON <= bram_dina(1);      
+--                    end if; 
+--                elsif cfg_addra(10 downto 8) = "011" then
+--                    SWR_wr <= '1';  
+--                elsif cfg_addra(10 downto 8) = "100" then
+--                    UART0_wr <= '1';   
+--                elsif cfg_addra(10 downto 8) = "101" then
+--                    UART1_wr <= '1';       
+--                end if;        
+--            end if;  
+--        end if;
+--   end if;
+--end process cmd_process;
+
+
 cmd_process : process (aclk) is
-begin 
-   if rising_edge(aclk) then
-        HW_wr <= '0';    
+begin
+    if rising_edge(aclk) then
+        HW_wr <= '0';
         RXA_wr <= '0';
-        TXA_wr <= '0';   
-        SWR_wr <= '0';   
-        UART0_wr <= '0'; 
+        TXA_wr <= '0';
+        SWR_wr <= '0';
+        UART0_wr <= '0';
         UART1_wr <= '0';
+
         if bram_ena = '1' then
-            cfg_addr_r <= cfg_addra;  
-            if bram_wea = x"F" then 
-                if cfg_addra(10 downto 8) = "000" then
-                    HW_wr <= '1';    
-                elsif cfg_addra(10 downto 8) = "001" then
-                    RXA_wr <= '1';
-                elsif cfg_addra(10 downto 8) = "010" then
-                    TXA_wr <= '1';  
-                    if  cfg_addra(7 downto 0) = x"01" then
-                        TX_ON <= bram_dina(1);      
-                    end if; 
-                elsif cfg_addra(10 downto 8) = "011" then
-                    SWR_wr <= '1';  
-                elsif cfg_addra(10 downto 8) = "100" then
-                    UART0_wr <= '1';   
-                elsif cfg_addra(10 downto 8) = "101" then
-                    UART1_wr <= '1';       
-                end if;        
-            end if;  
+            -- Запоминаем текущий адрес для следующего такта (если нужно модулям)
+            cfg_addr_r <= cfg_addra;
+
+            -- ЛОГИКА ЗАПИСИ (остается почти без изменений)
+            if bram_wea = x"F" then
+                case cfg_addra(10 downto 8) is
+                    when "000" => HW_wr <= '1';
+                    when "001" => RXA_wr <= '1';
+                    when "010" => 
+                        TXA_wr <= '1';
+                        if cfg_addra(7 downto 0) = x"01" then
+                            TX_ON <= bram_dina(1);
+                        end if;
+                    when "011" => SWR_wr <= '1';
+                    when "100" => UART0_wr <= '1';
+                    when "101" => UART1_wr <= '1';
+                    when others => null;
+                end case;
+            end if;
+
+            -- ЛОГИКА ЧТЕНИЯ (с защелкиванием на 1 такт)
+            -- Выбираем данные в зависимости от адреса, который активен СЕЙЧАС
+            case cfg_addra(10 downto 8) is
+                when "001" => reg_read_data <= RXA_cfg_douta;
+                when "010" => reg_read_data <= TXA_cfg_douta;
+                when "011" => reg_read_data <= SWR_cfg_douta;
+                when "000" => reg_read_data <= x"0000000" & CAT_DTR & CAT_RTC & CW_KEY & PTT;
+                when others => reg_read_data <= (others => '0');
+            end case;
         end if;
-   end if;
+    end if;
 end process cmd_process;
 
-p_synchronous_reset : process (aclk, rst_sig) is
+--p_synchronous_reset : process (aclk, rst_sig) is
+--begin
+--
+--    if rising_edge(aclk) then 
+--        rst_sig <= '0';
+--        if HW_wr = '1' then
+--            if cfg_addra(7 downto 0) = x"00" then
+--                rst_sig <= '1';
+--            end if;
+--        end if;    
+--    end if;
+--
+--    if rst_sig = '1' then
+--        rst_r <= '1';  
+--    elsif rising_edge(aclk) then
+--        rst_r <= '0'; 
+--    end if;     
+--
+--   if rising_edge(aclk) then        
+--      rst_r1 <= rst_r; 
+--      
+--      if rst_r /= rst_r1 and rst_r = '1' then
+--         aresetn <= '0';
+--      else
+--         aresetn <= '1'; 
+--      end if;
+--      
+--   end if;
+--end process p_synchronous_reset;
+
+p_reset_logic : process (aclk) is
 begin
-
-    if rising_edge(aclk) then 
-        rst_sig <= '0';
-        if HW_wr = '1' then
-            if cfg_addra(7 downto 0) = x"00" then
-                rst_sig <= '1';
-            end if;
-        end if;    
+    if rising_edge(aclk) then
+        -- Логика активации сброса
+        if HW_wr = '1' and cfg_addra(7 downto 0) = x"00" then
+            -- Если пришла команда сброса через BRAM
+            reset_counter <= 63; 
+            aresetn_i     <= '0';
+        elsif reset_counter > 0 then
+            -- Удерживаем сброс в низком уровне, пока счетчик не обнулится
+            reset_counter <= reset_counter - 1;
+            aresetn_i     <= '0';
+        else
+            -- Сброс окончен
+            aresetn_i     <= '1';
+        end if;
     end if;
+end process p_reset_logic;
 
-    if rst_sig = '1' then
-        rst_r <= '1';  
-    elsif rising_edge(aclk) then
-        rst_r <= '0'; 
-    end if;     
-
-   if rising_edge(aclk) then        
-      rst_r1 <= rst_r; 
-      
-      if rst_r /= rst_r1 and rst_r = '1' then
-         aresetn <= '0';
-      else
-         aresetn <= '1'; 
-      end if;
-      
-   end if;
-end process p_synchronous_reset;
+-- Назначаем внутренний сигнал на глобальный
+aresetn <= aresetn_i;
 
 adc_input_0: component adc_input
     port map (

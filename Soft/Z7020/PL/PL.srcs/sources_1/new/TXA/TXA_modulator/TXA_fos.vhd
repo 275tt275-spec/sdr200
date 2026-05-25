@@ -77,46 +77,65 @@ END COMPONENT  fir_fos_txa;
     signal fir_delay : integer range 0 to 8192 := 0;
     signal gain_correct : STD_LOGIC_VECTOR(2 DOWNTO 0) := "100";
     signal firout_tdata : STD_LOGIC_VECTOR (63 downto 0);
+    signal reload_pending : std_logic := '0'; -- Флаг ожидания завершения загрузки
 
 begin
 
 process(aclk)
 begin
 	if rising_edge(aclk) then	
-	    reload_tlast <= '0';
-	    reload_tvalid <= '0';
-	    config_tvalid <= '0';
+        -- Сброс импульсных сигналов по умолчанию
+        config_tvalid <= '0';
 	    
 	    if reload_tlast = '1' then
 	       fir_delay <= 1;
 	    end if;	    
 	    
-	    if fir_delay < 7680 and fir_delay /= 0 then -- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅ
-	       fir_delay <= fir_delay + 1;	        
-	    elsif fir_delay = 7680 then 
-	       config_tvalid <= '1'; 
-	       fir_delay <= 0;
-	    end if;      
+	    -- Логика задержки для активации новой конфигурации (после загрузки всех коэф.)
+        if fir_delay > 0 then
+            if fir_delay = 7680 then
+                config_tvalid <= '1';
+                fir_delay <= 0;
+            else
+                fir_delay <= fir_delay + 1;
+            end if;
+        end if;      
 		
-		if s_axis_cfg_tvalid = '1' then				   		
-			if s_axis_cfg_tdest = "0" then
-			    reload_tdata <= s_axis_cfg_tdata(23 DOWNTO 0);
-			    reload_tvalid <= '1';
-			    if s_axis_cfg_tdata(31) = '1' then
-			       fir_coeff <= 0;
-			       fir_delay <= 0;
-			    else
-			        if fir_coeff < 62 then
-                        fir_coeff <= fir_coeff + 1;
-                    elsif fir_coeff = 62 then 
---                        fir_coeff <= fir_coeff + 1;
-                        reload_tlast <= '1';
-                    end if;		       
-			    end if; 
-			elsif s_axis_cfg_tdest = "1" then    
-			    gain_correct <= s_axis_cfg_tdata(2 DOWNTO 0);    
-			end if;				     			           
-		end if;  
+		-- Логика управления загрузкой (Reload)
+        if s_axis_cfg_tvalid = '1' and s_axis_cfg_tdest = "0" then
+            reload_tdata <= s_axis_cfg_tdata(23 DOWNTO 0);
+            reload_tvalid <= '1';
+            -- Проверка флага сброса очереди (бит 31) в первом коэффициенте
+            if s_axis_cfg_tdata(31) = '1' then
+                fir_coeff <= 0;
+                reload_tlast <= '0';
+                reload_pending <= '0';
+            else
+                -- Если это последний коэффициент (64-й, так как счет идет с 1 до 62)
+                if fir_coeff = 62 then
+                    reload_tlast <= '1';
+                    reload_pending <= '1';
+                else
+                    fir_coeff <= fir_coeff + 1;
+                    reload_tlast <= '0';
+                end if;       
+            end if;  
+    -- Снимаем сигналы Reload только когда IP-ядро их подтвердило (TREADY = '1')
+        elsif reload_tready = '1' then
+            reload_tvalid <= '0';
+            if reload_tlast = '1' then
+                reload_tlast <= '0';
+                reload_pending <= '0';
+                fir_delay <= 1; -- Запускаем счетчик перед активацией CONFIG
+                fir_coeff <= 0; -- Сбрасываем счетчик для следующей пачки
+            end if;
+        end if;        
+			
+		-- Обработка настройки усиления
+        if s_axis_cfg_tvalid = '1' and s_axis_cfg_tdest = "1" then
+            gain_correct <= s_axis_cfg_tdata(2 DOWNTO 0);
+        end if;				     			           
+		 
 	end if;
 end process;
 

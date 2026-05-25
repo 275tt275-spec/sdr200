@@ -66,6 +66,7 @@ architecture Behavioral of RXA_demod is
     COMPONENT dds_16_24 IS
     PORT (
         aclk : IN STD_LOGIC;
+        aclken : IN STD_LOGIC;
         s_axis_config_tvalid : IN STD_LOGIC;
         s_axis_config_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         m_axis_data_tvalid : OUT STD_LOGIC;
@@ -98,7 +99,7 @@ architecture Behavioral of RXA_demod is
     signal a3e_out_tvalid : std_logic;
     signal j3e_out_tdata : std_logic_vector(63 downto 0);
     signal j3e_out_tvalid : std_logic;
-    signal f3e_prv_tdata : std_logic_vector(31 downto 0); 
+    signal f3e_prv_tdata : std_logic_vector(31 downto 0) := (others => '0'); 
     signal f3e_cur_tdata : std_logic_vector(31 downto 0); 
     signal f3e_out_tdata : std_logic_vector(31 downto 0); 
     signal f3e_demod : std_logic_vector(31 downto 0);  
@@ -134,7 +135,8 @@ end process;
     
 dds_0 : dds_16_24
     PORT MAP (
-        aclk => cordic_in_tvalid,
+        aclk => aclk,
+        aclken => cordic_in_tvalid,
         s_axis_config_tvalid => config_tvalid,
         s_axis_config_tdata => config_tdata,
         m_axis_data_tvalid => open,
@@ -172,10 +174,19 @@ begin
             end if;  
         elsif modulation = "11" then     -- f3e   
             if a3e_out_tvalid = '1' then
+                -- 1. Сохраняем текущую фазу из CORDIC (обычно это старшие 32 бита)
                 f3e_cur_tdata <= a3e_out_tdata(63 downto 32);
-                f3e_prv_tdata <= f3e_cur_tdata;
+                -- 2. Вычисляем разность: текущая фаза МИНУС задержка
+                -- ВАЖНО: f3e_prv_tdata содержит значение с ПРОШЛОГО такта валидности
                 f3e_out_tdata <= f3e_cur_tdata - f3e_prv_tdata;
-                demod_out_data <= f3e_demod;
+                -- 3. Обновляем задержку для следующего отсчета
+                f3e_prv_tdata <= f3e_cur_tdata;                               
+                
+--               f3e_cur_tdata <= a3e_out_tdata(63 downto 32);
+--               f3e_prv_tdata <= f3e_cur_tdata;
+--               f3e_out_tdata <= f3e_cur_tdata - f3e_prv_tdata;
+                
+                demod_out_data <= f3e_demod; -- Используем сигнал с коррекцией перехода через 2PI
                 demod_out_en <= '1';
             end if;
           else   -- j3e

@@ -90,19 +90,6 @@ entity linear_dds_iq is
 end linear_dds_iq;
 
 architecture Behavioral of linear_dds_iq is
-
-    component ila_0 IS
-    PORT (
-    clk : IN STD_LOGIC;
-    probe0 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    probe1 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    probe2 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    probe3 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    probe4 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    probe5 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    probe6 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
-    );
-    END component ila_0;
 	
 	component adc2zeroif
     Port ( 
@@ -273,24 +260,10 @@ signal overflow_i, overflow_q, overm_i, overm_q : STD_LOGIC;
 signal cfg_addr : std_logic_vector(3 downto 0);
 signal cfg_wr : std_logic := '0';
 
-    constant ACLK_DIVIDER : integer := ((122880000 / 32000) - 1);
-    signal sync_cnt : std_logic_vector(11 downto 0) := (others => '0');
-    signal valid32 : std_logic;
+attribute MAX_FANOUT : integer;
+attribute MAX_FANOUT of corr_clr : signal is 50; -- Ограничиваем нагрузку до 50 триггеров на один драйвер
 
 begin
-
-valid32 <= '1' when sync_cnt = ACLK_DIVIDER else '0';
-
-process(aclk)
-begin
-    if rising_edge(aclk) then
-        if sync_cnt = ACLK_DIVIDER then
-            sync_cnt <= (others => '0');
-        else
-            sync_cnt <= sync_cnt + 1;
-        end if;
-    end if;
-end process;
 
 dout_i <= dout_i_int & x"00";
 dout_q <= dout_q_int & x"00";
@@ -318,20 +291,6 @@ inst_adc2zeroif : adc2zeroif
 			i_out => fir_i,
 			q_out => fir_q
 		);
-		
---debug_0 : ila_0
---    PORT MAP(
---        clk => aclk,
---        probe0 => din2c,
---        probe1 => fb_i(17 downto 2),
---        probe2 => fb_q(17 downto 2),
---        probe3 => din1_ir(17 downto 2),
---        probe4 => dout_i_int,
---        probe5 => dout_q_int,
---        probe6(0) => valid32
---    );
-
--- PHASE Block
 
     wr_m <= s_axis_cfg_tvalid when s_axis_cfg_tdest(4) = '1' else '0';        
     m_cs <= '1' when s_axis_cfg_tdest(4) = '1' else '0';
