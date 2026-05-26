@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "cmpy_16_24",
     "component_reference": "xilinx.com:ip:cmpy:6.0",
-    "ip_revision": "23",
+    "ip_revision": "22",
     "gen_directory": "../../../../PL.gen/sources_1/ip/cmpy_16_24",
     "parameters": {
       "component_parameters": {

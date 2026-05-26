@@ -211,7 +211,7 @@ architecture Behavioral of linear_dds_iq is
 	END COMPONENT;
 
 signal phase_i, phase_q : std_logic_vector(15 downto 0);
-signal di_16, dq_16 : std_logic_vector(15 downto 0);
+signal di_16, dq_16 : std_logic_vector(15 downto 0) := (others => '0');
 signal fir_i, fir_q : std_logic_vector(15 downto 0) := (others => '0');
 
 signal di_19, dq_19 : std_logic_vector(18 downto 0);
@@ -242,7 +242,8 @@ signal orth0, orth1, orth2, orth3 : std_logic_vector(16 downto 0);
 signal stab_reg : std_logic_vector(17 downto 0) := x"2666" & "00";	-- 0.3
 signal stab_cnt : std_logic_vector(17 downto 0) := (others => '0');
 signal prop_reg : std_logic_vector(17 downto 0) := x"1780" & "00";	-- 4 (0.0156*256)
-signal dif_reg : std_logic_vector(17 downto 0) := x"6400" & "00";	-- 200 (0.78*256)
+-- signal dif_reg : std_logic_vector(17 downto 0) := x"6400" & "00";	-- 200 (0.78*256)
+signal dif_reg : std_logic_vector(17 downto 0) := (others => '0');
 
 signal agc_i, agc_q : std_logic_vector(15 downto 0);
 signal agc_k : std_logic_vector(2 downto 0) := "010";

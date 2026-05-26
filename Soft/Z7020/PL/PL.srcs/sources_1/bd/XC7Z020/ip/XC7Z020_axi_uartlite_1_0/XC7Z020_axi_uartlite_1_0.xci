@@ -4,7 +4,7 @@
     "xci_name": "XC7Z020_axi_uartlite_1_0",
     "cell_name": "axi_uartlite_2",
     "component_reference": "xilinx.com:ip:axi_uartlite:2.0",
-    "ip_revision": "34",
+    "ip_revision": "33",
     "gen_directory": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_axi_uartlite_1_0",
     "parameters": {
       "component_parameters": {
@@ -44,12 +44,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "34" } ],
+        "IPREVISION": [ { "value": "33" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_axi_uartlite_1_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },

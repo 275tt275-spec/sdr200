@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "dds_16",
     "component_reference": "xilinx.com:ip:dds_compiler:6.0",
-    "ip_revision": "24",
+    "ip_revision": "23",
     "gen_directory": "../../../../PL.gen/sources_1/ip/dds_16",
     "parameters": {
       "component_parameters": {

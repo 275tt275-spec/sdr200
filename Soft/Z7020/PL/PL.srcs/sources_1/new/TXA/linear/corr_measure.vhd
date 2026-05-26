@@ -92,7 +92,7 @@ signal d_i_56, d_q_56 : std_logic_vector(55 downto 0);
 signal kreg : std_logic_vector(2 downto 0):= "101";
 signal byte_cnt : std_logic_vector(4 downto 0):= (others => '0');
 signal wr_accs, prev_rd, prev_wr : std_logic := '0';
-signal rds, wrs : std_logic;
+signal rds, wrs : std_logic := '0';
 signal norm24_i, norm24_q: std_logic_vector(23 downto 0) := (others => '0');
 signal norm_i, norm_q: std_logic_vector(15 downto 0) := (others => '0');
 signal latch_phi, set_phi, phi_norm : std_logic_vector(17 downto 0) := (others => '0');

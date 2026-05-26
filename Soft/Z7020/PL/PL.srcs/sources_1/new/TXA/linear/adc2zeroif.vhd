@@ -69,6 +69,8 @@ signal scope_d : std_logic_vector(63 downto 0);
 signal scope_trg : std_logic_vector(1 downto 0) := "00";
 
 signal i_zeroif, q_zeroif : std_logic_vector(35 downto 0);
+signal i_out_r : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
+signal q_out_r : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
 
 begin
 
@@ -77,6 +79,9 @@ begin
 --		data => scope_d,
 --		trig0 => scope_trg
 --	);
+
+i_out <= i_out_r;
+q_out <= q_out_r;
 	
 scope_d <= din & i_raw(17 downto 2) & i_hi_freq(17 downto 2) & i_zeroif(35 downto 20);
 	
@@ -186,21 +191,21 @@ begin
 
 			-- FIRs, выход ограничиваем
 			if i_zeroif(35 downto 31) = "00000" or i_zeroif(35 downto 31) = "11111" then
-				i_out <= i_zeroif(31 downto 16);  
+				i_out_r <= i_zeroif(31 downto 16);  
 			else
 				if i_zeroif(35) = '0' then
-					i_out <= x"7fff";
+					i_out_r <= x"7fff";
 				else
-					i_out <= x"8000";
+					i_out_r <= x"8000";
 				end if;
 			end if;
 			if q_zeroif(35 downto 31) = "00000" or q_zeroif(35 downto 31) = "11111" then
-				q_out <= q_zeroif(31 downto 16);  
+				q_out_r <= q_zeroif(31 downto 16);  
 			else
 				if q_zeroif(35) = '0' then
-					q_out <= x"7fff";
+					q_out_r <= x"7fff";
 				else
-					q_out <= x"8000";
+					q_out_r <= x"8000";
 				end if;
 			end if;
 			

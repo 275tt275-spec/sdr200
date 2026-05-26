@@ -32,6 +32,7 @@ architecture Behavioral of m1_31 is
 signal c1, p1, p2 : std_logic_vector(47 downto 0);
 signal a1_30, a2_30 : std_logic_vector(29 downto 0);
 signal alumode : std_logic_vector(3 downto 0);
+signal dout_r : STD_LOGIC_VECTOR (30 downto 0) := (others => '0');
 
 begin
 
@@ -53,9 +54,9 @@ m1 : DSP48E1
 		ACASCREG => 1, -- Number of pipeline stages between A/ACIN and ACOUT (0, 1 or 2)
 		ADREG => 1, -- Number of pipeline stages for pre-adder (0 or 1)
 		ALUMODEREG => 1, -- Number of pipeline stages for ALUMODE (0 or 1)
-		AREG => 2, -- Number of pipeline stages for A (0, 1 or 2)
+		AREG => 1, -- Number of pipeline stages for A (0, 1 or 2)
 		BCASCREG => 1, -- Number of pipeline stages between B/BCIN and BCOUT (0, 1 or 2)
-		BREG => 2, -- Number of pipeline stages for B (0, 1 or 2)
+		BREG => 1, -- Number of pipeline stages for B (0, 1 or 2)
 		CARRYINREG => 1, -- Number of pipeline stages for CARRYIN (0 or 1))
 		CARRYINSELREG => 1, -- Number of pipeline stages for CARRYINSEL (0 or 1)
 		CREG => 1, -- Number of pipeline stages for C (0 or 1)
@@ -221,16 +222,18 @@ c1 <= sxt(p2, 48);
 
 alumode <= "0000" when op_minus = '0' else
            "0011";
-			 
-just_proc : process(clk)
-begin
-	if rising_edge(clk) then
-		if ce = '1' then
-			dout <= p1(31 downto 1);
-		end if;	--ce
-	end if; --clk
 	
-end process just_proc;
+dout <= p1(31 downto 1) when ce = '1' else (others => '0');
+	
+--just_proc : process(clk)
+--begin
+--	if rising_edge(clk) then
+--		if ce = '1' then
+--			dout_r <= p1(31 downto 1);
+--		end if;	--ce
+--	end if; --clk
+--	
+--end process just_proc;
 
 end Behavioral;
 

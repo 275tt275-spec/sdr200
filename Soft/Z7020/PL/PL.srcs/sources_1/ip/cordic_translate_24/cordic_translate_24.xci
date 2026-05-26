@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "cordic_translate_24",
     "component_reference": "xilinx.com:ip:cordic:6.0",
-    "ip_revision": "21",
+    "ip_revision": "20",
     "gen_directory": "../../../../PL.gen/sources_1/ip/cordic_translate_24",
     "parameters": {
       "component_parameters": {
@@ -18,7 +18,7 @@
         "Round_Mode": [ { "value": "Round_Pos_Neg_Inf", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
         "Iterations": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "Precision": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "Coarse_Rotation": [ { "value": "true", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
+        "Coarse_Rotation": [ { "value": "true", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "Compensation_Scaling": [ { "value": "Embedded_Multiplier", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
         "cartesian_has_tuser": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "cartesian_tuser_width": [ { "value": "1", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -80,12 +80,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
-        "IPREVISION": [ { "value": "21" } ],
+        "IPREVISION": [ { "value": "20" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../PL.gen/sources_1/ip/cordic_translate_24" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },
