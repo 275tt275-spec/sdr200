@@ -28,6 +28,7 @@
 --         txa on hwr(1) 
 -- 0x0202  audio_in select
 -- 0x0203  txa resampler out gain
+-- 0x0204  reset max values
 -- 0x022_  limiter
 -- 0x024_  modulator
 -- 0x0240  MODULATION
@@ -48,6 +49,7 @@
 -- 0x00__  HW_ctrl
 -- 0x0200  over bits
 -- 0x0201  audio_max_abs
+-- 0x0202  adc_lin_max_abs
 -- 0x03__   SWR
 -- 0x0300  swr 16 bit inc & 16 bit ref (absolute)
 -- 0x0301  magnitude 16 bit chan A & 16 bit chan B (absolute)

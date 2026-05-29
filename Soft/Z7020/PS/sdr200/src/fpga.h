@@ -101,6 +101,7 @@
 // 0x02__  TXA_cfg
 #define FPGA_TXA_OVER 		0x0200  /* over bits */
 #define FPGA_TXA_AUDIO_ABS 	0x0201  /* audio_max_abs */
+#define FPGA_TXA_LINDIN_ABS 0x0202  /* linear_din_max_abs */
 // 0x03__   SWR_cfg
 #define FPGA_REG_SWR		0x0300  /* swr 16 bit inc & 16 bit ref (absolute) */
 #define FPGA_REG_MAG		0x0301  /* magnitude 16 bit chan A & 16 bit chan B (absolute) */
@@ -209,6 +210,7 @@ void fpga_LinearSetIQDC(s_linear* lin);
 void fpga_LinearSetShift(s_linear* lin);
 void fpga_LinearSetCoeff(s_linear* lin);
 void fpga_LinearSetIQPhi(s_linear* lin);
+uint32_t fpga_LinearGetDin(void);
 uint32_t fpga_SetStatus(void);
 
 

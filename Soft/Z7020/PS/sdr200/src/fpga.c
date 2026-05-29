@@ -340,6 +340,11 @@ void fpga_LinearSetCoeff(s_linear* lin)
     fpga_write(FPGA_LIN_CORR_KSTAB, lin->stab);
 }
 
+inline uint32_t fpga_LinearGetDin(void)
+{
+	return fpga_read(FPGA_TXA_LINDIN_ABS);
+}
+
 inline uint32_t fpga_SetStatus(void)
 {
 	return fpga_read(FPGA_HW_CTRL);

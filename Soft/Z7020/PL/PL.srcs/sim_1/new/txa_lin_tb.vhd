@@ -118,7 +118,7 @@ UUT: entity work.linear_dds_iq
         -- Сброс и Включение (адрес F, bit0=CLR, bit1=ON)
         write_cfg(15, 1, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid);
         wait for 10 * CLK_PERIOD;
-        write_cfg(15, 2, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid);        
+        write_cfg(15, 6, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid);        
         wait for 10 * CLK_PERIOD;
 
         -- 3. Цикл симуляции сигналов
@@ -128,7 +128,7 @@ UUT: entity work.linear_dds_iq
             -- Имитация полезного сигнала (Baseband 10 кГц)
             phase_sig := 2.0 * MATH_PI * 10000.0 * real(i) / 122880000.0;
             din1_i <= std_logic_vector(to_signed(integer(4000000.0 * cos(phase_sig)), 24));
-            din1_q <= std_logic_vector(to_signed(integer(1000000.0 * sin(phase_sig)), 24));
+            din1_q <= std_logic_vector(to_signed(integer(4000000.0 * sin(phase_sig)), 24));
            
             -- Имитация DDS (Cos в 31..16, Sin в 15..0)
             phase_dds := 2.0 * MATH_PI * F_IF * real(i) / 122880000.0;
@@ -163,12 +163,12 @@ UUT: entity work.linear_dds_iq
             delay_buf(0) := v_fb_raw;
                 
             -- Подаем на вход АЦП (с небольшим шумом и DC смещением)
-  --         din2 <= std_logic_vector(to_signed(integer(v_fb_linear) + 500, 16));
+           din2 <= std_logic_vector(to_signed(integer(v_fb_linear) + 500, 16));
   --         din2 <= std_logic_vector(to_signed(integer(v_fb_nonlin) + 500, 16));
  
              -- 3. Подача задержанного сигнала на АЦП
             -- Считываем "старое" значение из конца буфера
-          din2 <= std_logic_vector(to_signed(delay_buf(FEEDBACK_DELAY_CLKS) + 500, 16));
+--          din2 <= std_logic_vector(to_signed(delay_buf(FEEDBACK_DELAY_CLKS) + 500, 16));
    
  --           -- Имитация АЦП (Сигнал + Смещение + Потеря усиления)
  --           -- Переносим Baseband на ПЧ (F_IF) для эмуляции того, что видит АЦП

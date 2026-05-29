@@ -9,9 +9,7 @@
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
-use IEEE.STD_LOGIC_ARITH.ALL;
-use IEEE.STD_LOGIC_SIGNED.ALL;
+use IEEE.NUMERIC_STD.ALL; -- Основная библиотека для математики
 
 entity adc2zeroif is
     Port ( clk : in  STD_LOGIC;
@@ -47,15 +45,6 @@ architecture Behavioral of adc2zeroif is
 		m : OUT std_logic_vector(35 downto 0)
 		);
 	END COMPONENT;
-	
-	COMPONENT scope
-	PORT(
-		clk : IN std_logic;
-		data : IN std_logic_vector(63 downto 0);
-		trig0 : IN std_logic_vector(1 downto 0)       
-		);
-	END COMPONENT;
-	
 
 signal adc_no_dc, adc_no_dc_prev : std_logic_vector(15 downto 0);
 signal i_raw, q_raw : std_logic_vector(17 downto 0);
@@ -68,22 +57,18 @@ signal mult_icos, mult_qcos, mult_isin, mult_qsin : std_logic_vector(35 downto 0
 signal scope_d : std_logic_vector(63 downto 0);
 signal scope_trg : std_logic_vector(1 downto 0) := "00";
 
-signal i_zeroif, q_zeroif : std_logic_vector(35 downto 0);
 signal i_out_r : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
 signal q_out_r : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
+signal i_zeroif, q_zeroif : std_logic_vector(35 downto 0);
+signal adc_no_dc_s      : signed(15 downto 0);
+signal adc_no_dc_prev_s : signed(15 downto 0);
+signal i_raw_s, q_raw_s : signed(17 downto 0);
+--signal i_zeroif_s, q_zeroif_s : signed(35 downto 0);
 
 begin
 
---	Inst_scope: scope PORT MAP(
---		clk => clk,
---		data => scope_d,
---		trig0 => scope_trg
---	);
-
 i_out <= i_out_r;
 q_out <= q_out_r;
-	
-scope_d <= din & i_raw(17 downto 2) & i_hi_freq(17 downto 2) & i_zeroif(35 downto 20);
 	
 inst_dc_remover : dc_remover
 		port map (
@@ -111,7 +96,7 @@ mult_q_correction : mult48cc port map (
 		a => q_raw,
 		b => q_amp,
 		m => mult_q_hi_freq
-	);		
+	);	
 
 -- комплексный перенос по частоте
 mult_cosine <= cosine & "00";
@@ -152,17 +137,24 @@ inst_mult_qsin : mult48cc port map (
 		b => mult_sine,
 		m => mult_qsin
 	);
+	
+	adc_no_dc_s <= signed(adc_no_dc);
+	i_raw <= std_logic_vector(i_raw_s);
+    q_raw <= std_logic_vector(q_raw_s);
 
 process(clk)
 begin
 	if rising_edge(clk) then
 		adc_no_dc_prev <= adc_no_dc;
+		adc_no_dc_prev_s <= adc_no_dc_s;
     
 		if clr = '1' then
+		   i_raw_s <= (others => '0');
+		   q_raw_s <= (others => '0');
 		else
-      
-			i_raw <= (adc_no_dc(15) & adc_no_dc & "0") - (adc_no_dc_prev(15) & adc_no_dc_prev & "0");
-			q_raw <= (adc_no_dc(15) & adc_no_dc & "0") + (adc_no_dc_prev(15) & adc_no_dc_prev & "0");
+
+		    i_raw_s <= (resize(adc_no_dc_s, 17) & '0') - (resize(adc_no_dc_prev_s, 17) & '0');
+            q_raw_s <= (resize(adc_no_dc_s, 17) & '0') + (resize(adc_no_dc_prev_s, 17) & '0');
 					
 			-- ограничиваем i/q после выравнивания амплитуды
 			if	mult_i_hi_freq(35 downto 29) = "0000000" or mult_i_hi_freq(35 downto 29) = "1111111" then
@@ -186,11 +178,13 @@ begin
 			end if;
 
 			-- формируем выходные i/q без переполнения
-			i_zeroif <= (mult_icos(35) & mult_icos(35 downto 1)) + (mult_qsin(35) & mult_qsin(35 downto 1));
-			q_zeroif <= (mult_qcos(35) & mult_qcos(35 downto 1)) - (mult_isin(35) & mult_isin(35 downto 1));
-
-			-- FIRs, выход ограничиваем
-			if i_zeroif(35 downto 31) = "00000" or i_zeroif(35 downto 31) = "11111" then
+			i_zeroif <= std_logic_vector(signed(mult_icos(35) & mult_icos(35 downto 1)) + signed(mult_qsin(35) & mult_qsin(35 downto 1)));
+			q_zeroif <= std_logic_vector(signed(mult_qcos(35) & mult_qcos(35 downto 1)) - signed(mult_isin(35) & mult_isin(35 downto 1)));
+---		    i_zeroif_s <= shift_right(signed(mult_icos), 1) + shift_right(signed(mult_qsin), 1);
+---           q_zeroif_s <= shift_right(signed(mult_qcos), 1) - shift_right(signed(mult_isin), 1);
+			
+			 -- Проверка: если число выходит за пределы 16-битного диапазона
+            if i_zeroif(35 downto 31) = "00000" or i_zeroif(35 downto 31) = "11111" then
 				i_out_r <= i_zeroif(31 downto 16);  
 			else
 				if i_zeroif(35) = '0' then

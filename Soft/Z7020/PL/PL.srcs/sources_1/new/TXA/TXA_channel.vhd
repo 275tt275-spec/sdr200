@@ -40,6 +40,7 @@ entity TXA_channel is
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
         audio_max_abs : out STD_LOGIC_VECTOR (23 downto 0);
+        lin_din_max_abs : out STD_LOGIC_VECTOR (15 downto 0);
         ovf : out STD_LOGIC_VECTOR (31 downto 0);
         aresetn : in std_logic;
         aclk : in std_logic
@@ -184,6 +185,9 @@ component fir_audio_0 IS
     signal cfg_wr : std_logic := '0';  
     signal resampler_over : std_logic;
     signal linear_ovf : std_logic_vector(3 downto 0);
+    signal lin_din_max : signed(15 downto 0) := x"0000"; 
+    signal lin_din_abs : signed(15 downto 0) := x"0000"; 
+    signal lin_din_rst : std_logic := '0'; 
 
 begin
 
@@ -218,6 +222,7 @@ cmd_process : process (aclk) is
 begin 
    if rising_edge(aclk) then
         dds_cfg_tvalid <= '0'; 
+        lin_din_rst <= '0';
 --        config_tvalid <= '0';
         if cfg_wr = '1' then   
             if cfg_addr = x"0" then
@@ -230,6 +235,8 @@ begin
 --               config_tvalid <= '1';
             elsif cfg_addr = x"3" then
                 gain <= s_axis_cfg_tdata( 17 downto 0 );
+            elsif cfg_addr = x"4" then
+                lin_din_rst <= '1';
             end if; 
         end if;
    end if;
@@ -294,6 +301,20 @@ resampler_0 : TXA_resampler
     fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) - resize(signed(s_adc_data_rx1), 17)); -- Сигналы в противофазе
 --    fb_forward <= s_adc_data_rx0 - s_adc_data_rx1; 
     linear_din2 <= fb_forward(16 downto 1); -- проверить там раньше было 14 бит  
+    
+   lin_din_max_abs <= std_logic_vector(lin_din_max);
+
+process(aclk)
+begin
+	if rising_edge(aclk) then
+	   lin_din_abs <= abs(signed(linear_din2));
+	   if lin_din_rst = '1' then
+	       lin_din_max <= x"0000";
+	   elsif lin_din_abs > lin_din_max then
+	       lin_din_max <= lin_din_abs;	
+	   end if;        
+	end if;
+end process;
         
 linear_0 : linear_dds_iq
     PORT MAP  ( 
