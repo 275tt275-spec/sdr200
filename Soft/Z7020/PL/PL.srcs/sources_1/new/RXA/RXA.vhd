@@ -228,7 +228,6 @@ architecture Behavioral of RXA is
     signal rssi_s32_out_tvalid : STD_LOGIC; 
     signal s_axis_cartesian_tvalid : STD_LOGIC;
     signal s_axis_cartesian_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0);
-    signal temp_i : STD_LOGIC_VECTOR(31 DOWNTO 0);
     signal m_axis_dout_tvalid : STD_LOGIC;
     signal m_axis_dout_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0);  
     signal real_rssi_tdata : STD_LOGIC_VECTOR (31 downto 0); 
@@ -348,13 +347,9 @@ begin
 	    s_axis_cartesian_tvalid <= '0';	
 		if fos_out_tvalid = '1' then
 		    if fos_out_tuser = "0" then				   		
-			    --s_axis_cartesian_tdata(31 downto 0) <= fos_out_tdata(31) & fos_out_tdata(31 downto 1);  
-			    -- Сохраняем I во временный регистр
-                temp_i <= fos_out_tdata(31) & fos_out_tdata(31 downto 1); 
+			    s_axis_cartesian_tdata(31 downto 0) <= fos_out_tdata(31) & fos_out_tdata(31 downto 1);  
 			else
-			    --s_axis_cartesian_tdata(63 downto 32) <= fos_out_tdata(31) & fos_out_tdata(31 downto 1);
-			    -- Собираем полный вектор I+Q и даем валид
-			    s_axis_cartesian_tdata <= fos_out_tdata(31) & fos_out_tdata(31 downto 1) & temp_i;
+			    s_axis_cartesian_tdata(63 downto 32) <= fos_out_tdata(31) & fos_out_tdata(31 downto 1);
 			    s_axis_cartesian_tvalid <= '1';
 			end if;    	           
 		end if;  
@@ -373,7 +368,7 @@ rssi_0 : cordic_rssi
         m_axis_dout_tdata => m_axis_dout_tdata
     );
     
-BUFG_audio : BUFG
+BUFG_inst : BUFH
 port map (
    O => audio_clk,
    I => aclk
@@ -381,7 +376,7 @@ port map (
 
 clock_0 : clock_converter_4
     PORT MAP (
-        s_axis_aresetn => aresetn,
+        s_axis_aresetn => '1',
         m_axis_aresetn => '1',
         s_axis_aclken => '1',
         m_axis_aclken => '1',

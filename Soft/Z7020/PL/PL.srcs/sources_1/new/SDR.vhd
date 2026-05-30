@@ -28,7 +28,6 @@
 --         txa on hwr(1) 
 -- 0x0202  audio_in select
 -- 0x0203  txa resampler out gain
--- 0x0204  reset max values
 -- 0x022_  limiter
 -- 0x024_  modulator
 -- 0x0240  MODULATION
@@ -49,7 +48,6 @@
 -- 0x00__  HW_ctrl
 -- 0x0200  over bits
 -- 0x0201  audio_max_abs
--- 0x0202  adc_lin_max_abs
 -- 0x03__   SWR
 -- 0x0300  swr 16 bit inc & 16 bit ref (absolute)
 -- 0x0301  magnitude 16 bit chan A & 16 bit chan B (absolute)
@@ -247,9 +245,7 @@ architecture Behavioral of SDR is
     signal aclk1 : std_logic;
     signal aresetn : std_logic := '1';
     signal rst_sig : std_logic := '0';
---    signal rst_r, rst_r1 : std_logic := '0';
-    signal reset_counter : integer range 0 to 63 := 63; -- Счетчик для удлинения сброса
-    signal aresetn_i     : std_logic := '0';           -- Внутренний сигнал сброса
+    signal rst_r, rst_r1 : std_logic := '0';
     
     signal adc0_max_rst : std_logic := '0';
     signal adc0_max_value : std_logic_vector(15 downto 0);
@@ -282,7 +278,6 @@ architecture Behavioral of SDR is
     signal axis_wb_tdata : STD_LOGIC_VECTOR (31 downto 0);
     signal axis_wb_tvalid : STD_LOGIC;
     signal audio_clk : STD_LOGIC;
-    signal reg_read_data : std_logic_vector(31 downto 0);
 
     ATTRIBUTE X_INTERFACE_INFO : string;
     ATTRIBUTE X_INTERFACE_INFO OF bram_addra: SIGNAL IS "xilinx.com:interface:bram:1.0 BRAM_PORTA ADDR";
@@ -310,149 +305,78 @@ begin
 
     aclk_122 <= aclk;
     cfg_addra <= bram_addra(12 downto 2);
---    bram_douta <= RXA_cfg_douta when cfg_addra(10 downto 8) = "001" or cfg_addr_r(10 downto 8) = "001" else 
---                  TXA_cfg_douta when cfg_addra(10 downto 8) = "010" or cfg_addr_r(10 downto 8) = "010" else 
---                  SWR_cfg_douta when cfg_addra(10 downto 8) = "011" or cfg_addr_r(10 downto 8) = "011" else 
---                  HW_cfg_douta;                                  
+    bram_douta <= RXA_cfg_douta when cfg_addra(10 downto 8) = "001" or cfg_addr_r(10 downto 8) = "001" else 
+                  TXA_cfg_douta when cfg_addra(10 downto 8) = "010" or cfg_addr_r(10 downto 8) = "010" else 
+                  SWR_cfg_douta when cfg_addra(10 downto 8) = "011" or cfg_addr_r(10 downto 8) = "011" else 
+                  HW_cfg_douta;                                  
 
     HW_cfg_douta <= x"0000000" & CAT_DTR & CAT_RTC & CW_KEY & PTT;   
     
     gpio_out <= (others => '0');  
     m_axis_ser1_tdata <= (others => '0');  
     
-    
-    -- Назначаем результат чтения на выход порта
-    bram_douta <= reg_read_data;
-    
---cmd_process : process (aclk) is
---begin 
---   if rising_edge(aclk) then
---        HW_wr <= '0';    
---        RXA_wr <= '0';
---        TXA_wr <= '0';   
---        SWR_wr <= '0';   
---        UART0_wr <= '0'; 
---        UART1_wr <= '0';
---        if bram_ena = '1' then
---            cfg_addr_r <= cfg_addra;  
---            if bram_wea = x"F" then 
---                if cfg_addra(10 downto 8) = "000" then
---                    HW_wr <= '1';    
---                elsif cfg_addra(10 downto 8) = "001" then
---                    RXA_wr <= '1';
---                elsif cfg_addra(10 downto 8) = "010" then
---                    TXA_wr <= '1';  
---                    if  cfg_addra(7 downto 0) = x"01" then
---                        TX_ON <= bram_dina(1);      
---                    end if; 
---                elsif cfg_addra(10 downto 8) = "011" then
---                    SWR_wr <= '1';  
---                elsif cfg_addra(10 downto 8) = "100" then
---                    UART0_wr <= '1';   
---                elsif cfg_addra(10 downto 8) = "101" then
---                    UART1_wr <= '1';       
---                end if;        
---            end if;  
---        end if;
---   end if;
---end process cmd_process;
-
-
 cmd_process : process (aclk) is
-begin
-    if rising_edge(aclk) then
-        HW_wr <= '0';
+begin 
+   if rising_edge(aclk) then
+        HW_wr <= '0';    
         RXA_wr <= '0';
-        TXA_wr <= '0';
-        SWR_wr <= '0';
-        UART0_wr <= '0';
+        TXA_wr <= '0';   
+        SWR_wr <= '0';   
+        UART0_wr <= '0'; 
         UART1_wr <= '0';
-
         if bram_ena = '1' then
-            -- Запоминаем текущий адрес для следующего такта (если нужно модулям)
-            cfg_addr_r <= cfg_addra;
-
-            -- ЛОГИКА ЗАПИСИ (остается почти без изменений)
-            if bram_wea = x"F" then
-                case cfg_addra(10 downto 8) is
-                    when "000" => HW_wr <= '1';
-                    when "001" => RXA_wr <= '1';
-                    when "010" => 
-                        TXA_wr <= '1';
-                        if cfg_addra(7 downto 0) = x"01" then
-                            TX_ON <= bram_dina(1);
-                        end if;
-                    when "011" => SWR_wr <= '1';
-                    when "100" => UART0_wr <= '1';
-                    when "101" => UART1_wr <= '1';
-                    when others => null;
-                end case;
-            end if;
-
-            -- ЛОГИКА ЧТЕНИЯ (с защелкиванием на 1 такт)
-            -- Выбираем данные в зависимости от адреса, который активен СЕЙЧАС
-            case cfg_addra(10 downto 8) is
-                when "001" => reg_read_data <= RXA_cfg_douta;
-                when "010" => reg_read_data <= TXA_cfg_douta;
-                when "011" => reg_read_data <= SWR_cfg_douta;
-                when "000" => reg_read_data <= x"0000000" & CAT_DTR & CAT_RTC & CW_KEY & PTT;
-                when others => reg_read_data <= (others => '0');
-            end case;
+            cfg_addr_r <= cfg_addra;  
+            if bram_wea = x"F" then 
+                if cfg_addra(10 downto 8) = "000" then
+                    HW_wr <= '1';    
+                elsif cfg_addra(10 downto 8) = "001" then
+                    RXA_wr <= '1';
+                elsif cfg_addra(10 downto 8) = "010" then
+                    TXA_wr <= '1';  
+                    if  cfg_addra(7 downto 0) = x"01" then
+                        TX_ON <= bram_dina(1);      
+                    end if; 
+                elsif cfg_addra(10 downto 8) = "011" then
+                    SWR_wr <= '1';  
+                elsif cfg_addra(10 downto 8) = "100" then
+                    UART0_wr <= '1';   
+                elsif cfg_addra(10 downto 8) = "101" then
+                    UART1_wr <= '1';       
+                end if;        
+            end if;  
         end if;
-    end if;
+   end if;
 end process cmd_process;
 
---p_synchronous_reset : process (aclk, rst_sig) is
---begin
---
---    if rising_edge(aclk) then 
---        rst_sig <= '0';
---        if HW_wr = '1' then
---            if cfg_addra(7 downto 0) = x"00" then
---                rst_sig <= '1';
---            end if;
---        end if;    
---    end if;
---
---    if rst_sig = '1' then
---        rst_r <= '1';  
---    elsif rising_edge(aclk) then
---        rst_r <= '0'; 
---    end if;     
---
---   if rising_edge(aclk) then        
---      rst_r1 <= rst_r; 
---      
---      if rst_r /= rst_r1 and rst_r = '1' then
---         aresetn <= '0';
---      else
---         aresetn <= '1'; 
---      end if;
---      
---   end if;
---end process p_synchronous_reset;
-
-p_reset_logic : process (aclk) is
+p_synchronous_reset : process (aclk, rst_sig) is
 begin
-    if rising_edge(aclk) then
-        -- Логика активации сброса
-        if HW_wr = '1' and cfg_addra(7 downto 0) = x"00" then
-            -- Если пришла команда сброса через BRAM
-            reset_counter <= 63; 
-            aresetn_i     <= '0';
-        elsif reset_counter > 0 then
-            -- Удерживаем сброс в низком уровне, пока счетчик не обнулится
-            reset_counter <= reset_counter - 1;
-            aresetn_i     <= '0';
-        else
-            -- Сброс окончен
-            aresetn_i     <= '1';
-        end if;
-    end if;
-end process p_reset_logic;
 
--- Назначаем внутренний сигнал на глобальный
-aresetn <= aresetn_i;
+    if rising_edge(aclk) then 
+        rst_sig <= '0';
+        if HW_wr = '1' then
+            if cfg_addra(7 downto 0) = x"00" then
+                rst_sig <= '1';
+            end if;
+        end if;    
+    end if;
+
+    if rst_sig = '1' then
+        rst_r <= '1';  
+    elsif rising_edge(aclk) then
+        rst_r <= '0'; 
+    end if;     
+
+   if rising_edge(aclk) then        
+      rst_r1 <= rst_r; 
+      
+      if rst_r /= rst_r1 and rst_r = '1' then
+         aresetn <= '0';
+      else
+         aresetn <= '1'; 
+      end if;
+      
+   end if;
+end process p_synchronous_reset;
 
 adc_input_0: component adc_input
     port map (
