@@ -37,9 +37,6 @@ entity TXA is
         s_axis_audio_tvalid : in STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
-        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
-        s_axis_iq_tvalid : in STD_LOGIC; 
-        s_axis_iq_tready : out STD_LOGIC; 
         DAC_DCI_N : out STD_LOGIC;
         DAC_DCI_P : out STD_LOGIC;
         DAC_DCO_P : in STD_LOGIC;
@@ -63,17 +60,12 @@ component TXA_channel is
         m_dacq_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC;
-        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
-        s_axis_iq_tvalid : in STD_LOGIC; 
-        s_axis_iq_tready : out STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
-        audio_max_abs : out STD_LOGIC_VECTOR (23 downto 0);
-        lin_din_max_abs : out STD_LOGIC_VECTOR (15 downto 0);
-        ovf : out STD_LOGIC_VECTOR (31 downto 0);
+        cfg_data_out : out STD_LOGIC_VECTOR (31 downto 0);
         aresetn : in std_logic;
         aclk : in std_logic
     );
@@ -95,19 +87,8 @@ component dac_out is
     end component dac_out;
     
     signal daci_tdata, dacq_tdata : STD_LOGIC_VECTOR ( 15 downto 0 );
-    signal inmult_over : STD_LOGIC;
-    signal outmult_over : STD_LOGIC;
-    signal resampler_over : STD_LOGIC;
-    signal limiter_over : STD_LOGIC;
-    signal audio_max_abs : STD_LOGIC_VECTOR (23 downto 0);
-    signal lin_din_max_abs : STD_LOGIC_VECTOR (15 downto 0);
-    signal ovf_txa : STD_LOGIC_VECTOR (31 downto 0);
 
 begin
-
-    cfg_douta <= x"00" & audio_max_abs when cfg_addra = x"01" else
-                 x"0000" & lin_din_max_abs when cfg_addra = x"02" else
-                 ovf_txa;
 
 TXA_channel_0 : TXA_channel
     port map ( 
@@ -115,17 +96,12 @@ TXA_channel_0 : TXA_channel
         m_dacq_tdata => dacq_tdata,
         s_axis_audio_tdata => s_axis_audio_tdata,
         s_axis_audio_tvalid => s_axis_audio_tvalid,
-        s_axis_iq_tdata => s_axis_iq_tdata,
-        s_axis_iq_tvalid => s_axis_iq_tvalid,
-        s_axis_iq_tready => s_axis_iq_tready,
         s_adc_data_rx0 => s_adc_data_rx0,
         s_adc_data_rx1 => s_adc_data_rx1,
         s_axis_cfg_tdata => cfg_dina,
         s_axis_cfg_tdest => cfg_addra,
         s_axis_cfg_tvalid => cfg_wr,
-        ovf => ovf_txa,
-        audio_max_abs => audio_max_abs,
-        lin_din_max_abs => lin_din_max_abs,
+        cfg_data_out => cfg_douta,
         aresetn => aresetn,
         aclk => aclk
     );

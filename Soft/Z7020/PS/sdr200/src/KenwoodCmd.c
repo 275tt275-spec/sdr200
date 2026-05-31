@@ -1174,6 +1174,36 @@ char* kenwood_RcvCmd(char* in)
             		swr.inc, swr.ref, swr.magA, swr.magB, swr.angA, swr.angB);
         }
     }
+    else if(memcmp(in, "SY", 2) == 0) /* Get corrections */
+    {
+        if(len == 2)                /* Read */
+        {
+        	int deltaPWR = 2 * (53 - e_vars->RFPower);
+        	uint8_t txafbV = eeprom_txafbV_att(vars.m_freq_tx);
+        	uint8_t txafbC = eeprom_txafbC_att(vars.m_freq_tx);
+        	uint8_t attMin = (txafbV < txafbC) ? txafbV : txafbC;
+        	if(deltaPWR > attMin) deltaPWR = attMin;
+        	txafbV = txafbV - deltaPWR;
+        	txafbC = txafbC - deltaPWR;
+
+        	uint8_t rxa_att = eeprom_rxa_att(vars.m_freq_tx);
+        	uint8_t txa_att = eeprom_txa_att(vars.m_freq_tx);
+
+
+            sprintf(m_out, "SY%03d%03d%03d%03d;",
+            		rxa_att, txa_att, txafbV, txafbC);
+        }
+    }
+    else if(memcmp(in, "SZ", 2) == 0) /* MAX values */
+    {
+        if(len == 2)                /* Read */
+        {
+        	s_max_values values;
+        	hw_GetMaxValues(&values);
+            sprintf(m_out, "SZ%08d%08d%08d%08d%08d;",
+            		values.over, values.audio, values.lin, values.dac, values.iq);
+        }
+    }
     else if(memcmp(in, "TE", 2) == 0) /* Set test mode all attenuation in 0 */
     {
     	kenwood_SetTest(in[2] == '0');

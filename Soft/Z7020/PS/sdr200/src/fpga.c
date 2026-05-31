@@ -288,7 +288,7 @@ void fpga_LinearEnable(s_linear* lin, int enable)
     fpga_write(FPGA_LIN_CTRL, lin_ctrl);
 
     if(enable == 1)
-        lin_ctrl = FPGA_LINER_ON | FPGA_LINER_AGC;
+        lin_ctrl = FPGA_LINER_ON;
     else
         lin_ctrl = 0;
 
@@ -340,9 +340,15 @@ void fpga_LinearSetCoeff(s_linear* lin)
     fpga_write(FPGA_LIN_CORR_KSTAB, lin->stab);
 }
 
-inline uint32_t fpga_LinearGetDin(void)
+void fpga_GetMaxValues(s_max_values* data)
 {
-	return fpga_read(FPGA_TXA_LINDIN_ABS);
+	data->over = fpga_read(FPGA_TXA_OVER);
+	data->audio = fpga_read(FPGA_TXA_AUDIO_ABS);
+	data->lin = fpga_read(FPGA_TXA_LINDIN_ABS);
+	data->dac = fpga_read(FPGA_TXA_DAC_ABS);
+	data->iq = fpga_read(FPGA_TXA_FLOAT_ABS);
+
+	fpga_write(FPGA_TXA_RESET_MAX, 0);
 }
 
 inline uint32_t fpga_SetStatus(void)

@@ -78,8 +78,8 @@ void hw_Init(void)
 	linear.agc_k = 5;
 	linear.phase_k = 5;
 	linear.diff = 0;
-	linear.prop = 6000;
-	linear.stab = 4000;
+	linear.prop = 2000;
+	linear.stab = 200;
 	linear.dc_i = 0;
 	linear.dc_q = 0;
 	linear.gain_i = 32767;
@@ -838,6 +838,11 @@ void hw_SetATU(uint8_t dir, uint8_t maskL, uint8_t maskC)
 inline void hw_GetSWR(s_swr* swr)
 {
 	fpga_GetSWR(swr);
+}
+
+inline void hw_GetMaxValues(s_max_values* data)
+{
+	fpga_GetMaxValues(data);
 }
 
 void hw_SetSpeech(int en)

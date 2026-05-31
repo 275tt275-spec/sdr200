@@ -112,6 +112,7 @@ void hw_SetATUBypass(int set);
 void hw_SetATU(uint8_t dir, uint8_t maskL, uint8_t maskC);
 void hw_GetSWR(s_swr* swr);
 void hw_StartTune(uint32_t freq);
+void hw_GetMaxValues(s_max_values* data);
 
 void hw_SetSpeech(int en);
 void hw_SetSpeechInOut(uint8_t in, uint8_t out);

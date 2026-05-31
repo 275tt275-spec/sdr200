@@ -242,7 +242,6 @@ signal orth0, orth1, orth2, orth3 : std_logic_vector(16 downto 0);
 signal stab_reg : std_logic_vector(17 downto 0) := x"2666" & "00";	-- 0.3
 signal stab_cnt : std_logic_vector(17 downto 0) := (others => '0');
 signal prop_reg : std_logic_vector(17 downto 0) := x"1780" & "00";	-- 4 (0.0156*256)
--- signal dif_reg : std_logic_vector(17 downto 0) := x"6400" & "00";	-- 200 (0.78*256)
 signal dif_reg : std_logic_vector(17 downto 0) := (others => '0');
 
 signal agc_i, agc_q : std_logic_vector(15 downto 0);
@@ -261,10 +260,24 @@ signal overflow_i, overflow_q, overm_i, overm_q : STD_LOGIC;
 signal cfg_addr : std_logic_vector(3 downto 0);
 signal cfg_wr : std_logic := '0';
 
-attribute MAX_FANOUT : integer;
-attribute MAX_FANOUT of corr_clr : signal is 50; -- Ограничиваем нагрузку до 50 триггеров на один драйвер
+    constant ACLK_DIVIDER : integer := ((122880000 / 32000) - 1);
+    signal sync_cnt : std_logic_vector(11 downto 0) := (others => '0');
+    signal valid32 : std_logic;
 
 begin
+
+valid32 <= '1' when sync_cnt = ACLK_DIVIDER else '0';
+
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        if sync_cnt = ACLK_DIVIDER then
+            sync_cnt <= (others => '0');
+        else
+            sync_cnt <= sync_cnt + 1;
+        end if;
+    end if;
+end process;
 
 dout_i <= dout_i_int & x"00";
 dout_q <= dout_q_int & x"00";
@@ -292,6 +305,8 @@ inst_adc2zeroif : adc2zeroif
 			i_out => fir_i,
 			q_out => fir_q
 		);
+		
+-- PHASE Block
 
     wr_m <= s_axis_cfg_tvalid when s_axis_cfg_tdest(4) = '1' else '0';        
     m_cs <= '1' when s_axis_cfg_tdest(4) = '1' else '0';

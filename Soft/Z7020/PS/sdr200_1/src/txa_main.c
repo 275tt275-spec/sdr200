@@ -55,12 +55,12 @@ void create_txa(int channel, struct _create_runs* runs)
 		1.0);							// gain
 
 	txa[channel].gen0.p = create_gen(
-		0,											// run
+		1,											// run
 		ch.dsp_size,								// buffer size
 		txa[channel].midbuff,						// input buffer
 		txa[channel].midbuff,						// output buffer
 		ch.dsp_rate,								// sample rate
-		1);											// mode
+		0);											// mode
 
 	txa[channel].panel.p = create_panel(
 		channel,									// channel number

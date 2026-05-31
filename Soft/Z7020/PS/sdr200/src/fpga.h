@@ -41,7 +41,9 @@
 #define FPGA_TXA_CTRL 		0x0201  /* ctrl reg */
 #define FPGA_TXA_CTRL_ON 	( 1 << 0 ) /* txa on(0) */
 #define FPGA_TXA_CTRL_HW 	( 1 << 1 ) /* txa hw on(1) */
+#define FPGA_TXA_CTRL_IQ 	( 1 << 31 ) /* iq data select(31)  */
 #define FPGA_TXA_RESAMPLER_G	0x0203  /* txa resampler out gain */
+#define FPGA_TXA_RESET_MAX	0x0204  /* reset max values */
 
 // 0x022_  /* limiter */
 #define FPGA_LIM_IN 		0x0220 /* lim_in_gain default "00" & x"3FFF" */
@@ -102,6 +104,8 @@
 #define FPGA_TXA_OVER 		0x0200  /* over bits */
 #define FPGA_TXA_AUDIO_ABS 	0x0201  /* audio_max_abs */
 #define FPGA_TXA_LINDIN_ABS 0x0202  /* linear_din_max_abs */
+#define FPGA_TXA_DAC_ABS 	0x0203  /* dac_tdata_max */
+#define FPGA_TXA_FLOAT_ABS 	0x0204  /* float_out_max */
 // 0x03__   SWR_cfg
 #define FPGA_REG_SWR		0x0300  /* swr 16 bit inc & 16 bit ref (absolute) */
 #define FPGA_REG_MAG		0x0301  /* magnitude 16 bit chan A & 16 bit chan B (absolute) */
@@ -170,6 +174,15 @@ typedef struct tag_limiter
 	uint32_t dds_phase;
 } s_limiter;
 
+typedef struct tag_max_values
+{
+	uint32_t over;
+	uint32_t audio;
+	uint32_t lin;
+	uint32_t dac;
+	uint32_t iq;
+} s_max_values;
+
 void fpga_init(void);
 void fpga_tick(void);
 void fpga_write(uint16_t addr, uint32_t value);
@@ -210,8 +223,8 @@ void fpga_LinearSetIQDC(s_linear* lin);
 void fpga_LinearSetShift(s_linear* lin);
 void fpga_LinearSetCoeff(s_linear* lin);
 void fpga_LinearSetIQPhi(s_linear* lin);
-uint32_t fpga_LinearGetDin(void);
 uint32_t fpga_SetStatus(void);
+void fpga_GetMaxValues(s_max_values* data);
 
 
 #endif /* SRC_FPGA_H_ */

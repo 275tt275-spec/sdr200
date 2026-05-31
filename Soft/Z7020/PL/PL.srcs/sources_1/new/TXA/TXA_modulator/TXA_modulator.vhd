@@ -47,7 +47,7 @@ entity TXA_modulator is
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (3 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
         tx_on : in STD_LOGIC;
-        audio_max_abs : out STD_LOGIC_VECTOR (23 downto 0);
+        audio_max_abs : out STD_LOGIC_VECTOR (24 downto 0);
         aclk : in STD_LOGIC
     );
 end TXA_modulator;
@@ -191,8 +191,8 @@ mply_0 : cmpy_24_16
                 mult_out_data(30 downto 7) & mult_out_data(62 downto 39);
     iq_in_tdata <= A3E_envelope & x"000000" when (a3e_mod = '1') else j3e_data;
           
-    audio_abs_in <= A3E_envelope when a3e_mod = '1' else audio_data;                                  
-    audio_max_abs <= std_logic_vector(abs(signed(audio_abs_in)));
+    audio_abs_in <= A3E_envelope when a3e_mod = '1' else audio_data;   
+    audio_max_abs <= std_logic_vector(abs(resize(signed(audio_abs_in), 25)));                               
     
     fos_in_tdata <= x"400000" & x"400000" when modulation = "10" else iq_in_tdata;
     fos_in_tvalid <= s_axis_audio_tvalid when a3e_mod = '1' else mult_out_valid;

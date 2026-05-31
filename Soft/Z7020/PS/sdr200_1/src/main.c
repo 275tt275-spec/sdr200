@@ -30,17 +30,18 @@
 #include "comm.h"
 #include "cmd.h"
 
-#define IN_SIZE 32
-#define DSP_SIZE 32
+#define IN_SIZE 8
+#define DSP_SIZE 8
 
 #define OCM_SHARED_SECTION 0xFFFF0000
 #define SGI_FROM_CORE0  0  // Core 1 слушает SGI 0 (настроенный контроллером Core 0)
 #define INTC_DEVICE_ID XPAR_SCUGIC_SINGLE_DEVICE_ID
 #define FIFO_DEV_I2S_ID	 XPAR_AXI_FIFO_1_DEVICE_ID
-#define FIFO_DEV_RESAMPLER_ID	 XPAR_AXI_FIFO_2_DEVICE_ID
+#define BRAM_DEVICE_ID			XPAR_BRAM_0_DEVICE_ID
 
 XScuGic InterruptController; /* Ёкземпл€р GIC */
-static XLlFifo fifo_i2s, fifo_resampler;
+static XLlFifo fifo_i2s;
+static XBram Bram;
 static int in_ptr = 0;
 
 volatile uint32_t *shared_buffer = (volatile uint32_t *)OCM_SHARED_SECTION;
@@ -117,12 +118,22 @@ int main()
 	}
 	XLlFifo_IntClear(&fifo_i2s, 0xffffffff);
 
-	FifoConfig = XLlFfio_LookupConfig(FIFO_DEV_RESAMPLER_ID);
-	Status = XLlFifo_CfgInitialize(&fifo_resampler, FifoConfig, FifoConfig->BaseAddress);
+	XBram_Config *XBramConfig = XBram_LookupConfig(BRAM_DEVICE_ID);
+
+	if (XBramConfig == (XBram_Config *) NULL) {
+		return 0;
+	}
+
+	Status = XBram_CfgInitialize(&Bram, XBramConfig,
+			XBramConfig->CtrlBaseAddress);
 	if (Status != XST_SUCCESS) {
 		return 0;
 	}
-	XLlFifo_IntClear(&fifo_resampler, 0xffffffff);
+
+	Status = XBram_SelfTest(&Bram, XBRAM_IR_ALL_MASK);
+	if (Status != XST_SUCCESS) {
+		return 0;
+	}
 
 	int channel = 0;
 	set_dsp(IN_SIZE, DSP_SIZE, 16000, 16000, 16000);
@@ -145,8 +156,9 @@ int main()
     	      Xil_DCacheFlushRange((INTPTR)shared_buffer, 1);
     	      data_ready = 0;  // —брос флага
     	}
-#if 0
+#if 1
     	uint32_t world = XLlFifo_iRxOccupancy(&fifo_i2s);
+    	float data;
     	if(world)
     	{
     		data = XLlFifo_RxGetWord(&fifo_i2s);
@@ -159,9 +171,10 @@ int main()
     			xtxa(channel);
     			for(int n = 0; n < DSP_SIZE; n++)
     			{
-					XLlFifo_TxPutWord(&fifo_resampler, *(uint32_t*)&txa[channel].outbuff[n * 2]);
-					XLlFifo_TxPutWord(&fifo_resampler, *(uint32_t*)&txa[channel].outbuff[n * 2 + 1]);
-					XLlFifo_iTxSetLen(&fifo_resampler, sizeof(complex));
+    				data = txa[channel].outbuff[n * 2];
+    				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020E << 2, *(uint32_t*)&data );
+    				data = txa[channel].outbuff[n * 2 + 1];
+    				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020F << 2, *(uint32_t*)&data );
     			}
     		}
     	}

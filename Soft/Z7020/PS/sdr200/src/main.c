@@ -63,7 +63,7 @@ volatile uint32_t *shared_buffer = (volatile uint32_t *)OCM_SHARED_SECTION;
 
 int main( void )
 {
-#if 0
+#if 1
     // 1. Срочно перенастраиваем регион OCM, чтобы он был доступен для записи
     // 0x10C02 - Strongly Ordered (без кэша), Read/Write
     Xil_SetTlbAttributes(0xFFF00000, 0x10C02);
@@ -172,7 +172,7 @@ void SendToCore1Uint32(uint32_t type, uint32_t value)
 void SendToCore1(uint32_t type, uint32_t len, void* value)
 {
 	static uint32_t counter = 0;
-#if 0
+#if 1
 	Xil_DCacheInvalidateRange((INTPTR)shared_buffer, 4);
 	if(shared_buffer[0] != counter)
 	{

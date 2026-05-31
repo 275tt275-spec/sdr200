@@ -26,8 +26,12 @@
 -- 0x0201  ctrl reg
 --         txa on(0)  
 --         txa on hwr(1) 
+--         iq data select(31) 
 -- 0x0202  audio_in select
 -- 0x0203  txa resampler out gain
+-- 0x0204  /* reset max values */
+-- 0x020e  data in i
+-- 0x020f  data in q
 -- 0x022_  limiter
 -- 0x024_  modulator
 -- 0x0240  MODULATION
@@ -46,8 +50,11 @@
 
 -- read
 -- 0x00__  HW_ctrl
--- 0x0200  over bits
--- 0x0201  audio_max_abs
+-- 0x0200  over bits ( ovf_out)
+-- 0x0201  audio_max
+-- 0x0202  lin_din_max
+-- 0x0203  dac_tdata_max
+-- 0x0204  float_out_max
 -- 0x03__   SWR
 -- 0x0300  swr 16 bit inc & 16 bit ref (absolute)
 -- 0x0301  magnitude 16 bit chan A & 16 bit chan B (absolute)
@@ -112,9 +119,6 @@ entity SDR is
         m_axis_i2s_tdata : out STD_LOGIC_VECTOR (23 downto 0);
         m_axis_i2s_tvalid : out STD_LOGIC;   
         m_axis_i2s_tlast : out STD_LOGIC; 
-        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
-        s_axis_iq_tvalid : in STD_LOGIC; 
-        s_axis_iq_tready : out STD_LOGIC;
         gpio_out : out STD_LOGIC_VECTOR (5 downto 0);
         TX_ON : out std_logic;
         TX_FAIL : in std_logic;
@@ -189,9 +193,6 @@ architecture Behavioral of SDR is
         s_axis_audio_tvalid : in STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
-        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
-        s_axis_iq_tvalid : in STD_LOGIC; 
-        s_axis_iq_tready : out STD_LOGIC; 
         DAC_DCI_N : out STD_LOGIC;
         DAC_DCI_P : out STD_LOGIC;
         DAC_DCO_P : in STD_LOGIC;
@@ -492,9 +493,6 @@ TXA_0 : TXA
         s_axis_audio_tvalid => m_axis_audio_tvalid,
         s_adc_data_rx0 => m_axis_adc0_tdata,
         s_adc_data_rx1 => m_axis_adc1_tdata,
-        s_axis_iq_tdata => s_axis_iq_tdata,
-        s_axis_iq_tvalid => s_axis_iq_tvalid,
-        s_axis_iq_tready => s_axis_iq_tready,
         DAC_DCI_N => DAC_DCI_N,
         DAC_DCI_P => DAC_DCI_P,
         DAC_DCO_P => DAC_DCO_P,

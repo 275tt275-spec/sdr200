@@ -25,29 +25,61 @@ use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.VComponents.all;
 
+
 entity TXA_channel is
     Port ( 
         m_daci_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         m_dacq_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC;
-        s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
-        s_axis_iq_tvalid : in STD_LOGIC; 
-        s_axis_iq_tready : out STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
-        audio_max_abs : out STD_LOGIC_VECTOR (23 downto 0);
-        lin_din_max_abs : out STD_LOGIC_VECTOR (15 downto 0);
-        ovf : out STD_LOGIC_VECTOR (31 downto 0);
+        cfg_data_out : out STD_LOGIC_VECTOR (31 downto 0);
         aresetn : in std_logic;
         aclk : in std_logic
     );
 end TXA_channel;
 
 architecture Behavioral of TXA_channel is
+
+component ila_1 IS
+PORT (
+    clk : IN STD_LOGIC;    
+    probe0 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe2 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+    probe3 : IN STD_LOGIC_VECTOR(47 DOWNTO 0)
+    
+);
+END component ila_1;
+
+component floating_f2fix24 is
+    port (
+        aclk : IN STD_LOGIC;
+        s_axis_a_tvalid : IN STD_LOGIC;
+        s_axis_a_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        s_axis_a_tuser : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+        m_axis_result_tvalid : OUT STD_LOGIC;
+        m_axis_result_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0);
+        m_axis_result_tuser : OUT STD_LOGIC_VECTOR(0 DOWNTO 0)
+    );
+    end component floating_f2fix24;
+
+component axis_data_fifo_48 is
+    port (
+        s_axis_aresetn : IN STD_LOGIC;
+        s_axis_aclk : IN STD_LOGIC;
+        s_axis_tvalid : IN STD_LOGIC;
+        s_axis_tready : OUT STD_LOGIC;
+        s_axis_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+        m_axis_tvalid : OUT STD_LOGIC;
+        m_axis_tready : IN STD_LOGIC;
+        m_axis_tdata  : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+    );
+    end component axis_data_fifo_48;
 
 component fir_audio_0 IS
     port (
@@ -87,7 +119,7 @@ component fir_audio_0 IS
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (3 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
         tx_on : in STD_LOGIC;
-        audio_max_abs : out STD_LOGIC_VECTOR (23 downto 0);
+        audio_max_abs : out STD_LOGIC_VECTOR (24 downto 0);
         aclk : in STD_LOGIC
     );
     end component TXA_modulator;
@@ -182,17 +214,103 @@ component fir_audio_0 IS
     signal resampler_cfg_tvalid : STD_LOGIC;
     signal lim_over : STD_LOGIC_VECTOR(3 DOWNTO 0) := (others => '0');
     signal cfg_addr : std_logic_vector(3 downto 0);
-    signal cfg_wr : std_logic := '0';  
+    signal cfg_wr : std_logic := '0';
+    
+    signal iq_data_select : std_logic := '0'; 
+    signal iq_data_i, iq_data_q : std_logic_vector(23 downto 0);
+    signal iq_data_valid : std_logic := '0'; 
+    signal float_in_tvalid : std_logic := '0'; 
+    signal float_in_tuser : std_logic_vector(0 downto 0);
+    signal float_in_tdata : std_logic_vector(31 downto 0);
+    signal float_out_tvalid : std_logic := '0'; 
+    signal float_out_tuser : std_logic_vector(0 downto 0);
+    signal float_out_tdata : std_logic_vector(23 downto 0);
+    signal fifo_in_tdata : std_logic_vector(47 downto 0);
+    signal fifo_out_tdata : std_logic_vector(47 downto 0);
+    signal fifo_out_tvalid : std_logic; 
+    
     signal resampler_over : std_logic;
     signal linear_ovf : std_logic_vector(3 downto 0);
-    signal lin_din_max : signed(15 downto 0) := x"0000"; 
-    signal lin_din_abs : signed(15 downto 0) := x"0000"; 
+    signal ovf_out : std_logic_vector(31 downto 0) := (others => '0');
+    signal audio_max_mod : std_logic_vector(24 downto 0);
+    signal audio_max_mod_s : signed(24 downto 0);
+    signal audio_max : signed(24 downto 0) := (others => '0');
+    signal audio_max_rst : std_logic := '0';
+    signal lin_din_max : signed(16 downto 0) := (others => '0');
+    signal lin_din_abs : signed(16 downto 0); -- +1 бит для корректного abs
     signal lin_din_rst : std_logic := '0'; 
+    signal dac_tdata_abs : signed(16 downto 0); -- +1 бит для корректного abs
+    signal dac_tdata_max : signed(16 downto 0) := (others => '0');
+    signal dac_tdata_rst : std_logic := '0'; 
+    signal float_out_abs : signed(24 downto 0); -- +1 бит для корректного abs
+    signal float_out_max : signed(24 downto 0) := (others => '0');
+    signal float_out_rst : std_logic := '0'; 
 
 begin
 
+    cfg_data_out <= std_logic_vector(resize(audio_max, 32)) when s_axis_cfg_tdest = x"01" else
+               std_logic_vector(resize(lin_din_max, 32)) when s_axis_cfg_tdest = x"02" else
+               std_logic_vector(resize(dac_tdata_max, 32)) when s_axis_cfg_tdest = x"03" else
+               std_logic_vector(resize(float_out_max, 32)) when s_axis_cfg_tdest = x"04" else
+               ovf_out;
+
     audio_in_tvalid <= s_axis_audio_tvalid;
     audio_in_tdata <= s_axis_audio_tdata;
+    
+float2fix : floating_f2fix24
+    PORT MAP (
+        aclk => aclk,
+        s_axis_a_tvalid => float_in_tvalid,
+        s_axis_a_tdata => float_in_tdata,
+        s_axis_a_tuser => float_in_tuser,
+        m_axis_result_tvalid => float_out_tvalid,
+        m_axis_result_tdata => float_out_tdata,
+        m_axis_result_tuser => float_out_tuser
+    );
+      
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        iq_data_valid <= '0';
+        if float_out_tvalid = '1' then
+            float_out_abs <= abs(resize(signed(float_out_tdata), 25));
+            if float_out_tuser = "0" then
+                iq_data_i <= float_out_tdata;
+             else
+                iq_data_q <= float_out_tdata;
+                iq_data_valid <= '1';
+             end if;   
+        end if;
+        if float_out_rst = '1' then
+            float_out_max <= (others => '0');
+        elsif float_out_abs > float_out_max then
+            float_out_max <= float_out_abs;
+        end if;
+    end if;
+end process; 
+
+    fifo_in_tdata <= iq_data_i & iq_data_q;
+
+iq_fifo : axis_data_fifo_48
+    PORT MAP (
+        s_axis_aresetn => aresetn,
+        s_axis_aclk => aclk,
+        s_axis_tvalid => iq_data_valid,
+        s_axis_tready => open,
+        s_axis_tdata => fifo_in_tdata,
+        m_axis_tvalid => fifo_out_tvalid,
+        m_axis_tready => '1',
+        m_axis_tdata => fifo_out_tdata
+    );   
+    
+debug_0 : ila_1
+PORT MAP(
+    clk => aclk,  
+    probe0(0) => fifo_out_tvalid,
+    probe1(0) => resampler_in_tready,
+    probe2 => fifo_out_tdata,
+    probe3 => iq_tdata
+);
 
 audio_0 : fir_audio_0
     PORT MAP (
@@ -223,6 +341,13 @@ begin
    if rising_edge(aclk) then
         dds_cfg_tvalid <= '0'; 
         lin_din_rst <= '0';
+        dac_tdata_rst <= '0';
+        audio_max_rst <= '0';
+        float_out_rst <= '0';
+        float_in_tvalid <= '0';
+        ovf_out <= std_logic_vector(resize(unsigned
+                (resampler_over & lim_over & linear_ovf),
+                 ovf_out'length));
 --        config_tvalid <= '0';
         if cfg_wr = '1' then   
             if cfg_addr = x"0" then
@@ -230,13 +355,26 @@ begin
                 dds_cfg_tvalid <= '1';  
             elsif cfg_addr = x"1" then
                 txa_on <= s_axis_cfg_tdata(0);
+                iq_data_select <= s_axis_cfg_tdata(31);
 --           elsif cfg_addr = x"2" then
 --               config_tdata <= s_axis_cfg_tdata(7 DOWNTO 0);
 --               config_tvalid <= '1';
             elsif cfg_addr = x"3" then
                 gain <= s_axis_cfg_tdata( 17 downto 0 );
             elsif cfg_addr = x"4" then
+                ovf_out <= (others => '0');
                 lin_din_rst <= '1';
+                dac_tdata_rst <= '1';
+                audio_max_rst <= '1';
+                float_out_rst <= '1';
+            elsif cfg_addr = x"e" then
+                float_in_tdata <= s_axis_cfg_tdata;
+                float_in_tuser <= "0";
+                float_in_tvalid <= '1';
+            elsif cfg_addr = x"f" then
+                float_in_tdata <= s_axis_cfg_tdata;
+                float_in_tuser <= "1";
+                float_in_tvalid <= '1';     
             end if; 
         end if;
    end if;
@@ -273,16 +411,25 @@ modulator_0 : TXA_modulator
         s_axis_cfg_tdest => s_axis_cfg_tdest(3 downto 0),
         s_axis_cfg_tvalid => modulator_cfg_tvalid,
         tx_on => txa_on,
-        audio_max_abs => audio_max_abs,
+        audio_max_abs => audio_max_mod,
         aclk => aclk
     );
-
-    resampler_in_tvalid <= modulator_out_tvalid;
-    resampler_in_tdata <= modulator_out_tdata;
     
---    resampler_in_tdata <= s_axis_iq_tdata;
---    resampler_in_tvalid <= s_axis_iq_tvalid;
-    s_axis_iq_tready <= resampler_in_tready;
+    audio_max_mod_s <= signed(audio_max_mod);
+    
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        if audio_max_rst = '1' then
+            audio_max <= (others => '0');
+        elsif audio_max_mod_s > audio_max then
+            audio_max <= audio_max_mod_s;
+        end if;
+    end if;
+end process;
+
+    resampler_in_tvalid <= modulator_out_tvalid when iq_data_select = '0' else fifo_out_tvalid;
+    resampler_in_tdata <= modulator_out_tdata when iq_data_select = '0' else fifo_out_tdata;
 
 resampler_0 : TXA_resampler
     PORT MAP  ( 
@@ -301,21 +448,7 @@ resampler_0 : TXA_resampler
     fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) - resize(signed(s_adc_data_rx1), 17)); -- Сигналы в противофазе
 --    fb_forward <= s_adc_data_rx0 - s_adc_data_rx1; 
     linear_din2 <= fb_forward(16 downto 1); -- проверить там раньше было 14 бит  
-    
-   lin_din_max_abs <= std_logic_vector(lin_din_max);
-
-process(aclk)
-begin
-	if rising_edge(aclk) then
-	   lin_din_abs <= abs(signed(linear_din2));
-	   if lin_din_rst = '1' then
-	       lin_din_max <= x"0000";
-	   elsif lin_din_abs > lin_din_max then
-	       lin_din_max <= lin_din_abs;	
-	   end if;        
-	end if;
-end process;
-        
+           
 linear_0 : linear_dds_iq
     PORT MAP  ( 
         din1_i => linear_in_i,
@@ -369,6 +502,28 @@ begin
 	       dac_tdata <= x"8000";
 	   end if;   
 	end if;
+end process;
+
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        -- Шаг 1: Вычисляем абсолютное значение с расширением разрядности
+        -- Это исключает ошибку переполнения для отрицательного максимума
+        lin_din_abs <= abs(resize(signed(linear_din2), 17));
+        dac_tdata_abs <= abs(resize(signed(dac_tdata), 17));
+        -- Шаг 2: Сравнение и накопление максимума (Конвейерный регистр)
+        if lin_din_rst = '1' then
+            lin_din_max <= (others => '0');
+        elsif lin_din_abs > lin_din_max then
+            lin_din_max <= lin_din_abs;
+        end if;
+        
+        if dac_tdata_rst = '1' then
+            dac_tdata_max <= (others => '0');
+        elsif dac_tdata_abs > dac_tdata_max then
+            dac_tdata_max <= dac_tdata_abs;
+        end if;
+    end if;
 end process;
 
     m_daci_tdata <= dac_tdata;  
