@@ -45,16 +45,16 @@ end TXA_channel;
 
 architecture Behavioral of TXA_channel is
 
-component ila_1 IS
-PORT (
-    clk : IN STD_LOGIC;    
-    probe0 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe2 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-    probe3 : IN STD_LOGIC_VECTOR(47 DOWNTO 0)
-    
-);
-END component ila_1;
+--component ila_1 IS
+--PORT (
+--    clk : IN STD_LOGIC;    
+--    probe0 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+--    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+--    probe2 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+--    probe3 : IN STD_LOGIC_VECTOR(47 DOWNTO 0)
+--    
+--);
+--END component ila_1;
 
 component floating_f2fix24 is
     port (
@@ -77,7 +77,8 @@ component axis_data_fifo_48 is
         s_axis_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
         m_axis_tvalid : OUT STD_LOGIC;
         m_axis_tready : IN STD_LOGIC;
-        m_axis_tdata  : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+        m_axis_tdata  : OUT STD_LOGIC_VECTOR(47 DOWNTO 0);
+        prog_empty : OUT STD_LOGIC
     );
     end component axis_data_fifo_48;
 
@@ -228,6 +229,9 @@ component fir_audio_0 IS
     signal fifo_in_tdata : std_logic_vector(47 downto 0);
     signal fifo_out_tdata : std_logic_vector(47 downto 0);
     signal fifo_out_tvalid : std_logic; 
+    signal fifo_empty : std_logic; 
+    signal fifo_out_tready : std_logic;
+    signal fifo_delay : std_logic := '1';
     
     signal resampler_over : std_logic;
     signal linear_ovf : std_logic_vector(3 downto 0);
@@ -286,10 +290,14 @@ begin
         elsif float_out_abs > float_out_max then
             float_out_max <= float_out_abs;
         end if;
+        if fifo_empty = '0' then
+            fifo_delay <= '0';
+        end if;    
     end if;
 end process; 
 
     fifo_in_tdata <= iq_data_i & iq_data_q;
+    fifo_out_tready <= resampler_in_tready when fifo_delay = '0' else '0';
 
 iq_fifo : axis_data_fifo_48
     PORT MAP (
@@ -299,19 +307,20 @@ iq_fifo : axis_data_fifo_48
         s_axis_tready => open,
         s_axis_tdata => fifo_in_tdata,
         m_axis_tvalid => fifo_out_tvalid,
-        m_axis_tready => '1',
-        m_axis_tdata => fifo_out_tdata
+        m_axis_tready => fifo_out_tready,
+        m_axis_tdata => fifo_out_tdata,
+        prog_empty => fifo_empty
     );   
     
-debug_0 : ila_1
-PORT MAP(
-    clk => aclk,  
-    probe0(0) => fifo_out_tvalid,
-    probe1(0) => resampler_in_tready,
-    probe2 => fifo_out_tdata,
-    probe3 => iq_tdata
-);
-
+--debug_0 : ila_1
+--PORT MAP(
+--    clk => aclk,  
+--    probe0(0) => fifo_out_tvalid,
+--    probe1(0) => resampler_in_tready,
+--    probe2 => fifo_out_tdata,
+--    probe3 => iq_tdata
+--);
+--
 audio_0 : fir_audio_0
     PORT MAP (
         aclk => aclk,

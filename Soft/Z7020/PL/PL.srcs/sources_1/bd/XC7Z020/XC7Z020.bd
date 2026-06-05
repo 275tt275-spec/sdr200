@@ -7,7 +7,7 @@
       "name": "XC7Z020",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2023.2.2",
+      "tool_version": "2023.2",
       "validated": "true"
     },
     "design_tree": {
@@ -2307,7 +2307,7 @@
       },
       "gmii_to_rgmii_0": {
         "vlnv": "xilinx.com:ip:gmii_to_rgmii:4.1",
-        "ip_revision": "13",
+        "ip_revision": "11",
         "xci_name": "XC7Z020_gmii_to_rgmii_0_0",
         "xci_path": "ip\\XC7Z020_gmii_to_rgmii_0_0_1\\XC7Z020_gmii_to_rgmii_0_0.xci",
         "inst_hier_path": "gmii_to_rgmii_0",
@@ -2600,7 +2600,7 @@
         "components": {
           "xbar": {
             "vlnv": "xilinx.com:ip:axi_crossbar:2.1",
-            "ip_revision": "31",
+            "ip_revision": "30",
             "xci_name": "XC7Z020_xbar_0",
             "xci_path": "ip\\XC7Z020_xbar_0\\XC7Z020_xbar_0.xci",
             "inst_hier_path": "axi_interconnect_0/xbar",
@@ -2683,7 +2683,7 @@
             "components": {
               "s00_data_fifo": {
                 "vlnv": "xilinx.com:ip:axi_data_fifo:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_s00_data_fifo_0",
                 "xci_path": "ip\\XC7Z020_s00_data_fifo_0\\XC7Z020_s00_data_fifo_0.xci",
                 "inst_hier_path": "axi_interconnect_0/s00_couplers/s00_data_fifo",
@@ -2699,7 +2699,7 @@
               },
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "XC7Z020_auto_pc_6",
                 "xci_path": "ip\\XC7Z020_auto_pc_6\\XC7Z020_auto_pc_6.xci",
                 "inst_hier_path": "axi_interconnect_0/s00_couplers/auto_pc",
@@ -2819,7 +2819,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_0",
                 "xci_path": "ip\\XC7Z020_auto_cc_0\\XC7Z020_auto_cc_0.xci",
                 "inst_hier_path": "axi_interconnect_0/m00_couplers/auto_cc",
@@ -2925,7 +2925,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_1",
                 "xci_path": "ip\\XC7Z020_auto_cc_1\\XC7Z020_auto_cc_1.xci",
                 "inst_hier_path": "axi_interconnect_0/m01_couplers/auto_cc",
@@ -2941,7 +2941,7 @@
               },
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "XC7Z020_auto_pc_0",
                 "xci_path": "ip\\XC7Z020_auto_pc_0\\XC7Z020_auto_pc_0.xci",
                 "inst_hier_path": "axi_interconnect_0/m01_couplers/auto_pc",
@@ -3063,7 +3063,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_2",
                 "xci_path": "ip\\XC7Z020_auto_cc_2\\XC7Z020_auto_cc_2.xci",
                 "inst_hier_path": "axi_interconnect_0/m02_couplers/auto_cc",
@@ -3169,7 +3169,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_3",
                 "xci_path": "ip\\XC7Z020_auto_cc_3\\XC7Z020_auto_cc_3.xci",
                 "inst_hier_path": "axi_interconnect_0/m03_couplers/auto_cc",
@@ -3185,7 +3185,7 @@
               },
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "XC7Z020_auto_pc_1",
                 "xci_path": "ip\\XC7Z020_auto_pc_1\\XC7Z020_auto_pc_1.xci",
                 "inst_hier_path": "axi_interconnect_0/m03_couplers/auto_pc",
@@ -3307,7 +3307,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_4",
                 "xci_path": "ip\\XC7Z020_auto_cc_4\\XC7Z020_auto_cc_4.xci",
                 "inst_hier_path": "axi_interconnect_0/m04_couplers/auto_cc",
@@ -3323,7 +3323,7 @@
               },
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "XC7Z020_auto_pc_2",
                 "xci_path": "ip\\XC7Z020_auto_pc_2\\XC7Z020_auto_pc_2.xci",
                 "inst_hier_path": "axi_interconnect_0/m04_couplers/auto_pc",
@@ -3445,7 +3445,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_5",
                 "xci_path": "ip\\XC7Z020_auto_cc_5\\XC7Z020_auto_cc_5.xci",
                 "inst_hier_path": "axi_interconnect_0/m05_couplers/auto_cc",
@@ -3461,7 +3461,7 @@
               },
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "XC7Z020_auto_pc_3",
                 "xci_path": "ip\\XC7Z020_auto_pc_3\\XC7Z020_auto_pc_3.xci",
                 "inst_hier_path": "axi_interconnect_0/m05_couplers/auto_pc",
@@ -3583,7 +3583,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_6",
                 "xci_path": "ip\\XC7Z020_auto_cc_6\\XC7Z020_auto_cc_6.xci",
                 "inst_hier_path": "axi_interconnect_0/m06_couplers/auto_cc",
@@ -3599,7 +3599,7 @@
               },
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "XC7Z020_auto_pc_4",
                 "xci_path": "ip\\XC7Z020_auto_pc_4\\XC7Z020_auto_pc_4.xci",
                 "inst_hier_path": "axi_interconnect_0/m06_couplers/auto_pc",
@@ -3721,7 +3721,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_7",
                 "xci_path": "ip\\XC7Z020_auto_cc_7\\XC7Z020_auto_cc_7.xci",
                 "inst_hier_path": "axi_interconnect_0/m07_couplers/auto_cc",
@@ -3737,7 +3737,7 @@
               },
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "XC7Z020_auto_pc_5",
                 "xci_path": "ip\\XC7Z020_auto_pc_5\\XC7Z020_auto_pc_5.xci",
                 "inst_hier_path": "axi_interconnect_0/m07_couplers/auto_pc",
@@ -3859,7 +3859,7 @@
             "components": {
               "auto_cc": {
                 "vlnv": "xilinx.com:ip:axi_clock_converter:2.1",
-                "ip_revision": "29",
+                "ip_revision": "28",
                 "xci_name": "XC7Z020_auto_cc_8",
                 "xci_path": "ip\\XC7Z020_auto_cc_8\\XC7Z020_auto_cc_8.xci",
                 "inst_hier_path": "axi_interconnect_0/m08_couplers/auto_cc",
@@ -4202,7 +4202,7 @@
       },
       "axi_fifo_mm_s_0": {
         "vlnv": "xilinx.com:ip:axi_fifo_mm_s:4.3",
-        "ip_revision": "2",
+        "ip_revision": "1",
         "xci_name": "XC7Z020_axi_fifo_mm_s_0_0",
         "xci_path": "ip\\XC7Z020_axi_fifo_mm_s_0_0\\XC7Z020_axi_fifo_mm_s_0_0.xci",
         "inst_hier_path": "axi_fifo_mm_s_0",
@@ -4229,7 +4229,7 @@
       },
       "SDR_1": {
         "vlnv": "xilinx.com:module_ref:SDR:1.0",
-        "ip_revision": "1780222735",
+        "ip_revision": "1",
         "xci_name": "XC7Z020_SDR_1_0",
         "xci_path": "ip\\XC7Z020_SDR_1_0\\XC7Z020_SDR_1_0.xci",
         "inst_hier_path": "SDR_1",
@@ -4689,7 +4689,7 @@
       },
       "axi_uartlite_0": {
         "vlnv": "xilinx.com:ip:axi_uartlite:2.0",
-        "ip_revision": "34",
+        "ip_revision": "33",
         "xci_name": "XC7Z020_axi_uartlite_0_1",
         "xci_path": "ip\\XC7Z020_axi_uartlite_0_1\\XC7Z020_axi_uartlite_0_1.xci",
         "inst_hier_path": "axi_uartlite_0",
@@ -4704,7 +4704,7 @@
       },
       "axi_uartlite_1": {
         "vlnv": "xilinx.com:ip:axi_uartlite:2.0",
-        "ip_revision": "34",
+        "ip_revision": "33",
         "xci_name": "XC7Z020_axi_uartlite_0_2",
         "xci_path": "ip\\XC7Z020_axi_uartlite_0_2\\XC7Z020_axi_uartlite_0_2.xci",
         "inst_hier_path": "axi_uartlite_1",
@@ -4744,7 +4744,7 @@
       },
       "axi_uartlite_2": {
         "vlnv": "xilinx.com:ip:axi_uartlite:2.0",
-        "ip_revision": "34",
+        "ip_revision": "33",
         "xci_name": "XC7Z020_axi_uartlite_1_0",
         "xci_path": "ip\\XC7Z020_axi_uartlite_1_0\\XC7Z020_axi_uartlite_1_0.xci",
         "inst_hier_path": "axi_uartlite_2",
@@ -4766,7 +4766,7 @@
       },
       "axi_fifo_TXA_i2s": {
         "vlnv": "xilinx.com:ip:axi_fifo_mm_s:4.3",
-        "ip_revision": "2",
+        "ip_revision": "1",
         "xci_name": "XC7Z020_axi_fifo_mm_s_1_0",
         "xci_path": "ip\\XC7Z020_axi_fifo_mm_s_1_0\\XC7Z020_axi_fifo_mm_s_1_0.xci",
         "inst_hier_path": "axi_fifo_TXA_i2s",
@@ -4784,7 +4784,7 @@
       },
       "floating_point_0": {
         "vlnv": "xilinx.com:ip:floating_point:7.1",
-        "ip_revision": "17",
+        "ip_revision": "16",
         "xci_name": "XC7Z020_floating_point_0_0",
         "xci_path": "ip\\XC7Z020_floating_point_0_0\\XC7Z020_floating_point_0_0.xci",
         "inst_hier_path": "floating_point_0",
@@ -5193,10 +5193,10 @@
       "processing_system7_0_FCLK_CLK0": {
         "ports": [
           "processing_system7_0/FCLK_CLK0",
-          "rst_ps7_0_200M/slowest_sync_clk",
           "axi_interconnect_0/ACLK",
           "axi_interconnect_0/S00_ACLK",
-          "processing_system7_0/M_AXI_GP0_ACLK"
+          "processing_system7_0/M_AXI_GP0_ACLK",
+          "rst_ps7_0_200M/slowest_sync_clk"
         ]
       },
       "processing_system7_0_FCLK_CLK1": {
