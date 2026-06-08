@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "cic_wide",
     "component_reference": "xilinx.com:ip:cic_compiler:4.0",
-    "ip_revision": "18",
+    "ip_revision": "17",
     "gen_directory": "../../../../PL.gen/sources_1/ip/cic_wide",
     "parameters": {
       "component_parameters": {
@@ -90,12 +90,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
-        "IPREVISION": [ { "value": "18" } ],
+        "IPREVISION": [ { "value": "17" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../PL.gen/sources_1/ip/cic_wide" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },

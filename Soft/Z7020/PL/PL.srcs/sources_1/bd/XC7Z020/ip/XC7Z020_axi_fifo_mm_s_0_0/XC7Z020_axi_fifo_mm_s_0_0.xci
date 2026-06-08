@@ -4,7 +4,7 @@
     "xci_name": "XC7Z020_axi_fifo_mm_s_0_0",
     "cell_name": "axi_fifo_mm_s_0",
     "component_reference": "xilinx.com:ip:axi_fifo_mm_s:4.3",
-    "ip_revision": "2",
+    "ip_revision": "1",
     "gen_directory": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_axi_fifo_mm_s_0_0",
     "parameters": {
       "component_parameters": {
@@ -104,12 +104,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "2" } ],
+        "IPREVISION": [ { "value": "1" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_axi_fifo_mm_s_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },

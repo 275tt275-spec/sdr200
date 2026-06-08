@@ -4,7 +4,7 @@
     "xci_name": "XC7Z020_xbar_0",
     "cell_name": "axi_interconnect_0/xbar",
     "component_reference": "xilinx.com:ip:axi_crossbar:2.1",
-    "ip_revision": "31",
+    "ip_revision": "30",
     "gen_directory": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_xbar_0",
     "parameters": {
       "component_parameters": {
@@ -839,7 +839,11 @@
         "M08_A13_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
         "M08_A14_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
         "M08_A15_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
+<<<<<<< HEAD
         "M09_A00_BASE_ADDR": [ { "value": "0x0000000043C40000", "value_src": "propagated", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
+=======
+        "M09_A00_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
+>>>>>>> dbfe4986fc50461962a3d3297e874cb1d5e810bb
         "M09_A01_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
         "M09_A02_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
         "M09_A03_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
@@ -855,7 +859,11 @@
         "M09_A13_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
         "M09_A14_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
         "M09_A15_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
+<<<<<<< HEAD
         "M10_A00_BASE_ADDR": [ { "value": "0x0000000043C50000", "value_src": "propagated", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
+=======
+        "M10_A00_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
+>>>>>>> dbfe4986fc50461962a3d3297e874cb1d5e810bb
         "M10_A01_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
         "M10_A02_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
         "M10_A03_BASE_ADDR": [ { "value": "0xffffffffffffffff", "value_permission": "bd_and_user", "resolve_type": "user", "format": "bitString", "usage": "all" } ],
@@ -1095,7 +1103,11 @@
         "M08_A13_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M08_A14_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M08_A15_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
+<<<<<<< HEAD
         "M09_A00_ADDR_WIDTH": [ { "value": "16", "value_src": "propagated", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
+=======
+        "M09_A00_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
+>>>>>>> dbfe4986fc50461962a3d3297e874cb1d5e810bb
         "M09_A01_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M09_A02_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M09_A03_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -1111,7 +1123,11 @@
         "M09_A13_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M09_A14_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M09_A15_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
+<<<<<<< HEAD
         "M10_A00_ADDR_WIDTH": [ { "value": "16", "value_src": "propagated", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
+=======
+        "M10_A00_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
+>>>>>>> dbfe4986fc50461962a3d3297e874cb1d5e810bb
         "M10_A01_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M10_A02_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M10_A03_ADDR_WIDTH": [ { "value": "0", "value_permission": "bd_and_user", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -1255,12 +1271,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "31" } ],
+        "IPREVISION": [ { "value": "30" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_xbar_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "rtl" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },
