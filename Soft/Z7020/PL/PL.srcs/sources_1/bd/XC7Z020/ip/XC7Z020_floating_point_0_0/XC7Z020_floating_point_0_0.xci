@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "XC7Z020_floating_point_0_0",
-    "cell_name": "floating_point_0",
+    "cell_name": "hier_0/floating_point_0",
     "component_reference": "xilinx.com:ip:floating_point:7.1",
     "ip_revision": "17",
     "gen_directory": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_floating_point_0_0",

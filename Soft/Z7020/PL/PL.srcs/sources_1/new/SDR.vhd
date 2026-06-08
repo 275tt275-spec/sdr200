@@ -114,11 +114,18 @@ entity SDR is
         irq : out STD_LOGIC; 
         m_axis_ser0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_axis_ser0_tvalid : out STD_LOGIC;
+        m_axis_ser0_tlast : out STD_LOGIC;
         m_axis_ser1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_axis_ser1_tvalid : out STD_LOGIC;    
+        m_axis_ser1_tlast : out STD_LOGIC; 
+        resetn_fifo : out STD_LOGIC; 
         m_axis_i2s_tdata : out STD_LOGIC_VECTOR (23 downto 0);
         m_axis_i2s_tvalid : out STD_LOGIC;   
         m_axis_i2s_tlast : out STD_LOGIC; 
+        m_linear_iq0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq0_tvalid : out std_logic;
+        m_linear_iq1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq1_tvalid : out std_logic;
         gpio_out : out STD_LOGIC_VECTOR (5 downto 0);
         TX_ON : out std_logic;
         TX_FAIL : in std_logic;
@@ -203,6 +210,10 @@ architecture Behavioral of SDR is
         cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
 		cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
         cfg_wr : in STD_LOGIC;
+        m_linear_iq0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq0_tvalid : out std_logic;
+        m_linear_iq1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq1_tvalid : out std_logic;
         aresetn : in STD_LOGIC;
         aclk : in STD_LOGIC
     );
@@ -296,7 +307,7 @@ architecture Behavioral of SDR is
     
     ATTRIBUTE X_INTERFACE_INFO of aclk_122: SIGNAL is "xilinx.com:signal:clock:1.0 aclk_122 CLK";
     ATTRIBUTE X_INTERFACE_PARAMETER : STRING;
-    ATTRIBUTE X_INTERFACE_PARAMETER of aclk_122: SIGNAL is "ASSOCIATED_BUSIF m_axis_ser0:m_axis_ser1:m_axis_wb:m_axis_i2s:s_axis_iq, FREQ_HZ 122880000"; 
+    ATTRIBUTE X_INTERFACE_PARAMETER of aclk_122: SIGNAL is "ASSOCIATED_BUSIF m_axis_ser0:m_axis_ser1:m_axis_wb:m_axis_i2s:s_axis_iq:m_linear_iq0:m_linear_iq1, FREQ_HZ 122880000"; 
 
     ATTRIBUTE X_INTERFACE_PARAMETER OF bram_rsta: SIGNAL IS "XIL_INTERFACENAME BRAM_PORTA, MASTER_TYPE BRAM_CTRL, MEM_SIZE 8192, MEM_WIDTH 32, MEM_ECC NONE, READ_WRITE_MODE READ_WRITE, READ_LATENCY 1";
     ATTRIBUTE X_INTERFACE_INFO of audio_clk: SIGNAL is "xilinx.com:signal:clock:1.0 audio_clk CLK";
@@ -503,9 +514,17 @@ TXA_0 : TXA
         cfg_dina => bram_dina,
 		cfg_douta => TXA_cfg_douta,
         cfg_wr => TXA_wr,
+        m_linear_iq0_tdata => m_linear_iq0_tdata,
+        m_linear_iq0_tvalid => m_linear_iq0_tvalid,
+        m_linear_iq1_tdata => m_linear_iq1_tdata,
+        m_linear_iq1_tvalid => m_linear_iq1_tvalid,
         aresetn => aresetn,                     
         aclk => aclk
     );
+    
+    m_axis_ser0_tlast <= '1';
+    m_axis_ser1_tlast <= '1';
+    resetn_fifo <= aresetn;
     
     s_axis_audioR_tdata <= s_axis_audioL_tdata;
     

@@ -165,19 +165,14 @@ inline uint32_t fpga_RXA_GetRSSI(void)
 
 void fpga_TXA_Enable(int enable)
 {
-	uint32_t ctrl_reg;
-
 	if(enable == 1)
 	{
-		ctrl_reg = FPGA_TXA_CTRL_ON;
-		fpga_write(FPGA_TXA_CTRL, ctrl_reg);
-		ctrl_reg = FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW;
-		fpga_write(FPGA_TXA_CTRL, ctrl_reg);
+		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_IQ);
+		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW | FPGA_TXA_CTRL_IQ);
 	}
 	else
 	{
-		ctrl_reg = 0;
-		fpga_write(FPGA_TXA_CTRL, ctrl_reg);
+		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_IQ);
 	}
 }
 
@@ -245,18 +240,14 @@ void fpga_GetSWR(s_swr* swr)
 
 void fpga_LIM_Enable(int enable)
 {
-	uint32_t ctrl_reg;
-
 	if(enable == 1)
 	{
-		ctrl_reg = 1;
+		fpga_write(FPGA_LIM_CTRL, 1);
 	}
 	else
 	{
-		ctrl_reg = 0;
+		fpga_write(FPGA_LIM_CTRL, 0);
 	}
-
-	fpga_write(FPGA_LIM_CTRL, ctrl_reg);
 }
 
 void fpga_LIM_Set(s_limiter* lim)

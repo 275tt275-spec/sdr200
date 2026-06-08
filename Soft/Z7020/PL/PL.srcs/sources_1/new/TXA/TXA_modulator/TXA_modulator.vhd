@@ -93,7 +93,7 @@ architecture Behavioral of TXA_modulator is
     signal audio_gain : STD_LOGIC_VECTOR (17 downto 0) := "00" & x"3FFF";
     signal audio_data_42 : STD_LOGIC_VECTOR (41 downto 0);
     signal audio_data : STD_LOGIC_VECTOR (23 downto 0);
-    signal audio_data_valid : std_logic;    
+    signal audio_data_valid : std_logic := '0';    
     signal freq_offset_data : STD_LOGIC_VECTOR (15 downto 0) := x"1799";
     signal freq_offset_valid : std_logic := '0';
     signal freq_offset_valid_r : std_logic := '0';

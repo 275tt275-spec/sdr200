@@ -569,6 +569,8 @@ void hw_SetRXAMode(e_trx_mode mode)
 		freq_offset = 6041; // 1475 Hz
 	}
 
+	hw_device.TXA_offset = 0;
+
 	fpga_RXA_MOD(fpga_mode);
 	fpga_RXA_OFFSET(freq_offset);
 	fpga_RXA_LSB(fpga_lsb);

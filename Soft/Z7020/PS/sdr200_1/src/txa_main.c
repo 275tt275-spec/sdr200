@@ -1,7 +1,7 @@
 
 #include "txa_main.h"
 
-#define DEFAULT_COEFF	32
+#define DEFAULT_COEFF	128
 
 struct _txa txa[1];
 struct _ch ch;
@@ -36,8 +36,11 @@ void create_txa(int channel, struct _create_runs* runs)
 {
 	InitializeCriticalSectionAndSpinCount(&csDSP, 2500);
 
-	txa[channel].f_low = 2700.0f;
-	txa[channel].f_high = 150.0f;
+	txa[channel].f_low  = 150.0;
+	txa[channel].f_high = 4500.0;
+
+//	txa[channel].f_low = 2700.0f;
+//	txa[channel].f_high = 150.0f;
 	txa[channel].inbuff = (float*)malloc0(1 * ch.dsp_insize * sizeof(complex));
 	txa[channel].outbuff = (float*)malloc0(1 * ch.dsp_outsize * sizeof(complex));
 	txa[channel].midbuff = (float*)malloc0(2 * ch.dsp_size * sizeof(complex));
@@ -55,7 +58,7 @@ void create_txa(int channel, struct _create_runs* runs)
 		1.0);							// gain
 
 	txa[channel].gen0.p = create_gen(
-		1,											// run
+		0,											// run
 		ch.dsp_size,								// buffer size
 		txa[channel].midbuff,						// input buffer
 		txa[channel].midbuff,						// output buffer
@@ -615,36 +618,40 @@ void TXASetupBPFilters(int channel)
 	switch (txa[channel].mode)
 	{
 	case TXA_LSB:
-	case TXA_USB:
-	case TXA_CWL:
-	case TXA_CWU:
-	case TXA_SPEC:
-	case TXA_DRM:
-		CalcBandpassFilter(txa[channel].bp0.p, txa[channel].f_low, txa[channel].f_high, 2.0);
+		CalcBandpassFilter (txa[channel].bp0.p, -2700, -150, 2.0);
 		if (txa[channel].compressor.p->run)
 		{
-			CalcBandpassFilter(txa[channel].bp1.p, txa[channel].f_low, txa[channel].f_high, 2.0);
+			CalcBandpassFilter (txa[channel].bp1.p, txa[channel].f_low, txa[channel].f_high, 2.0);
 			txa[channel].bp1.p->run = 1;
 			if (txa[channel].osctrl.p->run)
 			{
-				CalcBandpassFilter(txa[channel].bp2.p, txa[channel].f_low, txa[channel].f_high, 1.0);
+				CalcBandpassFilter (txa[channel].bp2.p, txa[channel].f_low, txa[channel].f_high, 1.0);
 				txa[channel].bp2.p->run = 1;
 			}
 		}
 		break;
-	case TXA_DIGL:
-	case TXA_DIGU:
-		CalcBandpassFilter(txa[channel].bp0.p, 150.f, 4500.f, 2.0);
+	case TXA_USB:
+		CalcBandpassFilter (txa[channel].bp0.p, 150, 2700, 2.0);
 		if (txa[channel].compressor.p->run)
 		{
-			CalcBandpassFilter(txa[channel].bp1.p, 150.f, 4500.f, 2.0);
+			CalcBandpassFilter (txa[channel].bp1.p, txa[channel].f_low, txa[channel].f_high, 2.0);
 			txa[channel].bp1.p->run = 1;
 			if (txa[channel].osctrl.p->run)
 			{
-				CalcBandpassFilter(txa[channel].bp2.p, 150.f, 4500.f, 1.0);
+				CalcBandpassFilter (txa[channel].bp2.p, txa[channel].f_low, txa[channel].f_high, 1.0);
 				txa[channel].bp2.p->run = 1;
 			}
 		}
+		break;
+	case TXA_CWL:
+	case TXA_CWU:
+	case TXA_SPEC:
+	case TXA_DRM:
+	case TXA_DIGL:
+		CalcBandpassFilter (txa[channel].bp0.p, -txa[channel].f_high, -txa[channel].f_low, 2.0);
+		break;
+	case TXA_DIGU:
+		CalcBandpassFilter (txa[channel].bp0.p, txa[channel].f_low, txa[channel].f_high, 2.0);
 		break;
 	case TXA_DSB:
 	case TXA_AM:

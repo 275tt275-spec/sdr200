@@ -30,8 +30,8 @@
 #include "comm.h"
 #include "cmd.h"
 
-#define IN_SIZE 8
-#define DSP_SIZE 8
+#define IN_SIZE 32
+#define DSP_SIZE 32
 
 #define OCM_SHARED_SECTION 0xFFFF0000
 #define SGI_FROM_CORE0  0  // Core 1 слушает SGI 0 (настроенный контроллером Core 0)
@@ -91,11 +91,11 @@ int main()
 	runs.eqp = 0;					// pre-EQ
 	runs.eqmeter = 0;				// EQ meter
 	runs.preemph = 0;				// FM pre-emphasis
-	runs.leveler = 0;				// Leveler
+	runs.leveler = 1;				// Leveler
 	runs.lvlrmeter = 0;				// Leveler Meter
 	runs.cfcomp = 0;				// Continuous Frequency Compressor with post-EQ
 	runs.cfcmeter = 0;				// CFC+PostEQ Meter
-	runs.bp0 = 0;					// primary bandpass filter
+	runs.bp0 = 1;					// primary bandpass filter
 	runs.compressor = 0;			// COMP compressor
 	runs.osctrl = 0;				// CESSB Overshoot Control
 	runs.compmeter = 0;				// COMP meter
@@ -158,12 +158,14 @@ int main()
     	}
 #if 1
     	uint32_t world = XLlFifo_iRxOccupancy(&fifo_i2s);
-    	float data;
+    	uint32_t udata;
+    	float fdata;
     	if(world)
     	{
-    		data = XLlFifo_RxGetWord(&fifo_i2s);
-    		txa[channel].inbuff[in_ptr * 2] = *(float*)&data;
-    		txa[channel].inbuff[in_ptr * 2 + 1] = *(float*)&data;
+    		udata = XLlFifo_RxGetWord(&fifo_i2s);
+//    		data = 0;
+    		txa[channel].inbuff[in_ptr * 2] = *(float*)&udata;
+    		txa[channel].inbuff[in_ptr * 2 + 1] = *(float*)&udata;
 
     		if(++in_ptr >= IN_SIZE)
     		{
@@ -171,10 +173,10 @@ int main()
     			xtxa(channel);
     			for(int n = 0; n < DSP_SIZE; n++)
     			{
-    				data = txa[channel].outbuff[n * 2];
-    				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020E << 2, *(uint32_t*)&data );
-    				data = txa[channel].outbuff[n * 2 + 1];
-    				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020F << 2, *(uint32_t*)&data );
+    				fdata = txa[channel].outbuff[n * 2];
+    				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020E << 2, *(uint32_t*)&fdata );
+    				fdata = txa[channel].outbuff[n * 2 + 1];
+    				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020F << 2, *(uint32_t*)&fdata );
     			}
     		}
     	}

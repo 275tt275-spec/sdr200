@@ -34,6 +34,10 @@ entity TXA_channel is
         s_axis_audio_tvalid : in STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
+        m_linear_iq0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq0_tvalid : out std_logic;
+        m_linear_iq1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq1_tvalid : out std_logic;
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
@@ -44,17 +48,6 @@ entity TXA_channel is
 end TXA_channel;
 
 architecture Behavioral of TXA_channel is
-
-component ila_1 IS
-PORT (
-    clk : IN STD_LOGIC;    
-    probe0 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe2 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-    probe3 : IN STD_LOGIC_VECTOR(47 DOWNTO 0)
-    
-);
-END component ila_1;
 
 component floating_f2fix24 is
     port (
@@ -77,7 +70,8 @@ component axis_data_fifo_48 is
         s_axis_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
         m_axis_tvalid : OUT STD_LOGIC;
         m_axis_tready : IN STD_LOGIC;
-        m_axis_tdata  : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+        m_axis_tdata  : OUT STD_LOGIC_VECTOR(47 DOWNTO 0);
+        prog_empty : OUT STD_LOGIC
     );
     end component axis_data_fifo_48;
 
@@ -154,6 +148,21 @@ component fir_audio_0 IS
         m_ovf : out std_logic_vector(3 downto 0)
     );
     end component linear_dds_iq;
+    
+    component iqc is
+    Port (
+        in_i : in  STD_LOGIC_VECTOR (17 downto 0);
+        in_q : in  STD_LOGIC_VECTOR (17 downto 0);
+        adc : in  STD_LOGIC_VECTOR (15 downto 0); 
+        s_axis_dds_tdata : in STD_LOGIC_VECTOR (31 downto 0);
+        outiq_0 : out  STD_LOGIC_VECTOR (31 downto 0);
+        out_valid_0 : out STD_LOGIC;
+        outiq_1 : out  STD_LOGIC_VECTOR (31 downto 0);
+        out_valid_1 : out STD_LOGIC;
+        aresetn : in std_logic;
+        aclk : in std_logic
+    );
+    end component iqc;
 
     component dds16a
         Port (
@@ -228,6 +237,9 @@ component fir_audio_0 IS
     signal fifo_in_tdata : std_logic_vector(47 downto 0);
     signal fifo_out_tdata : std_logic_vector(47 downto 0);
     signal fifo_out_tvalid : std_logic; 
+    signal fifo_empty : std_logic; 
+    signal fifo_out_tready : std_logic;
+    signal fifo_delay : std_logic := '1';
     
     signal resampler_over : std_logic;
     signal linear_ovf : std_logic_vector(3 downto 0);
@@ -245,6 +257,8 @@ component fir_audio_0 IS
     signal float_out_abs : signed(24 downto 0); -- +1 бит для корректного abs
     signal float_out_max : signed(24 downto 0) := (others => '0');
     signal float_out_rst : std_logic := '0'; 
+    
+    signal iqc_in_i, iqc_in_q : std_logic_vector(17 downto 0);
 
 begin
 
@@ -286,10 +300,14 @@ begin
         elsif float_out_abs > float_out_max then
             float_out_max <= float_out_abs;
         end if;
+        if fifo_empty = '0' then
+            fifo_delay <= '0';
+        end if;    
     end if;
 end process; 
 
     fifo_in_tdata <= iq_data_i & iq_data_q;
+    fifo_out_tready <= resampler_in_tready when fifo_delay = '0' else '0';
 
 iq_fifo : axis_data_fifo_48
     PORT MAP (
@@ -299,18 +317,10 @@ iq_fifo : axis_data_fifo_48
         s_axis_tready => open,
         s_axis_tdata => fifo_in_tdata,
         m_axis_tvalid => fifo_out_tvalid,
-        m_axis_tready => '1',
-        m_axis_tdata => fifo_out_tdata
+        m_axis_tready => fifo_out_tready,
+        m_axis_tdata => fifo_out_tdata,
+        prog_empty => fifo_empty
     );   
-    
-debug_0 : ila_1
-PORT MAP(
-    clk => aclk,  
-    probe0(0) => fifo_out_tvalid,
-    probe1(0) => resampler_in_tready,
-    probe2 => fifo_out_tdata,
-    probe3 => iq_tdata
-);
 
 audio_0 : fir_audio_0
     PORT MAP (
@@ -449,21 +459,38 @@ resampler_0 : TXA_resampler
 --    fb_forward <= s_adc_data_rx0 - s_adc_data_rx1; 
     linear_din2 <= fb_forward(16 downto 1); -- проверить там раньше было 14 бит  
            
-linear_0 : linear_dds_iq
+--linear_0 : linear_dds_iq
+--    PORT MAP  ( 
+--        din1_i => linear_in_i,
+--        din1_q => linear_in_q,
+--        din2 => linear_din2,
+--        aclk => aclk,
+--        ce => txa_on,
+--        s_axis_cfg_tdata => s_axis_cfg_tdata,
+--        s_axis_cfg_tdest => s_axis_cfg_tdest(4 downto 0),
+--        s_axis_cfg_tvalid => linear_cfg_tvalid,
+--        s_axis_dds_tdata => dds_tdata,
+--        dout_i => linear_out_i,
+--        dout_q => linear_out_q,
+--        m_ovf => linear_ovf
+--    );  
+    
+    iqc_in_q <= iq_tdata(47 downto 30);
+    iqc_in_i <= iq_tdata(23 downto 6); 
+    
+iqc_0 : iqc 
     PORT MAP  ( 
-        din1_i => linear_in_i,
-        din1_q => linear_in_q,
-        din2 => linear_din2,
-        aclk => aclk,
-        ce => txa_on,
-        s_axis_cfg_tdata => s_axis_cfg_tdata,
-        s_axis_cfg_tdest => s_axis_cfg_tdest(4 downto 0),
-        s_axis_cfg_tvalid => linear_cfg_tvalid,
+        in_i => iqc_in_i,
+        in_q => iqc_in_q,
+        adc => linear_din2,
         s_axis_dds_tdata => dds_tdata,
-        dout_i => linear_out_i,
-        dout_q => linear_out_q,
-        m_ovf => linear_ovf
-    );    
+        outiq_0 => m_linear_iq0_tdata,
+        out_valid_0 => m_linear_iq0_tvalid,
+        outiq_1 => m_linear_iq1_tdata,
+        out_valid_1 => m_linear_iq1_tvalid,
+        aresetn => aresetn,
+        aclk => aclk
+    );
 
 dds_0 : dds16a
   PORT MAP (
@@ -527,7 +554,7 @@ begin
 end process;
 
     m_daci_tdata <= dac_tdata;  
-    m_dacq_tdata <= dac_tdata;  
+    m_dacq_tdata <= dac_tdata; 
 
 
 end Behavioral;

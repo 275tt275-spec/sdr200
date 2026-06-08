@@ -47,6 +47,10 @@ entity TXA is
         cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
 		cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
         cfg_wr : in STD_LOGIC;
+        m_linear_iq0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq0_tvalid : out std_logic;
+        m_linear_iq1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq1_tvalid : out std_logic;
         aresetn : in STD_LOGIC;
         aclk : in STD_LOGIC
     );
@@ -62,6 +66,10 @@ component TXA_channel is
         s_axis_audio_tvalid : in STD_LOGIC;
         s_adc_data_rx0 : in std_logic_vector(15 downto 0);
         s_adc_data_rx1 : in std_logic_vector(15 downto 0);
+        m_linear_iq0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq0_tvalid : out std_logic;
+        m_linear_iq1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_linear_iq1_tvalid : out std_logic;
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
@@ -98,6 +106,10 @@ TXA_channel_0 : TXA_channel
         s_axis_audio_tvalid => s_axis_audio_tvalid,
         s_adc_data_rx0 => s_adc_data_rx0,
         s_adc_data_rx1 => s_adc_data_rx1,
+        m_linear_iq0_tdata => m_linear_iq0_tdata,
+        m_linear_iq0_tvalid => m_linear_iq0_tvalid,
+        m_linear_iq1_tdata => m_linear_iq1_tdata,
+        m_linear_iq1_tvalid => m_linear_iq1_tvalid,
         s_axis_cfg_tdata => cfg_dina,
         s_axis_cfg_tdest => cfg_addra,
         s_axis_cfg_tvalid => cfg_wr,
