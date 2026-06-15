@@ -28,6 +28,19 @@ warren@wpratt.com
 #define _calcc_h
 #include "delay.h"
 #include "lmath.h"
+
+typedef struct tag_eeprom_iqc_ints
+{
+	float pm[4];
+	float pc[4];
+	float ps[4];
+} s_eeprom_iqc_ints;
+
+typedef struct tag_eeprom_iqc
+{
+	s_eeprom_iqc_ints ints[16];
+} s_eeprom_iqc;
+
 typedef struct _calcc
 {
 	int channel;
@@ -139,6 +152,7 @@ extern CALCC create_calcc (int channel, int runcal, int size, int rate, int ints
 extern void destroy_calcc (CALCC a);
 extern void flush_calcc (CALCC a);
 void pscc (int channel, int size, float* tx, float* rx);
+
 extern void PSSaveCorrection(void* pargs);
 extern void PSRestoreCorrection(void* pargs);
 extern void doPSCalcCorrection(void* arg);
@@ -167,6 +181,9 @@ void SetPSPinMode(int channel, int pin);
 void SetPSMapMode(int channel, int map);
 void SetPSStabilize(int channel, int stbl);
 void SetPSIntsAndSpi(int channel, int ints, int spi);
+
+//void PSSaveCorr(int channel, void* value);
+void PSRestoreCorr(int channel, void* ptr);
 
 #endif
 

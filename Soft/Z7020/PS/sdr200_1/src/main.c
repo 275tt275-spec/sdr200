@@ -299,6 +299,8 @@ static void main_parse_cmd(uint32_t type, uint32_t len, uint8_t* value)
 	case SET_TXA_PS_SAVE_CORR:
 		break;
 	case SET_TXA_PS_RESTORE_CORR:
+		if(len == sizeof(s_eeprom_iqc))
+			PSRestoreCorr(0, (void*) value);
 		break;
 	case SET_TXA_SET_PS_HWPEAK:
 		SetPSHWPeak(0, *(float*)value);
@@ -328,10 +330,12 @@ static void main_parse_cmd(uint32_t type, uint32_t len, uint8_t* value)
 		SetPSIntsAndSpi(0, *(uint32_t*)value, *(uint32_t*)&value[sizeof(uint32_t)]);
 		break;
 
+
+
 //void GetPSInfo(int channel, int* info);
 //void psccF(int channel, int size, float* Itxbuff, float* Qtxbuff, float* Irxbuff, float* Qrxbuff, bool mox, bool solidmox);
 //void PSSaveCorr(int channel, string filename);
-//void PSRestoreCorr(int channel, string filename);
+
 //void GetPSHWPeak(int channel, double* peak);
 //void GetPSMaxTX(int channel, double* maxtx);
 //void GetPSDisp(int channel, IntPtr x, IntPtr ym, IntPtr yc, IntPtr ys, IntPtr cm, IntPtr cc, IntPtr cs);

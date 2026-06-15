@@ -16,6 +16,18 @@
 #define EEPROM_VARS_LENGHT	2048
 #define EEPROM_FREQ_POINTS	256
 
+typedef struct tag_eeprom_iqc_ints
+{
+	float pm[4];
+	float pc[4];
+	float ps[4];
+} s_eeprom_iqc_ints;
+
+typedef struct tag_eeprom_iqc
+{
+	s_eeprom_iqc_ints ints[16];
+} s_eeprom_iqc;
+
 typedef struct tag_eeprom_message
 {
 	uint8_t type;
@@ -40,6 +52,7 @@ typedef struct tag_eeprom_const
 	s_eeprom_freq txafbV_att[EEPROM_FREQ_POINTS];
 	uint8_t txafbC_cnt;
 	s_eeprom_freq txafbC_att[EEPROM_FREQ_POINTS];
+	s_eeprom_iqc iqc;
 } s_eeprom_const;
 
 typedef struct tag_eeprom_vars

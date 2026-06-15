@@ -191,9 +191,7 @@ CALCC create_calcc (int channel, int runcal, int size, int rate, int ints, int s
 	InterlockedBitTestAndReset(&a->savecorr_bypass, 0);
 //	a->Sem_SaveCorr = CreateSemaphore(0, 0, 1, 0);
 //	_beginthread(PSSaveCorrection, 0, (void*)a);
-	InterlockedBitTestAndReset(&a->restcorr_bypass, 0);
-//	a->Sem_RestCorr = CreateSemaphore(0, 0, 1, 0);
-//	_beginthread(PSRestoreCorrection, 0, (void*)a);
+
 	InterlockedBitTestAndReset(&a->calccorr_bypass, 0);
 //	a->Sem_CalcCorr = CreateSemaphore(0, 0, 1, 0);
 //	_beginthread(doPSCalcCorrection, 0, (void*)a);
@@ -213,10 +211,7 @@ void destroy_calcc (CALCC a)
 //	ReleaseSemaphore(a->Sem_SaveCorr, 1, 0);
 	while (InterlockedAnd(&a->savecorr_bypass, 0xffffffff)) Sleep(1);
 //	CloseHandle(a->Sem_SaveCorr);
-	InterlockedBitTestAndSet(&a->restcorr_bypass, 0);
-//	ReleaseSemaphore(a->Sem_RestCorr, 1, 0);
-	while (InterlockedAnd(&a->restcorr_bypass, 0xffffffff)) Sleep(1);
-//	CloseHandle(a->Sem_RestCorr);
+
 	InterlockedBitTestAndSet(&a->calccorr_bypass, 0);
 //	ReleaseSemaphore(a->Sem_CalcCorr, 1, 0);
 	while (InterlockedAnd(&a->calccorr_bypass, 0xffffffff)) Sleep(1);
@@ -571,43 +566,6 @@ void PSSaveCorrection (void *pargs)
 	InterlockedBitTestAndReset(&a->savecorr_bypass, 0);
 }
 
-void PSRestoreCorrection(void *pargs)
-{
-	int i, k;
-	CALCC a = (CALCC)pargs;
-	while (!InterlockedAnd(&a->restcorr_bypass, 0xffffffff))
-	{
-//		WaitForSingleObject(a->Sem_RestCorr, INFINITE);
-		if (!InterlockedAnd(&a->restcorr_bypass, 0xffffffff))
-		{
-			FILE* file = fopen(a->util.restfile, "r");
-			if (file)
-			{
-				int error = 0;
-				for (i = 0; i < a->util.ints; i++)
-				{
-					// no additional reads after first error occurs
-					for (k = 0; k < 4; k++)
-						if (error == 0 && fscanf(file, "%f", &(a->util.pm[4 * i + k])) != 1) error = 1;
-					for (k = 0; k < 4; k++)
-						if (error == 0 && fscanf(file, "%f", &(a->util.pc[4 * i + k])) != 1) error = 1;
-					for (k = 0; k < 4; k++)
-						if (error == 0 && fscanf(file, "%f", &(a->util.ps[4 * i + k])) != 1) error = 1;
-				}
-				fclose(file);
-				if (!error)
-				{
-					if (!InterlockedBitTestAndSet(&a->ctrl.running, 0))
-						SetTXAiqcStart(a->channel, a->util.pm, a->util.pc, a->util.ps);
-					else
-						SetTXAiqcSwap(a->channel, a->util.pm, a->util.pc, a->util.ps);
-				}
-			}
-		}
-	}
-	InterlockedBitTestAndReset(&a->restcorr_bypass, 0);
-}
-
 
 /********************************************************************************************************
 *																										*
@@ -870,16 +828,32 @@ void PSSaveCorr (int channel, char* filename)
 	LeaveCriticalSection (&txa[channel].calcc.cs_update);
 }
 
-PORT
-void PSRestoreCorr (int channel, char* filename)
+void PSRestoreCorr(int channel, void* ptr)
 {
-	CALCC a;
-	int i = 0;
+	int i, k;
+	CALCC a = txa[channel].calcc.p;
+	s_eeprom_iqc* p = (s_eeprom_iqc*)ptr;
+
 	EnterCriticalSection (&txa[channel].calcc.cs_update);
-	a = txa[channel].calcc.p;
-	while (a->util.restfile[i++] = *filename++);
+
+	for (i = 0; i < a->util.ints; i++)
+	{
+		// no additional reads after first error occurs
+		for (k = 0; k < 4; k++)
+			a->util.pm[4 * i + k] = p->ints[i].pm[k];
+		for (k = 0; k < 4; k++)
+			a->util.pc[4 * i + k] = p->ints[i].pc[k];
+		for (k = 0; k < 4; k++)
+			a->util.ps[4 * i + k] = p->ints[i].ps[k];
+	}
+
+	if (!InterlockedBitTestAndSet(&a->ctrl.running, 0))
+		SetTXAiqcStart(a->channel, a->util.pm, a->util.pc, a->util.ps);
+	else
+		SetTXAiqcSwap(a->channel, a->util.pm, a->util.pc, a->util.ps);
+
+
 	a->ctrl.turnon = 1;
-//	ReleaseSemaphore(a->Sem_RestCorr, 1, 0);
 	LeaveCriticalSection (&txa[channel].calcc.cs_update);
 }
 
