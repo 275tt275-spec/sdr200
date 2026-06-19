@@ -59,6 +59,12 @@
                                 								
                                 <option id="xilinx.gnu.compiler.misc.other.796580339" name="Other flags" superClass="xilinx.gnu.compiler.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -MT&quot;$@&quot; -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -ffast-math -fsingle-precision-constant -mvectorize-with-neon-quad" valueType="string"/>
                                 								
+                                <option id="xilinx.gnu.compiler.dircategory.includes.176149426" superClass="xilinx.gnu.compiler.dircategory.includes" useByScannerDiscovery="false" valueType="includePath">
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/sdr200/shared}&quot;"/>
+                                    								
+                                </option>
+                                								
                                 <inputType id="xilinx.gnu.armv7.c.compiler.input.43174874" name="C source files" superClass="xilinx.gnu.armv7.c.compiler.input"/>
                                 							
                             </tool>
@@ -97,7 +103,7 @@
                                 								
                                 <option id="xilinx.gnu.c.link.option.ldflags.1993416516" name="Linker Flags" superClass="xilinx.gnu.c.link.option.ldflags" useByScannerDiscovery="false" value=" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec" valueType="string"/>
                                 								
-                                <option id="xilinx.gnu.c.link.option.libs.1678760054" superClass="xilinx.gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+                                <option id="xilinx.gnu.c.link.option.libs.1678760054" name="Libraries (-l)" superClass="xilinx.gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
                                     									
                                     <listOptionValue builtIn="false" value="m"/>
                                     								

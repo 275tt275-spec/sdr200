@@ -289,6 +289,12 @@ _SDA2_BASE_ = __sdata2_start + ((__sbss2_end - __sdata2_start) / 2 );
    __undef_stack = .;
 } > ps7_ddr_core_0
 
+.shared_section : {
+   __shared_start = .;
+   *(.shared_section)
+   __shared_end = .;
+} > ps7_ram_1
+
 _end = .;
 }
 

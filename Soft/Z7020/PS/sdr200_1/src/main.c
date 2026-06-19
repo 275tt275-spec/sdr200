@@ -26,6 +26,7 @@
 #include "xscugic.h"
 #include "xil_exception.h"
 #include "xil_cache.h"
+#include "shared_region.h"
 
 #include "comm.h"
 #include "cmd.h"
@@ -33,10 +34,9 @@
 #define IN_SIZE 32
 #define DSP_SIZE 32
 
-#define OCM_SHARED_SECTION 0xFFFF0000
-#define SGI_FROM_CORE0  0  // Core 1 слушает SGI 0 (настроенный контроллером Core 0)
-#define INTC_DEVICE_ID XPAR_SCUGIC_SINGLE_DEVICE_ID
-#define FIFO_DEV_I2S_ID	 XPAR_AXI_FIFO_1_DEVICE_ID
+#define SGI_FROM_CORE0  		0  // Core 1 слушает SGI 0 (настроенный контроллером Core 0)
+#define INTC_DEVICE_ID 			XPAR_SCUGIC_SINGLE_DEVICE_ID
+#define FIFO_DEV_I2S_ID	 		XPAR_AXI_FIFO_1_DEVICE_ID
 #define BRAM_DEVICE_ID			XPAR_BRAM_0_DEVICE_ID
 
 XScuGic InterruptController; /* Ёкземпл€р GIC */
@@ -44,10 +44,14 @@ static XLlFifo fifo_i2s;
 static XBram Bram;
 static int in_ptr = 0;
 
-volatile uint32_t *shared_buffer = (volatile uint32_t *)OCM_SHARED_SECTION;
+volatile s_shared_buffer* Core0toCore1 = (volatile s_shared_buffer*)OCM_SHARED_SECTION;
+volatile s_shared_buffer* Core1toCore0 = (volatile s_shared_buffer*)(OCM_SHARED_SECTION + SHARED_BUFFER_SIZE);
+
 volatile int data_ready = 0;
-uint8_t value_buffer[2048];
-static void main_parse_cmd(uint32_t type, uint32_t len, uint8_t* value);
+static uint32_t rd_cnt_old = (uint32_t)-1;
+static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value);
+void SendToCore0Uint32(uint32_t type, uint32_t value);
+void SendToCore0(uint32_t type, uint32_t len, void* value);
 
 // ќбработчик прерывани€ на Core 1
 void Core1_SgiHandler(void *CallbackRef) {
@@ -143,17 +147,18 @@ int main()
     {
     	if (data_ready) {
     	      // »нвалидаци€ кэша перед чтением
-    	      Xil_DCacheInvalidateRange((INTPTR)&shared_buffer[1], 3 * sizeof(uint32_t));
-    	      uint32_t counter = shared_buffer[1];
-    	      uint32_t len = shared_buffer[3];
-    	      Xil_DCacheInvalidateRange((INTPTR)&shared_buffer[4], len);
-    	      if(len < sizeof(value_buffer))
+    	      Xil_DCacheInvalidateRange((INTPTR)&Core0toCore1->wr_cnt, 3 * sizeof(uint32_t));
+    	      if(rd_cnt_old != Core0toCore1->wr_cnt)
     	      {
-    	    	  memcpy(value_buffer, (void*)&shared_buffer[4], len);
-    	    	  main_parse_cmd(shared_buffer[2], len, value_buffer);
+    	    	  Xil_DCacheInvalidateRange((INTPTR)&Core0toCore1->data, Core0toCore1->lenght);
+    	    	  if(Core0toCore1->lenght < (SHARED_BUFFER_SIZE - 4 * sizeof(uint32_t)))
+    	    	  {
+    	    		  main_parse_cmd(Core0toCore1->type, Core0toCore1->lenght, (const uint8_t*)&Core0toCore1->data);
+    	    	  }
+    	    	  rd_cnt_old = Core0toCore1->wr_cnt;
+    	    	  Core0toCore1->rd_cnt = rd_cnt_old;
+    	    	  Xil_DCacheFlushRange((INTPTR)&Core0toCore1->rd_cnt, sizeof(uint32_t));
     	      }
-    	      shared_buffer[0] = counter;
-    	      Xil_DCacheFlushRange((INTPTR)shared_buffer, 1);
     	      data_ready = 0;  // —брос флага
     	}
 #if 1
@@ -187,7 +192,7 @@ int main()
     return 0;
 }
 
-static void main_parse_cmd(uint32_t type, uint32_t len, uint8_t* value)
+static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value)
 {
 	s_wxpAGC* pAGC = (s_wxpAGC*)value;
 	s_ps_control* ps_control = (s_ps_control*)value;
@@ -340,6 +345,36 @@ static void main_parse_cmd(uint32_t type, uint32_t len, uint8_t* value)
 //void GetPSMaxTX(int channel, double* maxtx);
 //void GetPSDisp(int channel, IntPtr x, IntPtr ym, IntPtr yc, IntPtr ys, IntPtr cm, IntPtr cc, IntPtr cs);
 	}
+}
+
+void SendToCore0Uint32(uint32_t type, uint32_t value)
+{
+	SendToCore0(type, sizeof(uint32_t), &value);
+}
+
+void SendToCore0(uint32_t type, uint32_t len, void* value)
+{
+	volatile s_shared_buffer* pBuffer = Core1toCore0;
+	static uint32_t counter = 0;
+#if 1
+	Xil_DCacheInvalidateRange((INTPTR)&pBuffer->rd_cnt, sizeof(uint32_t));
+	if(pBuffer->rd_cnt != counter)
+	{
+		Xil_DCacheInvalidateRange((INTPTR)&pBuffer->rd_cnt, sizeof(uint32_t));
+		if(pBuffer->rd_cnt != counter)
+		{
+			return;
+		}
+	}
+
+	pBuffer->wr_cnt = ++counter;
+	pBuffer->type = type;
+	pBuffer->lenght = len;
+    memcpy((void*)&pBuffer->data, value, len);
+    dmb();                  // Data Memory Barrier
+
+    Xil_DCacheFlushRange((INTPTR)&pBuffer->wr_cnt, len + 3 * sizeof(uint32_t));
+#endif
 }
 
 int _gettimeofday(struct timeval *tv, void *tz) {

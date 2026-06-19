@@ -33,6 +33,7 @@
 #include "uart_pl.h"
 #include "ext_amp.h"
 #include "cmd.h"
+#include "../shared/shared_region.h"
 
 #define INTC_DEVICE_ID		XPAR_SCUGIC_SINGLE_DEVICE_ID
 
@@ -41,10 +42,6 @@
 #define DELAY_1_SECOND		1000UL
 #define DELAY_4_MSECOND		4UL
 
-#define OCM_SHARED_SECTION 0xFFFF0000
-#define SGI_TO_CORE1 0  // ID прерывания для Core 1
-#define TARGET_CORE1 2  // Битовая маска для Core 1 (Core 0 = 1, Core 1 = 2)
-#define CORE1_START_REG 0xFFFFFFF0
 extern void _boot();  // или адрес main Core 1
 
 /* The Tx and Rx tasks as described at the top of this file. */
@@ -58,8 +55,11 @@ static TaskHandle_t xMainTask;
 XScuGic IntcInstance;
 static int SetupIntrSystem(XScuGic *IntcInstancePtr);
 void SendToCore1(uint32_t type, uint32_t len, void* value);
+void RcvFromCore1Tick(void);
+static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value);
 
-volatile uint32_t *shared_buffer = (volatile uint32_t *)OCM_SHARED_SECTION;
+volatile s_shared_buffer* Core0toCore1 = (volatile s_shared_buffer*)OCM_SHARED_SECTION;
+volatile s_shared_buffer* Core1toCore0 = (volatile s_shared_buffer*)(OCM_SHARED_SECTION + SHARED_BUFFER_SIZE);
 
 int main( void )
 {
@@ -124,6 +124,7 @@ static void prvMainTask( void *pvParameters )
 	for( ;; )
 	{
 		fpga_tick();
+		RcvFromCore1Tick();
 		taskYIELD();
 	}
 }
@@ -171,27 +172,52 @@ void SendToCore1Uint32(uint32_t type, uint32_t value)
 
 void SendToCore1(uint32_t type, uint32_t len, void* value)
 {
+	volatile s_shared_buffer* pBuffer = Core0toCore1;
 	static uint32_t counter = 0;
 #if 1
-	Xil_DCacheInvalidateRange((INTPTR)shared_buffer, 4);
-	if(shared_buffer[0] != counter)
+	Xil_DCacheInvalidateRange((INTPTR)&pBuffer->rd_cnt, sizeof(uint32_t));
+	if(pBuffer->rd_cnt != counter)
 	{
 		vTaskDelay(pdMS_TO_TICKS( DELAY_4_MSECOND ));
-		Xil_DCacheInvalidateRange((INTPTR)shared_buffer, 4);
-		if(shared_buffer[0] != counter)
+		Xil_DCacheInvalidateRange((INTPTR)&pBuffer->rd_cnt, 4);
+		if(pBuffer->rd_cnt != counter)
 		{
 			return;
 		}
 	}
 
-    shared_buffer[1] = ++counter;
-    shared_buffer[2] = type;
-    shared_buffer[3] = len;
-    memcpy((void*)&shared_buffer[4], value, len);
+	pBuffer->wr_cnt = ++counter;
+	pBuffer->type = type;
+	pBuffer->lenght = len;
+    memcpy((void*)&pBuffer->data, value, len);
     dmb();                  // Data Memory Barrier
 
-    Xil_DCacheFlushRange((INTPTR)&shared_buffer[1], len + 3 * sizeof(uint32_t));
+    Xil_DCacheFlushRange((INTPTR)&pBuffer->wr_cnt, len + 3 * sizeof(uint32_t));
     XScuGic_SoftwareIntr(&IntcInstance, SGI_TO_CORE1, TARGET_CORE1);
 #endif
 }
+
+void RcvFromCore1Tick(void)
+{
+	volatile s_shared_buffer* pBuffer = Core1toCore0;
+	static uint32_t rd_cnt_old = -1;
+
+    Xil_DCacheInvalidateRange((INTPTR)&pBuffer->wr_cnt, 3 * sizeof(uint32_t));
+    if(rd_cnt_old != pBuffer->wr_cnt)
+    {
+		Xil_DCacheInvalidateRange((INTPTR)&pBuffer->data, pBuffer->lenght);
+		if(pBuffer->lenght < (SHARED_BUFFER_SIZE - 4 * sizeof(uint32_t)))
+		{
+			main_parse_cmd(pBuffer->type, pBuffer->lenght, (const uint8_t*)&pBuffer->data);
+		}
+		rd_cnt_old = pBuffer->wr_cnt;
+		pBuffer->rd_cnt = rd_cnt_old;
+		Xil_DCacheFlushRange((INTPTR)&pBuffer->rd_cnt, sizeof(uint32_t));
+    }
+}
+
+static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value)
+{
+}
+
 
