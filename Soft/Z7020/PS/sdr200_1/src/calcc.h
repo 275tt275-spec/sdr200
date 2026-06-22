@@ -84,10 +84,6 @@ typedef struct _calcc
 	int* binfo;
 	float txdel;
 	BLDR ccbld;
-	volatile long savecorr_bypass;
-//	HANDLE Sem_SaveCorr;
-	volatile long restcorr_bypass;
-//	HANDLE Sem_RestCorr;
 	volatile long calccorr_bypass;
 //	HANDLE Sem_CalcCorr;
 	volatile long turnoff_bypass;
@@ -182,8 +178,8 @@ void SetPSMapMode(int channel, int map);
 void SetPSStabilize(int channel, int stbl);
 void SetPSIntsAndSpi(int channel, int ints, int spi);
 
-//void PSSaveCorr(int channel, void* value);
 void PSRestoreCorr(int channel, void* ptr);
+void PSSaveCorr (int channel, void* ptr);
 
 #endif
 

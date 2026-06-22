@@ -1,0 +1,9 @@
+﻿  KompexSQLiteBlob.cpp
+  KompexSQLiteDatabase.cpp
+  KompexSQLiteStatement.cpp
+  Создание кода...
+  sqlite3.c
+D:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(1374,5): warning MSB8012: TargetPath(E:\Projects\P75\Soft\pcsoft\Test5500\x64\Debug\KompexSQLiteWrapper_d.dll) не соответствует значению свойства выходного файла (E:\Projects\P75\Soft\pcsoft\Test5500\x64\Debug\KompexSQLiteWrapper.dll) для Linker. Это может привести к неправильной сборке проекта. Чтобы исправить это, убедитесь, что значения свойств $(OutDir), $(TargetName) и $(TargetExt) соответствуют значению, указанному в %(Link.OutputFile).
+D:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(1376,5): warning MSB8012: TargetName(KompexSQLiteWrapper_d) не соответствует значению свойства выходного файла (KompexSQLiteWrapper) для Linker. Это может привести к неправильной сборке проекта. Чтобы исправить это, убедитесь, что значения свойств $(OutDir), $(TargetName) и $(TargetExt) соответствуют значению, указанному в %(Link.OutputFile).
+     Создается библиотека ..\..\x64\Debug\KompexSQLiteWrapper.lib и объект ..\..\x64\Debug\KompexSQLiteWrapper.exp
+  Kompex SQLite Wrapper VS2019.vcxproj -> E:\Projects\P75\Soft\pcsoft\Test5500\x64\Debug\KompexSQLiteWrapper_d.dll

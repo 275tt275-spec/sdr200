@@ -1,0 +1,3 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(1133,5): warning MSB4211: Свойству "GetTargetPathDependsOn" в первый раз присваивается значение, но оно уже было использовано в "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\Microsoft.Common.CurrentVersion.targets (2244,5)".
+     Создается библиотека E:\Projects\StationVT\Soft\pcSoft\Calibrator\x64\Debug\fsup.lib и объект E:\Projects\StationVT\Soft\pcSoft\Calibrator\x64\Debug\fsup.exp
+  fsup.vcxproj -> E:\Projects\StationVT\Soft\pcSoft\Calibrator\x64\Debug\fsup.dll

@@ -29,7 +29,7 @@
 #include "uart_pl.h"
 #include "atu.h"
 #include "ext_amp.h"
-#include "cmd.h"
+#include "../shared/shared_region.h"
 
 #define SPI_DEVICE_ID		XPAR_XSPIPS_0_DEVICE_ID
 #define SPI_INTR_ID			XPAR_XSPIPS_0_INTR

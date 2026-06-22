@@ -29,7 +29,6 @@
 #include "shared_region.h"
 
 #include "comm.h"
-#include "cmd.h"
 
 #define IN_SIZE 32
 #define DSP_SIZE 32
@@ -43,6 +42,7 @@ XScuGic InterruptController; /* έκηεμολÿπ GIC */
 static XLlFifo fifo_i2s;
 static XBram Bram;
 static int in_ptr = 0;
+static s_eeprom_iqc iqc_buffer;
 
 volatile s_shared_buffer* Core0toCore1 = (volatile s_shared_buffer*)OCM_SHARED_SECTION;
 volatile s_shared_buffer* Core1toCore0 = (volatile s_shared_buffer*)(OCM_SHARED_SECTION + SHARED_BUFFER_SIZE);
@@ -83,7 +83,6 @@ void Intc_Init(u32 sgi_id, void *Handler) {
 int main()
 {
 	int Status;
-	uint32_t data;
     init_platform();
 
 	struct _create_runs runs;
@@ -302,6 +301,8 @@ static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value)
 	case SET_TXA_SET_PS_PSCCF:
 		break;
 	case SET_TXA_PS_SAVE_CORR:
+		PSSaveCorr(0, (void*)&iqc_buffer);
+		SendToCore0(SET_TXA_PS_SAVE_CORR, sizeof(iqc_buffer), (void*)&iqc_buffer);
 		break;
 	case SET_TXA_PS_RESTORE_CORR:
 		if(len == sizeof(s_eeprom_iqc))

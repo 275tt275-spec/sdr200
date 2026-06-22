@@ -1,21 +1,0 @@
-2026-05-21T11:40:21.399978100255-11:40:21 **** Build of project StationVT ****
-000-buildplatform.bat 53100 StationVT  
-000-XSDB Server Channel: tcfchan#3
-000-Failed to generate the platform.
-000-Reason: Error: Qemu arguments File given  E:/Projects/sdr200/Soft/Z7020/PS/StationVT/resources/StationVT/standalone_a9_0/qemu_args.txt do not exist
-000-    invoked from within
-000-"::tcf::eval -progress {apply {{msg} {puts $msg}}} {tcf_send_command tcfchan#0 xsdb eval s es {{platform active StationVT; platform generate }}}"
-000-    (procedure "::tcf::send_command" line 4)
-000-    invoked from within
-000-"tcf send_command $::xsdb::curchan xsdb eval s es [list "platform active $PLATFORM_NAME; platform generate $target"]"
-000-    invoked from within
-000-"if { $iswindows == 1 } {    
-000-
-000-    set XSDB_PORT [lindex $argv 0]
-000-    set PLATFORM_NAME [lindex $argv 1]
-000-    set arglen [llength $argv]
-000-    set lastind..."
-000-    (file "E:/Xilinx/Vitis/2023.2\scripts\vitis\util\buildplatform.tcl" line 11)
-00255-
-11:40:22 Build Finished (took 1s.422ms)
-

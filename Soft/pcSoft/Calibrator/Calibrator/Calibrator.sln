@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36212.18 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Calibrator", "Calibrator\Calibrator.vcxproj", "{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}"
+	ProjectSection(ProjectDependencies) = postProject
+		{50B4C71A-6647-45E4-8577-833495D9EAD0} = {50B4C71A-6647-45E4-8577-833495D9EAD0}
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5} = {855DE711-855E-4BC0-9023-E8D92D45A4A5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Kompex SQLite Wrapper", "Kompex SQLiteWrapper-Source_1.13.15\Kompex SQLite Wrapper\Kompex SQLite Wrapper.vcxproj", "{855DE711-855E-4BC0-9023-E8D92D45A4A5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestLib", "TestLib\TestLib.vcxproj", "{50B4C71A-6647-45E4-8577-833495D9EAD0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}.Debug|x64.ActiveCfg = Debug|x64
+		{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}.Debug|x64.Build.0 = Debug|x64
+		{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}.Debug|x86.ActiveCfg = Debug|Win32
+		{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}.Debug|x86.Build.0 = Debug|Win32
+		{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}.Release|x64.ActiveCfg = Release|x64
+		{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}.Release|x64.Build.0 = Release|x64
+		{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}.Release|x86.ActiveCfg = Release|Win32
+		{452EF6BC-1767-9AC6-E1BC-63C3BCC66C97}.Release|x86.Build.0 = Release|Win32
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5}.Debug|x64.ActiveCfg = DebugDynamicLib|x64
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5}.Debug|x64.Build.0 = DebugDynamicLib|x64
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5}.Debug|x86.ActiveCfg = DebugDynamicLib|Win32
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5}.Debug|x86.Build.0 = DebugDynamicLib|Win32
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5}.Release|x64.ActiveCfg = ReleaseStaticLib|Win32
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5}.Release|x64.Build.0 = ReleaseStaticLib|Win32
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5}.Release|x86.ActiveCfg = ReleaseStaticLib|Win32
+		{855DE711-855E-4BC0-9023-E8D92D45A4A5}.Release|x86.Build.0 = ReleaseStaticLib|Win32
+		{50B4C71A-6647-45E4-8577-833495D9EAD0}.Debug|x64.ActiveCfg = Debug|x64
+		{50B4C71A-6647-45E4-8577-833495D9EAD0}.Debug|x64.Build.0 = Debug|x64
+		{50B4C71A-6647-45E4-8577-833495D9EAD0}.Debug|x86.ActiveCfg = Debug|Win32
+		{50B4C71A-6647-45E4-8577-833495D9EAD0}.Debug|x86.Build.0 = Debug|Win32
+		{50B4C71A-6647-45E4-8577-833495D9EAD0}.Release|x64.ActiveCfg = Release|x64
+		{50B4C71A-6647-45E4-8577-833495D9EAD0}.Release|x64.Build.0 = Release|x64
+		{50B4C71A-6647-45E4-8577-833495D9EAD0}.Release|x86.ActiveCfg = Release|Win32
+		{50B4C71A-6647-45E4-8577-833495D9EAD0}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {61335A4D-9341-4A7C-999A-8C6BA54816C2}
+	EndGlobalSection
+EndGlobal

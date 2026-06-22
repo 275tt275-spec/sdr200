@@ -1,0 +1,81 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31702.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Kompex SQLite Wrapper VS2019", "Kompex SQLite Wrapper\Kompex SQLite Wrapper VS2019.vcxproj", "{B3C57121-7B2A-476A-8D10-4D72DFAE8397}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Kompex SQLite Example VS2019", "Kompex SQLite Example\Kompex SQLite Example VS2019.vcxproj", "{09D2FF95-252A-4B7D-A172-400271107247}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		DebugDynamicLib|Win32 = DebugDynamicLib|Win32
+		DebugDynamicLib|x64 = DebugDynamicLib|x64
+		DebugStaticLib|Win32 = DebugStaticLib|Win32
+		DebugStaticLib|x64 = DebugStaticLib|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+		ReleaseDynamicLib|Win32 = ReleaseDynamicLib|Win32
+		ReleaseDynamicLib|x64 = ReleaseDynamicLib|x64
+		ReleaseStaticLib|Win32 = ReleaseStaticLib|Win32
+		ReleaseStaticLib|x64 = ReleaseStaticLib|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.Debug|Win32.ActiveCfg = DebugDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.Debug|Win32.Build.0 = DebugDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.Debug|x64.ActiveCfg = DebugDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.Debug|x64.Build.0 = DebugDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.DebugDynamicLib|Win32.ActiveCfg = DebugDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.DebugDynamicLib|Win32.Build.0 = DebugDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.DebugDynamicLib|x64.ActiveCfg = DebugDynamicLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.DebugDynamicLib|x64.Build.0 = DebugDynamicLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.DebugStaticLib|Win32.ActiveCfg = DebugStaticLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.DebugStaticLib|Win32.Build.0 = DebugStaticLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.DebugStaticLib|x64.ActiveCfg = DebugStaticLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.DebugStaticLib|x64.Build.0 = DebugStaticLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.Release|Win32.ActiveCfg = ReleaseDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.Release|Win32.Build.0 = ReleaseDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.Release|x64.ActiveCfg = ReleaseDynamicLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.Release|x64.Build.0 = ReleaseDynamicLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.ReleaseDynamicLib|Win32.ActiveCfg = ReleaseDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.ReleaseDynamicLib|Win32.Build.0 = ReleaseDynamicLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.ReleaseDynamicLib|x64.ActiveCfg = ReleaseDynamicLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.ReleaseDynamicLib|x64.Build.0 = ReleaseDynamicLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.ReleaseStaticLib|Win32.ActiveCfg = ReleaseStaticLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.ReleaseStaticLib|Win32.Build.0 = ReleaseStaticLib|Win32
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.ReleaseStaticLib|x64.ActiveCfg = ReleaseStaticLib|x64
+		{B3C57121-7B2A-476A-8D10-4D72DFAE8397}.ReleaseStaticLib|x64.Build.0 = ReleaseStaticLib|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.Debug|Win32.ActiveCfg = Debug|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.Debug|Win32.Build.0 = Debug|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.Debug|x64.ActiveCfg = Debug|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.Debug|x64.Build.0 = Debug|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.DebugDynamicLib|Win32.ActiveCfg = Debug|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.DebugDynamicLib|Win32.Build.0 = Debug|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.DebugDynamicLib|x64.ActiveCfg = Debug|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.DebugDynamicLib|x64.Build.0 = Debug|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.DebugStaticLib|Win32.ActiveCfg = Debug|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.DebugStaticLib|Win32.Build.0 = Debug|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.DebugStaticLib|x64.ActiveCfg = Debug|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.DebugStaticLib|x64.Build.0 = Debug|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.Release|Win32.ActiveCfg = Release|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.Release|Win32.Build.0 = Release|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.Release|x64.ActiveCfg = Release|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.Release|x64.Build.0 = Release|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.ReleaseDynamicLib|Win32.ActiveCfg = Release|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.ReleaseDynamicLib|Win32.Build.0 = Release|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.ReleaseDynamicLib|x64.ActiveCfg = Release|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.ReleaseDynamicLib|x64.Build.0 = Release|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.ReleaseStaticLib|Win32.ActiveCfg = Release|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.ReleaseStaticLib|Win32.Build.0 = Release|Win32
+		{09D2FF95-252A-4B7D-A172-400271107247}.ReleaseStaticLib|x64.ActiveCfg = Release|x64
+		{09D2FF95-252A-4B7D-A172-400271107247}.ReleaseStaticLib|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3D5740F5-A057-47E2-81E6-4125ADFCD780}
+	EndGlobalSection
+EndGlobal
