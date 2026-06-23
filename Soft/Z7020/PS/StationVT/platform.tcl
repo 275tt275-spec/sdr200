@@ -74,3 +74,10 @@ platform clean
 platform generate
 platform active {StationVT}
 platform config -updatehw {D:/projects/sdr200/Soft/Z7020/PL/XC7Z020_wrapper.xsa}
+domain active {zynq_fsbl}
+domain active {ps7_cortexa9_1}
+domain active {freertos10_xilinx_domain}
+domain active {zynq_fsbl}
+domain active {zynq_fsbl}
+domain active {freertos10_xilinx_domain}
+domain active {ps7_cortexa9_1}

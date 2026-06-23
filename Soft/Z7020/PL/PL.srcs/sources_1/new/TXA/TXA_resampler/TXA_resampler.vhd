@@ -47,9 +47,6 @@ end TXA_resampler;
 
 architecture Behavioral of TXA_resampler is
 
-<<<<<<< HEAD
-=======
-
 component ila_0 IS
 PORT (
     clk : IN STD_LOGIC;
@@ -63,7 +60,6 @@ PORT (
 );
 END component ila_0;
 
->>>>>>> dbfe4986fc50461962a3d3297e874cb1d5e810bb
    component fir_duc_inter5 is
         port (
             aclk : in STD_LOGIC;
@@ -143,8 +139,6 @@ begin
     modulator_tdata <= s_axis_modulator_tdata;
     modulator_tvalid <= s_axis_modulator_tvalid; 
     s_axis_modulator_tready <= modulator_tready;
-<<<<<<< HEAD
-=======
 
 debug_0 : ila_0
 PORT MAP (
@@ -172,7 +166,6 @@ PORT MAP (
 --    probe8 => out_tdata42_1,
 --    probe9 => out_tdata24_0
 --);
->>>>>>> dbfe4986fc50461962a3d3297e874cb1d5e810bb
     
 fir_interpolator: component fir_duc_inter5
     port map (

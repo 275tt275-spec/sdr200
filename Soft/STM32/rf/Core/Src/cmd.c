@@ -22,7 +22,7 @@ static char rx_ch;
 
 static void cmd_parse(const char* msg, size_t len);
 static void cmd_rx_data(const char* data, uint32_t len);
-static const char chStartFreq[] = "RB08;";
+static const char chStartFreq[] = "RB01;";
 static const char chStartAtt[] = "RA00;";
 
 void cmd_start(void)

@@ -49,8 +49,6 @@ end TXA_channel;
 
 architecture Behavioral of TXA_channel is
 
-<<<<<<< HEAD
-=======
 --component ila_1 IS
 --PORT (
 --    clk : IN STD_LOGIC;    
@@ -62,7 +60,6 @@ architecture Behavioral of TXA_channel is
 --);
 --END component ila_1;
 
->>>>>>> dbfe4986fc50461962a3d3297e874cb1d5e810bb
 component floating_f2fix24 is
     port (
         aclk : IN STD_LOGIC;
@@ -335,10 +332,7 @@ iq_fifo : axis_data_fifo_48
         m_axis_tdata => fifo_out_tdata,
         prog_empty => fifo_empty
     );   
-<<<<<<< HEAD
 
-=======
-    
 --debug_0 : ila_1
 --PORT MAP(
 --    clk => aclk,  
@@ -348,7 +342,6 @@ iq_fifo : axis_data_fifo_48
 --    probe3 => iq_tdata
 --);
 --
->>>>>>> dbfe4986fc50461962a3d3297e874cb1d5e810bb
 audio_0 : fir_audio_0
     PORT MAP (
         aclk => aclk,
