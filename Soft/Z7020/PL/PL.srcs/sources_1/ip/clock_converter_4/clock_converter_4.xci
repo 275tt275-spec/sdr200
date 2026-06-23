@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "clock_converter_4",
     "component_reference": "xilinx.com:ip:axis_clock_converter:1.1",
-    "ip_revision": "30",
+    "ip_revision": "31",
     "gen_directory": "../../../../PL.gen/sources_1/ip/clock_converter_4",
     "parameters": {
       "component_parameters": {
@@ -48,12 +48,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
-        "IPREVISION": [ { "value": "30" } ],
+        "IPREVISION": [ { "value": "31" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../PL.gen/sources_1/ip/clock_converter_4" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
-        "SWVERSION": [ { "value": "2023.2" } ],
+        "SWVERSION": [ { "value": "2023.2.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },
