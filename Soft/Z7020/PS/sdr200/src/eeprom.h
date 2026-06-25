@@ -10,11 +10,13 @@
 
 #define EEPROM_SPI_SELECT	0x01
 
+// 25CSM04 524,288 x 8 organization
+
 #define EEPROM_CONST_OFFSET	0
 #define EEPROM_VARS_OFFSET	16384
 #define EEPROM_VARS_SIZE	49152
 #define EEPROM_VARS_LENGHT	2048
-#define EEPROM_FREQ_POINTS	256
+#define EEPROM_FREQ_POINTS	128
 
 typedef struct tag_eeprom_iqc_ints
 {
@@ -52,7 +54,7 @@ typedef struct tag_eeprom_const
 	s_eeprom_freq txafbV_att[EEPROM_FREQ_POINTS];
 	uint8_t txafbC_cnt;
 	s_eeprom_freq txafbC_att[EEPROM_FREQ_POINTS];
-	s_eeprom_iqc iqc;
+	s_eeprom_iqc iqc[12];
 } s_eeprom_const;
 
 typedef struct tag_eeprom_vars

@@ -26,32 +26,50 @@
 #include "xscugic.h"
 #include "xil_exception.h"
 #include "xil_cache.h"
+#include "xgpiops.h"
+
 #include "shared_region.h"
-
 #include "comm.h"
-#include "cmd.h"
 
-#define IN_SIZE 32
-#define DSP_SIZE 32
+#define IN_SIZE 64
+#define DSP_SIZE 64
+#define IQC_SIZE 64
 
 #define SGI_FROM_CORE0  		0  // Core 1 слушает SGI 0 (настроенный контроллером Core 0)
 #define INTC_DEVICE_ID 			XPAR_SCUGIC_SINGLE_DEVICE_ID
 #define FIFO_DEV_I2S_ID	 		XPAR_AXI_FIFO_1_DEVICE_ID
 #define BRAM_DEVICE_ID			XPAR_BRAM_0_DEVICE_ID
+#define FIFO_DEV_IQC0_ID	 	XPAR_AXI_FIFO_IQ0_DEVICE_ID
+#define FIFO_DEV_IQC1_ID	 	XPAR_AXI_FIFO_IQ1_DEVICE_ID
+#define GPIO_DEVICE_ID			XPAR_XGPIOPS_0_DEVICE_ID
+#define GPIO_TEST_PIN_0			26
+#define GPIO_TEST_PIN_1			28
 
 XScuGic InterruptController; /* Экземпляр GIC */
 static XLlFifo fifo_i2s;
+static XLlFifo fifo_iqc0;
+static XLlFifo fifo_iqc1;
 static XBram Bram;
+static XGpioPs GpioInstance;
 static int in_ptr = 0;
+static s_eeprom_iqc iqc_buffer;
+
+static float iqc_rx[IQC_SIZE * 2];
+static float iqc_tx[IQC_SIZE * 2];
+static int iqc_ptr = 0;
 
 volatile s_shared_buffer* Core0toCore1 = (volatile s_shared_buffer*)OCM_SHARED_SECTION;
 volatile s_shared_buffer* Core1toCore0 = (volatile s_shared_buffer*)(OCM_SHARED_SECTION + SHARED_BUFFER_SIZE);
 
 volatile int data_ready = 0;
+static int channel = 0;
 static uint32_t rd_cnt_old = (uint32_t)-1;
 static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value);
 void SendToCore0Uint32(uint32_t type, uint32_t value);
 void SendToCore0(uint32_t type, uint32_t len, void* value);
+static void main_cmd_tick(void);
+static void main_txa_tick(void);
+static void main_iqc_tick(void);
 
 // Обработчик прерывания на Core 1
 void Core1_SgiHandler(void *CallbackRef) {
@@ -83,16 +101,26 @@ void Intc_Init(u32 sgi_id, void *Handler) {
 int main()
 {
 	int Status;
-	uint32_t data;
     init_platform();
 
+	XGpioPs_Config *GpioConfigPtr = XGpioPs_LookupConfig(GPIO_DEVICE_ID);
+	Status = XGpioPs_CfgInitialize(&GpioInstance, GpioConfigPtr, GpioConfigPtr->BaseAddr);
+	if (Status != XST_SUCCESS) {
+		return 0;
+	}
+
+	XGpioPs_SetDirectionPin(&GpioInstance, GPIO_TEST_PIN_0, 1);
+	XGpioPs_SetOutputEnablePin(&GpioInstance, GPIO_TEST_PIN_0, 1);
+	XGpioPs_SetDirectionPin(&GpioInstance, GPIO_TEST_PIN_1, 1);
+	XGpioPs_SetOutputEnablePin(&GpioInstance, GPIO_TEST_PIN_1, 1);
+
 	struct _create_runs runs;
-	runs.rsmpin = 1;				// input resampler
+	runs.rsmpin = 0;				// input resampler
 	runs.panel = 0;					// includes MIC gain
 	runs.phrot = 0;					// phase rotator
 	runs.micmeter = 0;				// MIC meter
 	runs.amsq = 0;					// downward expander capture
-	runs.eqp = 0;					// pre-EQ
+	runs.eqp = 1;					// pre-EQ
 	runs.eqmeter = 0;				// EQ meter
 	runs.preemph = 0;				// FM pre-emphasis
 	runs.leveler = 1;				// Leveler
@@ -100,16 +128,16 @@ int main()
 	runs.cfcomp = 0;				// Continuous Frequency Compressor with post-EQ
 	runs.cfcmeter = 0;				// CFC+PostEQ Meter
 	runs.bp0 = 1;					// primary bandpass filter
-	runs.compressor = 0;			// COMP compressor
-	runs.osctrl = 0;				// CESSB Overshoot Control
+	runs.compressor = 1;			// COMP compressor
+	runs.osctrl = 1;				// CESSB Overshoot Control
 	runs.compmeter = 0;				// COMP meter
-	runs.alc = 0;					// ALC
+	runs.alc = 1;					// ALC
 	runs.ammod = 0;					// AM Modulator
 	runs.fmmod = 0;					// FM Modulator
 	runs.alcmeter = 0;				// ALC Meter
-	runs.iqc = 0;					// PureSignal correction
+	runs.iqc = 1;					// PureSignal correction
 	runs.cfir = 0;					// compensating FIR filter (used Protocol_2 only)
-	runs.rsmpout = 1;				// output resampler
+	runs.rsmpout = 0;				// output resampler
 	runs.outmeter = 0;				// output meter
 
     // Инициализация прерывания SGI 0 для Core 1
@@ -121,6 +149,20 @@ int main()
 		return 0;
 	}
 	XLlFifo_IntClear(&fifo_i2s, 0xffffffff);
+
+	FifoConfig = XLlFfio_LookupConfig(FIFO_DEV_IQC0_ID);
+	Status = XLlFifo_CfgInitialize(&fifo_iqc0, FifoConfig, FifoConfig->BaseAddress);
+	if (Status != XST_SUCCESS) {
+		return 0;
+	}
+	XLlFifo_IntClear(&fifo_iqc0, 0xffffffff);
+
+	FifoConfig = XLlFfio_LookupConfig(FIFO_DEV_IQC1_ID);
+	Status = XLlFifo_CfgInitialize(&fifo_iqc1, FifoConfig, FifoConfig->BaseAddress);
+	if (Status != XST_SUCCESS) {
+		return 0;
+	}
+	XLlFifo_IntClear(&fifo_iqc1, 0xffffffff);
 
 	XBram_Config *XBramConfig = XBram_LookupConfig(BRAM_DEVICE_ID);
 
@@ -139,57 +181,98 @@ int main()
 		return 0;
 	}
 
-	int channel = 0;
 	set_dsp(IN_SIZE, DSP_SIZE, 16000, 16000, 16000);
 	create_txa(channel, &runs);
 
+	SetPSRunCal(channel, 1);
+	SetPSMox(channel, 1);
+
     while(1)
     {
-    	if (data_ready) {
-    	      // Инвалидация кэша перед чтением
-    	      Xil_DCacheInvalidateRange((INTPTR)&Core0toCore1->wr_cnt, 3 * sizeof(uint32_t));
-    	      if(rd_cnt_old != Core0toCore1->wr_cnt)
-    	      {
-    	    	  Xil_DCacheInvalidateRange((INTPTR)&Core0toCore1->data, Core0toCore1->lenght);
-    	    	  if(Core0toCore1->lenght < (SHARED_BUFFER_SIZE - 4 * sizeof(uint32_t)))
-    	    	  {
-    	    		  main_parse_cmd(Core0toCore1->type, Core0toCore1->lenght, (const uint8_t*)&Core0toCore1->data);
-    	    	  }
-    	    	  rd_cnt_old = Core0toCore1->wr_cnt;
-    	    	  Core0toCore1->rd_cnt = rd_cnt_old;
-    	    	  Xil_DCacheFlushRange((INTPTR)&Core0toCore1->rd_cnt, sizeof(uint32_t));
-    	      }
-    	      data_ready = 0;  // Сброс флага
-    	}
-#if 1
-    	uint32_t world = XLlFifo_iRxOccupancy(&fifo_i2s);
-    	uint32_t udata;
-    	float fdata;
-    	if(world)
-    	{
-    		udata = XLlFifo_RxGetWord(&fifo_i2s);
-//    		data = 0;
-    		txa[channel].inbuff[in_ptr * 2] = *(float*)&udata;
-    		txa[channel].inbuff[in_ptr * 2 + 1] = *(float*)&udata;
-
-    		if(++in_ptr >= IN_SIZE)
-    		{
-    			in_ptr = 0;
-    			xtxa(channel);
-    			for(int n = 0; n < DSP_SIZE; n++)
-    			{
-    				fdata = txa[channel].outbuff[n * 2];
-    				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020E << 2, *(uint32_t*)&fdata );
-    				fdata = txa[channel].outbuff[n * 2 + 1];
-    				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020F << 2, *(uint32_t*)&fdata );
-    			}
-    		}
-    	}
-#endif
+    	main_cmd_tick();
+    	main_txa_tick();
+    	main_iqc_tick();
     }
 
     cleanup_platform();
     return 0;
+}
+
+static void main_cmd_tick(void)
+{
+	if (data_ready) {
+	      // Инвалидация кэша перед чтением
+	      Xil_DCacheInvalidateRange((INTPTR)&Core0toCore1->wr_cnt, 3 * sizeof(uint32_t));
+	      if(rd_cnt_old != Core0toCore1->wr_cnt)
+	      {
+	    	  Xil_DCacheInvalidateRange((INTPTR)&Core0toCore1->data, Core0toCore1->lenght);
+	    	  if(Core0toCore1->lenght < (SHARED_BUFFER_SIZE - 4 * sizeof(uint32_t)))
+	    	  {
+	    		  main_parse_cmd(Core0toCore1->type, Core0toCore1->lenght, (const uint8_t*)&Core0toCore1->data);
+	    	  }
+	    	  rd_cnt_old = Core0toCore1->wr_cnt;
+	    	  Core0toCore1->rd_cnt = rd_cnt_old;
+	    	  Xil_DCacheFlushRange((INTPTR)&Core0toCore1->rd_cnt, sizeof(uint32_t));
+	      }
+	      data_ready = 0;  // Сброс флага
+	}
+}
+
+static void main_txa_tick(void)
+{
+	uint32_t world = XLlFifo_iRxOccupancy(&fifo_i2s);
+	uint32_t udata;
+	float fdata;
+	if(world)
+	{
+		udata = XLlFifo_RxGetWord(&fifo_i2s);
+		txa[channel].inbuff[in_ptr * 2] = *(float*)&udata;
+		txa[channel].inbuff[in_ptr * 2 + 1] = *(float*)&udata;
+
+		if(++in_ptr >= IN_SIZE)
+		{
+			XGpioPs_WritePin(&GpioInstance, GPIO_TEST_PIN_0, 0x1);
+			in_ptr = 0;
+			xtxa(channel);
+			for(int n = 0; n < DSP_SIZE; n++)
+			{
+				fdata = txa[channel].outbuff[n * 2];
+				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020E << 2, *(uint32_t*)&fdata );
+				fdata = txa[channel].outbuff[n * 2 + 1];
+				XBram_WriteReg(XPAR_BRAM_0_BASEADDR, 0x020F << 2, *(uint32_t*)&fdata );
+			}
+			XGpioPs_WritePin(&GpioInstance, GPIO_TEST_PIN_0, 0x0);
+		}
+	}
+}
+
+static void main_iqc_tick(void)
+{
+	uint32_t world_0 = XLlFifo_iRxOccupancy(&fifo_iqc0);
+	uint32_t world_1 = XLlFifo_iRxOccupancy(&fifo_iqc1);
+	if(world_0 && world_1)
+	{
+		uint32_t udata_0 = XLlFifo_RxGetWord(&fifo_iqc0);
+		uint32_t udata_1 = XLlFifo_RxGetWord(&fifo_iqc1);
+
+		iqc_tx[iqc_ptr * 2] = (int16_t)((udata_0 >> 16) & 0xFFFF);
+		iqc_tx[iqc_ptr * 2 + 1] = (int16_t)(udata_0 & 0xFFFF);
+		iqc_rx[iqc_ptr * 2] = (int16_t)((udata_1 >> 16) & 0xFFFF);
+		iqc_rx[iqc_ptr * 2 + 1] = (int16_t)(udata_1 & 0xFFFF);
+
+		iqc_tx[iqc_ptr * 2] = iqc_tx[iqc_ptr * 2] / 32768.;
+		iqc_tx[iqc_ptr * 2 + 1] = iqc_tx[iqc_ptr * 2 + 1] / 32768.;
+		iqc_rx[iqc_ptr * 2] = iqc_rx[iqc_ptr * 2] / 32768.;
+		iqc_rx[iqc_ptr * 2 + 1] = iqc_rx[iqc_ptr * 2 + 1] / 32768.;
+
+		if(++iqc_ptr >= IQC_SIZE)
+		{
+			XGpioPs_WritePin(&GpioInstance, GPIO_TEST_PIN_1, 0x1);
+			pscc(channel, IQC_SIZE, iqc_tx, iqc_rx);
+			iqc_ptr = 0;
+			XGpioPs_WritePin(&GpioInstance, GPIO_TEST_PIN_1, 0x0);
+		}
+	}
 }
 
 static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value)
@@ -302,6 +385,8 @@ static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value)
 	case SET_TXA_SET_PS_PSCCF:
 		break;
 	case SET_TXA_PS_SAVE_CORR:
+		PSSaveCorr(0, (void*)&iqc_buffer);
+		SendToCore0(SET_TXA_PS_SAVE_CORR, sizeof(iqc_buffer), (void*)&iqc_buffer);
 		break;
 	case SET_TXA_PS_RESTORE_CORR:
 		if(len == sizeof(s_eeprom_iqc))
@@ -339,7 +424,6 @@ static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value)
 
 //void GetPSInfo(int channel, int* info);
 //void psccF(int channel, int size, float* Itxbuff, float* Qtxbuff, float* Irxbuff, float* Qrxbuff, bool mox, bool solidmox);
-//void PSSaveCorr(int channel, string filename);
 
 //void GetPSHWPeak(int channel, double* peak);
 //void GetPSMaxTX(int channel, double* maxtx);
@@ -347,7 +431,7 @@ static void main_parse_cmd(uint32_t type, uint32_t len, const uint8_t* value)
 	}
 }
 
-void SendToCore0Uint32(uint32_t type, uint32_t value)
+inline void SendToCore0Uint32(uint32_t type, uint32_t value)
 {
 	SendToCore0(type, sizeof(uint32_t), &value);
 }

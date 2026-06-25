@@ -508,7 +508,7 @@ void GetTXACFCOMPDisplayCompression (int channel, float* comp_values, int* ready
 	int i;
 	CFCOMP a = txa[channel].cfcomp.p;
 	EnterCriticalSection(&ch[channel].csDSP);
-	if (*ready = a->mask_ready)
+
 	{
 		memcpy(a->delta_copy, a->delta, a->msize * sizeof(float));
 		memcpy(a->cfc_gain_copy, a->cfc_gain, a->msize * sizeof(float));

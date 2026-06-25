@@ -124,8 +124,10 @@ entity SDR is
         m_axis_i2s_tlast : out STD_LOGIC; 
         m_linear_iq0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_linear_iq0_tvalid : out std_logic;
+        m_linear_iq0_tlast : out STD_LOGIC; 
         m_linear_iq1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_linear_iq1_tvalid : out std_logic;
+        m_linear_iq1_tlast : out STD_LOGIC; 
         gpio_out : out STD_LOGIC_VECTOR (5 downto 0);
         TX_ON : out std_logic;
         TX_FAIL : in std_logic;
@@ -524,6 +526,8 @@ TXA_0 : TXA
     
     m_axis_ser0_tlast <= '1';
     m_axis_ser1_tlast <= '1';
+    m_linear_iq0_tlast <= '1';
+    m_linear_iq1_tlast <= '1';
     resetn_fifo <= aresetn;
     
     s_axis_audioR_tdata <= s_axis_audioL_tdata;

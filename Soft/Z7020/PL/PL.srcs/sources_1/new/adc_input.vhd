@@ -22,7 +22,7 @@ end adc_input;
 architecture Behavioral of adc_input is
 
     signal adc_data : std_logic_vector(15 downto 0);
-    signal adc_data_r : std_logic_vector(15 downto 0);
+    signal adc_data_r, adc_data_buf : std_logic_vector(15 downto 0);
     signal adc_out_data : std_logic_vector(15 downto 0);
     signal rxa_tdata_rand : STD_LOGIC_VECTOR (15 downto 0);
     signal adc_max : signed(15 downto 0) := x"0000"; 
@@ -79,20 +79,28 @@ begin
 	end if;
 end process;
 
-    adc_clk_out <= adc_clk;
-    adc_out_data <= adc_data_r when adc_rand_en = '0' else rxa_tdata_rand;                      
 
-    rxa_tdata_rand(0) <= adc_data_r(0); 
+process(adc_clk)
+begin
+	if rising_edge(adc_clk) then
+	   adc_data_buf <= adc_data_r;     
+	end if;
+end process;
+
+    adc_clk_out <= adc_clk;
+    adc_out_data <= adc_data_buf when adc_rand_en = '0' else rxa_tdata_rand;                      
+
+    rxa_tdata_rand(0) <= adc_data_buf(0); 
 rxa : for k in 1 to 15 generate
-    rxa_tdata_rand(k) <= adc_data_r(k) xor adc_data_r(0);
+    rxa_tdata_rand(k) <= adc_data_buf(k) xor adc_data_buf(0);
 end generate;
 
     m_axis_data_tdata <= adc_out_data;    
     adc_max_value <= std_logic_vector(adc_max);
 
-process(adc_clk1)
+process(adc_clk)
 begin
-	if rising_edge(adc_clk1) then
+	if rising_edge(adc_clk) then
 	   adc_abs <= abs(signed(adc_out_data));
 	   if adc_max_rst = '1' then
 	       adc_max <= x"0000";

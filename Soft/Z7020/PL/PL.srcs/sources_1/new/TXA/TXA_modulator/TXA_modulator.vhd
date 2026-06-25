@@ -114,6 +114,7 @@ architecture Behavioral of TXA_modulator is
     signal audio_abs_in : STD_LOGIC_VECTOR (23 downto 0); 
     signal a3e_mod : std_logic := '0';
     signal fos_cfg_tvalid : std_logic := '0';
+    signal audio_max_abs_reg : STD_LOGIC_VECTOR (24 downto 0) := (others => '0');
 
 begin
 
@@ -192,10 +193,19 @@ mply_0 : cmpy_24_16
     iq_in_tdata <= A3E_envelope & x"000000" when (a3e_mod = '1') else j3e_data;
           
     audio_abs_in <= A3E_envelope when a3e_mod = '1' else audio_data;   
-    audio_max_abs <= std_logic_vector(abs(resize(signed(audio_abs_in), 25)));                               
+--    audio_max_abs <= std_logic_vector(abs(resize(signed(audio_abs_in), 25)));                               
     
     fos_in_tdata <= x"400000" & x"400000" when modulation = "10" else iq_in_tdata;
     fos_in_tvalid <= s_axis_audio_tvalid when a3e_mod = '1' else mult_out_valid;
+    
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        audio_max_abs_reg <= std_logic_vector(abs(resize(signed(audio_abs_in), 25)));
+    end if;
+end process;
+
+    audio_max_abs <= audio_max_abs_reg;
 
 txa_fos_0 : TXA_fos
     PORT MAP  (

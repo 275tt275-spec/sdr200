@@ -99,6 +99,12 @@ architecture Behavioral of agc is
     signal gain_dec : signed (15 downto 0) := x"0001";
     signal gain_inc_fast : signed (15 downto 0) := x"0002";
     signal gain_dec_fast : signed (15 downto 0) := x"0002";
+    
+    -- Новые сигналы для разгрузки таймингов (конвейер АРУ)
+    signal rssi_gt_max_fast : std_logic := '0';
+    signal rssi_gt_max      : std_logic := '0';
+    signal rssi_lt_min_fast : std_logic := '0';
+    signal rssi_lt_min      : std_logic := '0';
 
 begin
 
@@ -193,65 +199,59 @@ end process;
     
 --    m_axis_rssi_tdata <= std_logic_vector(abs(signed(m_axis_dout_tdata(31 downto 0)))); 
     m_axis_tdata <= gain_tdata;
-        
+    
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        -- Выполняем сравнения на такт раньше и сохраняем в однобитные триггеры
+        if m_axis_rssi_tdata > rssi_max_fast then rssi_gt_max_fast <= '1'; else rssi_gt_max_fast <= '0'; end if;
+        if m_axis_rssi_tdata > rssi_max      then rssi_gt_max <= '1';      else rssi_gt_max <= '0';      end if;
+        if rssi_max_value < rssi_min_fast    then rssi_lt_min_fast <= '1'; else rssi_lt_min_fast <= '0'; end if;
+        if rssi_max_value < rssi_min         then rssi_lt_min <= '1';      else rssi_lt_min <= '0';      end if;
+    end if;
+end process;
+
 agc_process : process (aclk) is
-begin 
-   if rising_edge(aclk) then
-       m_axis_tvalid <= s_tvalid_r;
-       m_axis_tuser <= s_tuser_r;
-       if s_tvalid_r = '1' then
-           if gain_data(47 downto 34) = "11111111111111" or gain_data(47 downto 34) = "00000000000000" then
-               gain_tdata <= gain_data(35 downto 4); -- Cordic in demodulator
-               if agc_on = '0' then
-                   if rf_gain_old /= rf_gain then
-                       gain <= signed(rf_gain & "00");
-                       rf_gain_old <= rf_gain;
-                   end if;  
-               elsif s_tuser_r = "1" then         
-                    rf_gain_old <= (others => '0');  
-                    if (m_axis_rssi_tdata > rssi_max_fast) and (gain >= gain_dec_fast) then
-                        gain <= gain - gain_dec_fast;
-                    elsif (m_axis_rssi_tdata > rssi_max) and (gain >= gain_dec) then
-                        gain <= gain - gain_dec;
-                    elsif rssi_max_valid = '1' then   
-                        if (rssi_max_value < rssi_min_fast) and (gain < ("01" & x"FFFF" - gain_inc_fast)) then
-                            gain <= gain + gain_inc_fast;
-                         elsif (rssi_max_value < rssi_min) and (gain < ("01" & x"FFFF" - gain_inc)) then
-                            gain <= gain + gain_inc;     
-                        end if;   
+begin
+    if rising_edge(aclk) then
+        m_axis_tvalid <= s_tvalid_r;
+        m_axis_tuser <= s_tuser_r;
+        
+        if s_tvalid_r = '1' then
+            if gain_data(47 downto 34) = "11111111111111" or gain_data(47 downto 34) = "00000000000000" then
+                gain_tdata <= gain_data(35 downto 4);
+                
+                if agc_on = '0' then
+                    if rf_gain_old /= rf_gain then
+                        gain <= signed(rf_gain & "00");
+                        rf_gain_old <= rf_gain;
                     end if;
-               end if;
-           else 
-                gain <= "000" & gain(16 downto 2);   
---              if gain_data(47 downto 35) = "1111111111111" or gain_data(47 downto 35) = "0000000000000" then  
---                  gain <= "00" & gain(17 downto 2);
---              elsif gain_data(47 downto 36) = "111111111111" or gain_data(47 downto 36) = "000000000000" then  
---                  gain <= "000" & gain(17 downto 3);
---              elsif gain_data(47 downto 37) = "11111111111" or gain_data(47 downto 37) = "00000000000" then  
---                  gain <= "0000" & gain(17 downto 4);  
---              elsif gain_data(47 downto 38) = "1111111111" or gain_data(47 downto 38) = "0000000000" then  
---                  gain <= "00000" & gain(17 downto 5); 
---              elsif gain_data(47 downto 39) = "111111111" or gain_data(47 downto 39) = "000000000" then  
---                  gain <= "000000" & gain(17 downto 6);      
---              elsif gain_data(47 downto 40) = "11111111" or gain_data(47 downto 40) = "00000000" then  
---                  gain <= "0000000" & gain(17 downto 7); 
---              elsif gain_data(47 downto 41) = "1111111" or gain_data(47 downto 41) = "0000000" then  
---                  gain <= "00000000" & gain(17 downto 8);  
---              elsif gain_data(47 downto 42) = "111111" or gain_data(47 downto 42) = "000000" then  
---                  gain <= "000000000" & gain(17 downto 9);  
---              elsif gain_data(47 downto 43) = "11111" or gain_data(47 downto 43) = "00000" then  
---                  gain <= "0000000000" & gain(17 downto 10); 
---              else
---                  gain <= "00000000000" & gain(17 downto 11);                    
---               end if;     
-               if gain_data(47) = '0' then  
-                   gain_tdata <= x"7FFFFFFF";
-               else
-                   gain_tdata <= x"80000000";
-               end if;    
-           end if;           
-        end if;          
-   end if;
+                elsif s_tuser_r = "1" then
+                    rf_gain_old <= (others => '0');
+                    
+                    if (rssi_gt_max_fast = '1') and (gain >= gain_dec_fast) then
+                        gain <= gain - gain_dec_fast;
+                    elsif (rssi_gt_max = '1') and (gain >= gain_dec) then
+                        gain <= gain - gain_dec;
+                    elsif rssi_max_valid = '1' then
+                        if (rssi_lt_min_fast = '1') and (gain < ("01" & x"FFFF" - gain_inc_fast)) then
+                            gain <= gain + gain_inc_fast;
+                        elsif (rssi_lt_min = '1') and (gain < ("01" & x"FFFF" - gain_inc)) then
+                            gain <= gain + gain_inc;
+                        end if;
+                    end if;
+                end if;
+            else
+                gain <= "000" & gain(17 downto 3);
+                
+                if gain_data(47) = '0' then
+                    gain_tdata <= x"7FFFFFFF";
+                else
+                    gain_tdata <= x"80000000";
+                end if;
+            end if;
+        end if;
+    end if;
 end process agc_process;
 
 max_fifo_gen : for k in 0 to 31 generate	

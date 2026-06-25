@@ -187,11 +187,6 @@ CALCC create_calcc (int channel, int runcal, int size, int rate, int ints, int s
 	a->temprx = (float*)malloc0(2048 * sizeof(complex));														// remove later
 	a->temptx = (float*)malloc0(2048 * sizeof(complex));														// remove later
 
-	// correction save and restore threads
-	InterlockedBitTestAndReset(&a->savecorr_bypass, 0);
-//	a->Sem_SaveCorr = CreateSemaphore(0, 0, 1, 0);
-//	_beginthread(PSSaveCorrection, 0, (void*)a);
-
 	InterlockedBitTestAndReset(&a->calccorr_bypass, 0);
 //	a->Sem_CalcCorr = CreateSemaphore(0, 0, 1, 0);
 //	_beginthread(doPSCalcCorrection, 0, (void*)a);
@@ -207,10 +202,6 @@ void destroy_calcc (CALCC a)
 	// correction save and restore threads
 	InterlockedBitTestAndReset(&txa[a->channel].iqc.p1->busy, 0);
 	Sleep(10);
-	InterlockedBitTestAndSet(&a->savecorr_bypass, 0);
-//	ReleaseSemaphore(a->Sem_SaveCorr, 1, 0);
-	while (InterlockedAnd(&a->savecorr_bypass, 0xffffffff)) Sleep(1);
-//	CloseHandle(a->Sem_SaveCorr);
 
 	InterlockedBitTestAndSet(&a->calccorr_bypass, 0);
 //	ReleaseSemaphore(a->Sem_CalcCorr, 1, 0);
@@ -533,39 +524,6 @@ enum _calcc_state
 	LTURNON
 };
 
-void PSSaveCorrection (void *pargs)
-{
-	int i, k;
-	CALCC a = (CALCC)pargs;
-	while (!InterlockedAnd(&a->savecorr_bypass, 0xffffffff))
-	{
-//		WaitForSingleObject(a->Sem_SaveCorr, INFINITE);
-		if (!InterlockedAnd(&a->savecorr_bypass, 0xffffffff))
-		{
-			FILE* file = fopen(a->util.savefile, "w");
-			if (file)
-			{
-				GetTXAiqcValues(a->util.channel, a->util.pm, a->util.pc, a->util.ps);
-				for (i = 0; i < a->util.ints; i++)
-				{
-					for (k = 0; k < 4; k++)
-						fprintf(file, "%.17e\t", a->util.pm[4 * i + k]);
-					fprintf(file, "\n");
-					for (k = 0; k < 4; k++)
-						fprintf(file, "%.17e\t", a->util.pc[4 * i + k]);
-					fprintf(file, "\n");
-					for (k = 0; k < 4; k++)
-						fprintf(file, "%.17e\t", a->util.ps[4 * i + k]);
-					fprintf(file, "\n\n");
-				}
-				fflush(file);
-				fclose(file);
-			}
-		}
-	}
-	InterlockedBitTestAndReset(&a->savecorr_bypass, 0);
-}
-
 
 /********************************************************************************************************
 *																										*
@@ -817,14 +775,26 @@ void psccF (int channel, int size, float *Itxbuff, float *Qtxbuff, float *Irxbuf
 }
 
 PORT
-void PSSaveCorr (int channel, char* filename)
+void PSSaveCorr (int channel, void* ptr)
 {
 	CALCC a;
-	int i = 0;
+	int i, k;
+	s_eeprom_iqc* p = (s_eeprom_iqc*)ptr;
+
 	EnterCriticalSection (&txa[channel].calcc.cs_update);
 	a = txa[channel].calcc.p;
-	while (a->util.savefile[i++] = *filename++);
-//	ReleaseSemaphore(a->Sem_SaveCorr, 1, 0);
+
+	GetTXAiqcValues(a->util.channel, a->util.pm, a->util.pc, a->util.ps);
+	for (i = 0; i < a->util.ints; i++)
+	{
+		for (k = 0; k < 4; k++)
+			p->ints[i].pm[k] = a->util.pm[4 * i + k];
+		for (k = 0; k < 4; k++)
+			p->ints[i].pc[k] = a->util.pc[4 * i + k];
+		for (k = 0; k < 4; k++)
+			p->ints[i].ps[k] = a->util.ps[4 * i + k];
+	}
+
 	LeaveCriticalSection (&txa[channel].calcc.cs_update);
 }
 

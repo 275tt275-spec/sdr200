@@ -49,17 +49,6 @@ end TXA_channel;
 
 architecture Behavioral of TXA_channel is
 
---component ila_1 IS
---PORT (
---    clk : IN STD_LOGIC;    
---    probe0 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
---    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
---    probe2 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
---    probe3 : IN STD_LOGIC_VECTOR(47 DOWNTO 0)
---    
---);
---END component ila_1;
-
 component floating_f2fix24 is
     port (
         aclk : IN STD_LOGIC;
@@ -333,15 +322,6 @@ iq_fifo : axis_data_fifo_48
         prog_empty => fifo_empty
     );   
 
---debug_0 : ila_1
---PORT MAP(
---    clk => aclk,  
---    probe0(0) => fifo_out_tvalid,
---    probe1(0) => resampler_in_tready,
---    probe2 => fifo_out_tdata,
---    probe3 => iq_tdata
---);
---
 audio_0 : fir_audio_0
     PORT MAP (
         aclk => aclk,
@@ -521,8 +501,11 @@ dds_0 : dds16a
     m_axis_data_tdata => dds_tdata
   );
   
-  mult_in_tdata <= linear_out_q & linear_out_i when test_reg(0) = '0' else
-                  test_data & test_data; 
+--  mult_in_tdata <= linear_out_q & linear_out_i when test_reg(0) = '0' else
+--                  test_data & test_data; 
+
+  mult_in_tdata <= linear_in_q & linear_in_i when test_reg(0) = '0' else
+                  test_data & test_data;
 
 cmply_0 : cmpy_24_24
    PORT MAP (

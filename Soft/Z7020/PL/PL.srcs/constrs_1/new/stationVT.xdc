@@ -221,27 +221,27 @@ set_property -dict {PACKAGE_PIN V8 IOSTANDARD LVCMOS33} [get_ports CW_KEY]
 set_property -dict {PACKAGE_PIN W8 IOSTANDARD LVCMOS33} [get_ports CAT_DTR]
 set_property -dict {PACKAGE_PIN U10 IOSTANDARD LVCMOS33} [get_ports CAT_RTC]
 
+# =====================================================================
+# Ограничения для интерфейса RF_CLOCKOUT (Дифференциальный клок)
+# =====================================================================
+set_property -dict {PACKAGE_PIN R18 IOSTANDARD LVDS_25} [get_ports RF_CLOCKOUT_P]
+set_property -dict {PACKAGE_PIN T18 IOSTANDARD LVDS_25} [get_ports RF_CLOCKOUT_N]
 
+# =====================================================================
+# Ограничения для интерфейса RF_DATAOUT (Дифференциальные данные)
+# =====================================================================
+set_property -dict {PACKAGE_PIN V13 IOSTANDARD LVDS_25} [get_ports RF_DATAOUT_P]
+set_property -dict {PACKAGE_PIN W13 IOSTANDARD LVDS_25} [get_ports RF_DATAOUT_N]
 
 
 create_generated_clock -name XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/audio_proc_0/s_axis_data_tvalid -source [get_pins XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/audio_proc_0/lim_in_tvalid_reg/C] -divide_by 1 [get_pins XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/audio_proc_0/lim_in_tvalid_reg/Q]
 create_generated_clock -name XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/modulator_0/s_axis_a_tvalid -source [get_pins XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/modulator_0/audio_data_valid_reg/C] -divide_by 1 [get_pins XC7Z020_i/SDR_1/U0/TXA_0/TXA_channel_0/modulator_0/audio_data_valid_reg/Q]
 create_generated_clock -name DAC_DCI_P -source [get_pins XC7Z020_i/SDR_1/U0/TXA_0/dac_out_0/dci_oddr/C] -divide_by 1 [get_ports DAC_DCI_P]
-set_input_delay -clock [get_clocks ADC0_CLK_clk_p] -min -add_delay 12.069 [get_ports {ADC0_OUT_P[*]}]
-set_input_delay -clock [get_clocks ADC0_CLK_clk_p] -max -add_delay 12.069 [get_ports {ADC0_OUT_P[*]}]
-set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports {ADC1_OUT_P[*]}]
-set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports {ADC1_OUT_P[*]}]
-set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports CAT_DTR]
-set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports CAT_DTR]
-set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports CAT_RTC]
-set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports CAT_RTC]
-set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports CW_KEY]
-set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports CW_KEY]
+set_input_delay -clock [get_clocks ADC0_CLK_clk_p] -max 0.800 [get_ports {ADC0_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC0_CLK_clk_p] -min -0.100 [get_ports {ADC0_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC1_CLK] -max 0.800 [get_ports {ADC1_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC1_CLK] -min -0.100 [get_ports {ADC1_OUT_P[*]}]
+set_false_path -from [get_pins -hierarchical *adc_data_r_reg*/C] -to [get_pins -hierarchical *adc_data_buf_reg*/D]
+
 set_input_delay -clock [get_clocks clk_fpga_1] -min -add_delay 7.500 [get_ports MDIO_PHY_mdio_io]
 set_input_delay -clock [get_clocks clk_fpga_1] -max -add_delay 7.500 [get_ports MDIO_PHY_mdio_io]
-set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports PTT]
-set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports PTT]
-set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports uart_rtl_0_rxd]
-set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports uart_rtl_0_rxd]
-set_input_delay -clock [get_clocks ADC1_CLK] -min -add_delay 12.069 [get_ports uart_rtl_1_rxd]
-set_input_delay -clock [get_clocks ADC1_CLK] -max -add_delay 12.069 [get_ports uart_rtl_1_rxd]

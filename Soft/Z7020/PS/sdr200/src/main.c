@@ -32,7 +32,6 @@
 #include "KenwoodCmd.h"
 #include "uart_pl.h"
 #include "ext_amp.h"
-#include "cmd.h"
 #include "../shared/shared_region.h"
 
 #define INTC_DEVICE_ID		XPAR_SCUGIC_SINGLE_DEVICE_ID
@@ -67,13 +66,18 @@ int main( void )
     // 1. Срочно перенастраиваем регион OCM, чтобы он был доступен для записи
     // 0x10C02 - Strongly Ordered (без кэша), Read/Write
     Xil_SetTlbAttributes(0xFFF00000, 0x10C02);
-    Xil_Out32(OCM_SHARED_SECTION, 0);
-    Xil_Out32(OCM_SHARED_SECTION + 4, 0);
+
+	Core0toCore1->wr_cnt = 0;
+	Core0toCore1->rd_cnt = 0;
+	Core1toCore0->wr_cnt = 0;
+	Core1toCore0->rd_cnt = 0;
 
     // 2. Теперь запись не должна вызывать Data Abort
 	Xil_Out32(CORE1_START_REG, 	0x10000000);  // Адрес старта Core 1 в DDR (из lscript.ld)
 	dmb();                  // Data Memory Barrier
 	__asm__("sev");         // Send Event для пробуждения Core 1
+
+
 #endif
  	SetupIntrSystem(&IntcInstance);
 
@@ -200,7 +204,7 @@ void SendToCore1(uint32_t type, uint32_t len, void* value)
 void RcvFromCore1Tick(void)
 {
 	volatile s_shared_buffer* pBuffer = Core1toCore0;
-	static uint32_t rd_cnt_old = -1;
+	static uint32_t rd_cnt_old = 0;
 
     Xil_DCacheInvalidateRange((INTPTR)&pBuffer->wr_cnt, 3 * sizeof(uint32_t));
     if(rd_cnt_old != pBuffer->wr_cnt)

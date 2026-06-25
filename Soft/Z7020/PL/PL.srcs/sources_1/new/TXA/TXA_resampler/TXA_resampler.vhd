@@ -47,19 +47,6 @@ end TXA_resampler;
 
 architecture Behavioral of TXA_resampler is
 
-component ila_0 IS
-PORT (
-    clk : IN STD_LOGIC;
-    probe0 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-    probe1 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-    probe2 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe3 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe4 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-    probe5 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    probe6 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
-);
-END component ila_0;
-
    component fir_duc_inter5 is
         port (
             aclk : in STD_LOGIC;
@@ -139,33 +126,6 @@ begin
     modulator_tdata <= s_axis_modulator_tdata;
     modulator_tvalid <= s_axis_modulator_tvalid; 
     s_axis_modulator_tready <= modulator_tready;
-
-debug_0 : ila_0
-PORT MAP (
-    clk => aclk,
-    probe0 => iq_tdata,
-    probe1 => modulator_tdata,
-    probe2(0) => modulator_tready,
-    probe3(0) => modulator_tvalid,
-    probe4 => interpolator_tdata,
-    probe5(0) => interpolator_tvalid,
-    probe6(0) => interpolator_tready
-);
-
---debug_0 : ila_2
---PORT MAP (
---    clk => aclk,
---    probe0 => s_axis_modulator_tdata,
---    probe1(0) => s_axis_modulator_tvalid,
---    probe2 => cic_in_tdata(23 downto 0),
---    probe3 => cic_in_tdata(47 downto 24),
---    probe4(0) => cic_in_tvalid,
---    probe5 => cic_out_tdata_0,
---    probe6 => cic_out_tdata_1,
---    probe7 => out_tdata42_0,
---    probe8 => out_tdata42_1,
---    probe9 => out_tdata24_0
---);
     
 fir_interpolator: component fir_duc_inter5
     port map (

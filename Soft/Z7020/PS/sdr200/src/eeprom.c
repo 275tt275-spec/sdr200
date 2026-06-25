@@ -525,6 +525,12 @@ static void eeprom_set_const(void)
 		e_const->txafbC_att[nPos] = txafbC_default[nPos];
 		e_const->txafbV_att[nPos] = txafbV_default[nPos];
 	}
+
+	points = sizeof(e_const->iqc) / sizeof(e_const->iqc[0]);
+	for(int nPos = 0; nPos < points; nPos++)
+	{
+		memcpy(&e_const->iqc[nPos], &iqc_default, sizeof(iqc_default));
+	}
 }
 
 static void eeprom_set_vars(void)
