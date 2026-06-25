@@ -241,7 +241,6 @@ set_input_delay -clock [get_clocks ADC0_CLK_clk_p] -max 0.800 [get_ports {ADC0_O
 set_input_delay -clock [get_clocks ADC0_CLK_clk_p] -min -0.100 [get_ports {ADC0_OUT_P[*]}]
 set_input_delay -clock [get_clocks ADC1_CLK] -max 0.800 [get_ports {ADC1_OUT_P[*]}]
 set_input_delay -clock [get_clocks ADC1_CLK] -min -0.100 [get_ports {ADC1_OUT_P[*]}]
-set_false_path -from [get_pins -hierarchical *adc_data_r_reg*/C] -to [get_pins -hierarchical *adc_data_buf_reg*/D]
 
 set_input_delay -clock [get_clocks clk_fpga_1] -min -add_delay 7.500 [get_ports MDIO_PHY_mdio_io]
 set_input_delay -clock [get_clocks clk_fpga_1] -max -add_delay 7.500 [get_ports MDIO_PHY_mdio_io]

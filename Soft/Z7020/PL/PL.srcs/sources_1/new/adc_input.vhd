@@ -22,12 +22,12 @@ end adc_input;
 architecture Behavioral of adc_input is
 
     signal adc_data : std_logic_vector(15 downto 0);
-    signal adc_data_r, adc_data_buf : std_logic_vector(15 downto 0);
+    signal adc_data_buf : std_logic_vector(15 downto 0);
     signal adc_out_data : std_logic_vector(15 downto 0);
     signal rxa_tdata_rand : STD_LOGIC_VECTOR (15 downto 0);
     signal adc_max : signed(15 downto 0) := x"0000"; 
     signal adc_abs : signed(15 downto 0) := x"0000"; 
-    signal adc_clk, adc_clk0, adc_clk1 : STD_LOGIC;
+    signal adc_clk, adc_clk0 : STD_LOGIC;
     
     ATTRIBUTE X_INTERFACE_INFO : STRING;
     ATTRIBUTE X_INTERFACE_PARAMETER : STRING;
@@ -47,12 +47,6 @@ generic map (
       IB => clk_n
 );
 
-BUFIO_inst : BUFIO
-    port map (
-       O => adc_clk1, -- 1-bit output: Clock output (connect to I/O clock loads).
-       I => adc_clk0  -- 1-bit input: Clock input (connect to an IBUF or BUFMR).
-    );
-
 add_bufg : BUFG
    port map (
       O => adc_clk, -- 1-bit output: Clock output
@@ -60,32 +54,34 @@ add_bufg : BUFG
    );
    
 lbl : for k in 0 to 15 generate
-dbuf : IBUFDS
-  generic map (
-	DIFF_TERM => TRUE, -- Differential Termination 
-	IBUF_LOW_PWR => TRUE, -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
-	IOSTANDARD => "DEFAULT")
-   port map (
-      O => adc_data(k), 
-      I => din_p(k),
-      IB => din_n(k)
-   );
+    dbuf : IBUFDS
+      generic map (
+        DIFF_TERM => TRUE, -- Differential Termination 
+        IBUF_LOW_PWR => TRUE, -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+        IOSTANDARD => "DEFAULT")
+       port map (
+          O => adc_data(k), 
+          I => din_p(k),
+          IB => din_n(k)
+       );
+       
+    IDDR_inst : IDDR
+    generic map (
+       DDR_CLK_EDGE => "SAME_EDGE_PIPELINED", -- "OPPOSITE_EDGE", "SAME_EDGE"
+                                        -- or "SAME_EDGE_PIPELINED"
+       INIT_Q1 => '0', -- Initial value of Q1: '0' or '1'
+       INIT_Q2 => '0', -- Initial value of Q2: '0' or '1'
+       SRTYPE => "SYNC") -- Set/Reset type: "SYNC" or "ASYNC"
+    port map (
+       Q1 => adc_data_buf(k), -- 1-bit output for positive edge of clock
+       Q2 => open, -- 1-bit output for negative edge of clock
+       C => adc_clk,   -- 1-bit clock input
+       CE => '1', -- 1-bit clock enable input
+       D => adc_data(k),   -- 1-bit DDR data input
+       R => '0',   -- 1-bit reset
+       S => '0'    -- 1-bit set
+       );
 end generate;
-
-process(adc_clk1)
-begin
-	if rising_edge(adc_clk1) then
-	   adc_data_r <= adc_data;     
-	end if;
-end process;
-
-
-process(adc_clk)
-begin
-	if rising_edge(adc_clk) then
-	   adc_data_buf <= adc_data_r;     
-	end if;
-end process;
 
     adc_clk_out <= adc_clk;
     adc_out_data <= adc_data_buf when adc_rand_en = '0' else rxa_tdata_rand;                      
