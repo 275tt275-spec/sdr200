@@ -94,7 +94,7 @@ architecture Behavioral of audio_filter is
     signal reload_hp_tvalid : STD_LOGIC := '0';
     signal reload_lp_tready, reload_hp_tready : STD_LOGIC;
     signal reload_tlast : STD_LOGIC := '0';
-    signal reload_tdata : STD_LOGIC_VECTOR(23 DOWNTO 0);
+    signal reload_tdata : STD_LOGIC_VECTOR(23 DOWNTO 0) := (others => '0');
     signal fir_coeff : integer range 0 to 64 := 0;
     signal fir_lp_delay : integer range 0 to 8192 := 0;
     signal fir_hp_delay : integer range 0 to 8192 := 0;

@@ -77,7 +77,7 @@ END COMPONENT  fir_fos_0;
     signal reload_tvalid : STD_LOGIC := '0';
     signal reload_tready : STD_LOGIC;
     signal reload_tlast : STD_LOGIC := '0';
-    signal reload_tdata : STD_LOGIC_VECTOR(23 DOWNTO 0);
+    signal reload_tdata : STD_LOGIC_VECTOR(23 DOWNTO 0) := (others => '0');
     signal fir_coeff : integer range 0 to 128 := 0;
     signal fir_delay : integer range 0 to 8192 := 0;
     signal gain_correct : STD_LOGIC_VECTOR(2 DOWNTO 0) := (others => '0');

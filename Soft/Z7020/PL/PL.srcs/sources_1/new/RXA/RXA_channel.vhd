@@ -54,7 +54,7 @@ architecture Behavioral of RXA_channel is
     signal mult_out : std_logic_vector(47 downto 0);  
     signal cic_in_data_0, cic_in_data_1 : std_logic_vector(23 downto 0);
     signal cic_out_data_0, cic_out_data_1 : std_logic_vector(39 downto 0);
-    signal cic_out_0, cic_out_1 : std_logic_vector(39 downto 0);
+    signal cic_out_0, cic_out_1 : std_logic_vector(39 downto 0) := (others => '0');
     signal cic_out : std_logic_vector(36 downto 0);
     signal cic_out_valid_0, cic_out_valid_1 : std_logic;
     signal cic_valid : std_logic_vector(1 downto 0) := (others => '0');

@@ -71,16 +71,16 @@ architecture Behavioral of agc is
 --END COMPONENT ila_3;
 
     signal s_axis_cartesian_tvalid : STD_LOGIC;
-    signal s_axis_cartesian_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0);
+    signal s_axis_cartesian_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0) := (others => '0');
     signal s_tuser_r : STD_LOGIC_VECTOR (0 downto 0);
     signal s_tvalid_r : std_logic;
     signal m_axis_dout_tvalid : STD_LOGIC;
     signal m_axis_dout_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0);
-    signal m_axis_rssi_tdata : STD_LOGIC_VECTOR (31 downto 0);
+    signal m_axis_rssi_tdata : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
     signal m_axis_rssi_tvalid : STD_LOGIC;
-    signal gain_tdata : STD_LOGIC_VECTOR (31 downto 0);
+    signal gain_tdata : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
 
-    signal gain_data : STD_LOGIC_VECTOR (47 downto 0);
+    signal gain_data : STD_LOGIC_VECTOR (47 downto 0) := (others => '0');
     signal rssi_max : STD_LOGIC_VECTOR (31 downto 0) := x"10000000";
     signal rssi_max_fast : STD_LOGIC_VECTOR (31 downto 0) := x"20000000";
     signal rssi_min : STD_LOGIC_VECTOR (31 downto 0) := x"10000000";
@@ -88,7 +88,7 @@ architecture Behavioral of agc is
     signal wr_addr : STD_LOGIC_VECTOR (5 downto 0) := (others => '0');
     signal rd_addr : STD_LOGIC_VECTOR (5 downto 0) := (others => '0');
     signal rssi_rd : STD_LOGIC_VECTOR (31 downto 0);
-    signal rssi_max_value : STD_LOGIC_VECTOR (31 downto 0);
+    signal rssi_max_value : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
     signal rssi_max_valid : STD_LOGIC := '1';
     signal agc_on : STD_LOGIC := '1';
     signal rf_gain : STD_LOGIC_VECTOR (15 downto 0) := x"0020";

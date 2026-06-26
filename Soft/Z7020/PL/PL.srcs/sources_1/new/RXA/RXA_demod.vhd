@@ -88,21 +88,21 @@ architecture Behavioral of RXA_demod is
     constant f3e_positive_threshold : integer := 536870912;
     constant f3e_negative_threshold : integer := -536870912;
     constant f3e_full_scale_value : integer := 1073741823;
-    signal cordic_in_tdata : std_logic_vector(63 downto 0);
-    signal cordic_in_tvalid : std_logic;
+    signal cordic_in_tdata : std_logic_vector(63 downto 0) := (others => '0');
+    signal cordic_in_tvalid : std_logic := '0';
     signal dds_data : std_logic_vector(47 DOWNTO 0);
     signal config_tvalid : std_logic := '0';
     signal config_tdata : std_logic_vector(15 DOWNTO 0) := x"1799";
-    signal j3e_in_tdata : std_logic_vector(63 downto 0);
+    signal j3e_in_tdata : std_logic_vector(63 downto 0) := (others => '0');
     signal a3e_out_tdata : std_logic_vector(63 downto 0);
     signal a3e_out_tvalid : std_logic;
-    signal j3e_out_tdata : std_logic_vector(63 downto 0);
+    signal j3e_out_tdata : std_logic_vector(63 downto 0) := (others => '0');
     signal j3e_out_tvalid : std_logic;
-    signal f3e_prv_tdata : std_logic_vector(31 downto 0); 
-    signal f3e_cur_tdata : std_logic_vector(31 downto 0); 
-    signal f3e_out_tdata : std_logic_vector(31 downto 0); 
-    signal f3e_demod : std_logic_vector(31 downto 0);  
-    signal demod_out_data : std_logic_vector(31 downto 0);   
+    signal f3e_prv_tdata : std_logic_vector(31 downto 0) := (others => '0');
+    signal f3e_cur_tdata : std_logic_vector(31 downto 0) := (others => '0'); 
+    signal f3e_out_tdata : std_logic_vector(31 downto 0) := (others => '0'); 
+    signal f3e_demod : std_logic_vector(31 downto 0) := (others => '0');  
+    signal demod_out_data : std_logic_vector(31 downto 0) := (others => '0');   
     signal demod_out_en : std_logic := '0';
 
 begin

@@ -201,7 +201,7 @@ architecture Behavioral of RXA is
     signal wide_out_tdata : STD_LOGIC_VECTOR (31 downto 0);
     signal wide_out_tvalid : STD_LOGIC;
     signal dds_wf, dds_nr : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
-    signal dds_wf_valid, dds_nr_valid  : STD_LOGIC := '0';
+    signal dds_wf_valid, dds_nr_valid : STD_LOGIC := '0';
     
     signal narrow_out0_tdata, narrow_out1_tdata : STD_LOGIC_VECTOR (31 downto 0);
 	signal narrow_out0_tuser, narrow_out1_tuser : STD_LOGIC_VECTOR (0 downto 0);
@@ -210,27 +210,27 @@ architecture Behavioral of RXA is
     signal fos_out_tuser : STD_LOGIC_VECTOR (0 downto 0);
     signal fos_out_tvalid : STD_LOGIC;
     signal fos_cfg_tdata : STD_LOGIC_VECTOR (31 downto 0);
-    signal fos_cfg_tdest : STD_LOGIC_VECTOR (0 downto 0);
-    signal fos_cfg_tvalid : STD_LOGIC;
-    signal low_out_tdata : STD_LOGIC_VECTOR (31 downto 0);
-    signal low_out_tuser : STD_LOGIC_VECTOR (0 downto 0);
-    signal low_out_tvalid : STD_LOGIC;
+    signal fos_cfg_tdest : STD_LOGIC_VECTOR (0 downto 0) := (others => '0');
+    signal fos_cfg_tvalid : STD_LOGIC := '0';
+    signal low_out_tdata : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
+    signal low_out_tuser : STD_LOGIC_VECTOR (0 downto 0) := (others => '0');
+    signal low_out_tvalid : STD_LOGIC := '0';
     signal modulation : STD_LOGIC_VECTOR (1 downto 0) := "00";
     signal j3e_lsb : STD_LOGIC := '0';
-    signal dds_config_16_data : STD_LOGIC_VECTOR (15 downto 0);
+    signal dds_config_16_data : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
     signal dds_config_16_valid : STD_LOGIC := '0';
-    signal demod_in_tdata : STD_LOGIC_VECTOR (31 downto 0);
+    signal demod_in_tdata : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
     signal demod_in_tuser : STD_LOGIC_VECTOR (0 downto 0);
     signal demod_in_tvalid : STD_LOGIC;
     signal demod_s24_out_tdata : STD_LOGIC_VECTOR (23 downto 0);
     signal demod_s24_out_tvalid : STD_LOGIC;
     signal rssi_s32_out_tdata : STD_LOGIC_VECTOR (31 downto 0);
     signal rssi_s32_out_tvalid : STD_LOGIC; 
-    signal s_axis_cartesian_tvalid : STD_LOGIC;
-    signal s_axis_cartesian_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0);
+    signal s_axis_cartesian_tvalid : STD_LOGIC := '0';
+    signal s_axis_cartesian_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0) := (others => '0');
     signal m_axis_dout_tvalid : STD_LOGIC;
     signal m_axis_dout_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0);  
-    signal real_rssi_tdata : STD_LOGIC_VECTOR (31 downto 0); 
+    signal real_rssi_tdata : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
     signal agc_cfg_wr : STD_LOGIC := '0';
     signal audio_clk : STD_LOGIC;
 
@@ -376,8 +376,8 @@ port map (
 
 clock_0 : clock_converter_4
     PORT MAP (
-        s_axis_aresetn => '1',
-        m_axis_aresetn => '1',
+        s_axis_aresetn => aresetn,
+        m_axis_aresetn => aresetn,
         s_axis_aclken => '1',
         m_axis_aclken => '1',
         s_axis_aclk => aclk,

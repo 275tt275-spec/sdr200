@@ -121,7 +121,7 @@ architecture Behavioral of RXA_wide is
     signal mult_out : std_logic_vector(47 downto 0);  
     signal cic_in_data_0, cic_in_data_1 : std_logic_vector(23 downto 0);   
     signal wb_cic_out_0, wb_cic_out_1 : std_logic_vector(23 downto 0);
-    signal cic_out_0, cic_out_1 : std_logic_vector(23 downto 0);
+    signal cic_out_0, cic_out_1 : std_logic_vector(23 downto 0) := (others => '0');
     signal cic_out_valid : std_logic_vector(1 downto 0);
     signal outwb_valid : std_logic_vector(1 downto 0) := (others => '0');
     signal fir1wb_in_tdata : STD_LOGIC_VECTOR (47 downto 0);
