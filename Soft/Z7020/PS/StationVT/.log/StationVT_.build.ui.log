@@ -1,6 +1,6 @@
-2026-06-24T13:48:18.804894200255-13:48:18 **** Build of project StationVT ****
-000-buildplatform.bat 59320 StationVT  
-000-XSDB Server Channel: tcfchan#21
+2026-06-26T08:25:20.729259700255-08:25:20 **** Build of project StationVT ****
+000-buildplatform.bat 49824 StationVT  
+000-XSDB Server Channel: tcfchan#2
 000-WARNING : No interface that uses file system is available 
 000-
 000-WARNING : No interface that uses file system is available 
@@ -12,7 +12,7 @@
 000-rm: невозможно выполнить lstat для `*.o': Invalid argument
 000/StationVT0-1-1make: *** [Makefile:42: clean] Error 12-make: *** [Makefile:42: clean] Error 1
 000-Building the zynq_fsbl application.
-000-make: Entering directory 'E:/Projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp'
+000-make: Entering directory 'D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp'
 000-
 000-make --no-print-directory seq_libs
 000-
@@ -162,7 +162,7 @@
 000-
 000-'Finished building libraries sequentially.'
 000-
-000-make -j 14 --no-print-directory par_libs
+000-make -j 10 --no-print-directory par_libs
 000-
 000-"Running Make include in ps7_cortexa9_0/libsrc/bram_v4_9/src"
 000-
@@ -416,8 +416,6 @@
 000-"ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nosta
 000-rtfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 000-
-000-"Running Make libs in ps7_cortexa9_0/libsrc/uartps_v3_13/src"
-000-
 000/StationVT29-1-1missing initializer for field 'IntrId' of 'XSpiPs_Config' [-Wmissing-field-initializers]1-xspips_g.c:29:9: warning: missing initializer for field 'IntrId' of 'XSpiPs_Config' [-Wmissing-field-initializers]
 000-   29 |         },
 000-      |         ^
@@ -431,6 +429,8 @@
 000/StationVT394-1-1'IntrId' declared here0-xspips.h:394:13: note: 'IntrId' declared here
 000-  394 |         u16 IntrId;             /**< Bits[11:0] Interrupt-id Bits[15:12]
 000-      |             ^~~~~~
+000-"Running Make libs in ps7_cortexa9_0/libsrc/uartps_v3_13/src"
+000-
 000-make -C ps7_cortexa9_0/libsrc/uartps_v3_13/src -s libs  "SHELL=CMD" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "
 000-ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostar
 000-tfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
@@ -498,7 +498,7 @@
 000-arm-none-eabi-ar: creating ps7_cortexa9_0/lib/libxil.a
 000-'Finished building libraries'
 000-
-000-make: Leaving directory 'E:/Projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp'
+000-make: Leaving directory 'D:/projects/sdr200/Soft/Z7020/PS/StationVT/zynq_fsbl/zynq_fsbl_bsp'
 000-
 000-arm-none-eabi-gcc  -O2 -c -MMD -MP       -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard  -c sd.c -o sd.o -Izynq_fsbl_bsp/ps7_cort
 000-exa9_0/include -I.
@@ -542,6 +542,8 @@
 000-group -Wl,--start-group,-lrsa,-lxil,-lgcc,-lc,--end-group                                               -Wl,--gc-sections -Lzyn
 000-q_fsbl_bsp/ps7_cortexa9_0/lib -L./ -Tlscript.ld
 000-
+000-In start copy ps7_cortexa9
+000-INFO:[hsi-utils-101] "xprint_generated_header" tcl procedure is deprecated, use "hsi::utils::write_c_header " instead
 000-Building the BSP Library for domain  - freertos10_xilinx_domain on processor ps7_cortexa9_0
 000-make --no-print-directory seq_libs
 000-
@@ -687,9 +689,14 @@
 000-
 000-"Compiling lwip src and adapter files"
 000-
+000-contrib/ports/xilinx/netif/xadapter.c: In function 'eth_link_detect':
+000/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/ps7_cortexa9_0/libsrc/lwip213_v1_1/src/contrib/ports/xilinx/netif/xadapter.c471-1-1enumeration value 'xemac_type_unknown' not handled in switch [-Wswitch]1-contrib/ports/xilinx/netif/xadapter.c:471:9: warning: enumeration value 'xemac_type_unknown' not handled in switch [-Wswitch]
+000-  471 |         switch (xemac->type) {
+000-      |         ^~~~~~
+000/StationVT/ps7_cortexa9_0/freertos10_xilinx_domain/bsp/ps7_cortexa9_0/libsrc/lwip213_v1_1/src/contrib/ports/xilinx/netif/xadapter.c471-1-1enumeration value 'xemac_type_xps_ll_temac' not handled in switch [-Wswitch]1-contrib/ports/xilinx/netif/xadapter.c:471:9: warning: enumeration value 'xemac_type_xps_ll_temac' not handled in switch [-Wswitch]
 000-'Finished building libraries sequentially.'
 000-
-000-make -j 14 --no-print-directory par_libs
+000-make -j 10 --no-print-directory par_libs
 000-
 000-"Running Make include in ps7_cortexa9_0/libsrc/bram_v4_9/src"
 000-
@@ -751,9 +758,9 @@
 000- "ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nost
 000-artfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 000-
-000-"Running Make include in ps7_cortexa9_0/libsrc/intc_v3_17/src"
-000-
 000-"includes"
+000-
+000-"Running Make include in ps7_cortexa9_0/libsrc/intc_v3_17/src"
 000-
 000-make -C ps7_cortexa9_0/libsrc/intc_v3_17/src -s include  "SHELL=CMD" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" 
 000-"ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nosta
@@ -894,9 +901,13 @@
 000-"Running Make libs in ps7_cortexa9_0/libsrc/llfifo_v5_6/src"
 000-
 000-make -C ps7_cortexa9_0/libsrc/llfifo_v5_6/src -s libs  "SHELL=CMD" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "A
+000-inbyte.c: In function 'inbyte':
 000-RCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostart
 000-files -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 000-
+000/StationVT11-1-1control reaches end of non-void function [-Wreturn-type]1-inbyte.c:11:1: warning: control reaches end of non-void function [-Wreturn-type]
+000-   11 | }
+000-      | ^
 000-"Running Make libs in ps7_cortexa9_0/libsrc/qspips_v3_11/src"
 000-
 000-make -C ps7_cortexa9_0/libsrc/qspips_v3_11/src -s libs  "SHELL=CMD" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "
@@ -915,6 +926,10 @@
 000-"ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nosta
 000-rtfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 000-
+000-outbyte.c: In function 'outbyte':
+000/StationVT11-1-1unused parameter 'c' [-Wunused-parameter]1-outbyte.c:11:19: warning: unused parameter 'c' [-Wunused-parameter]
+000-   11 | void outbyte(char c) {
+000-      |              ~~~~~^
 000-"Running Make libs in ps7_cortexa9_0/libsrc/scuwdt_v2_5/src"
 000-
 000-make -C ps7_cortexa9_0/libsrc/scuwdt_v2_5/src -s libs  "SHELL=CMD" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "A
@@ -939,6 +954,20 @@
 000-"ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nosta
 000-rtfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 000-
+000-arm-none-eabi-ar: creating ../../../lib/libfreertos.a
+000/StationVT29-1-1missing initializer for field 'IntrId' of 'XSpiPs_Config' [-Wmissing-field-initializers]1-xspips_g.c:29:9: warning: missing initializer for field 'IntrId' of 'XSpiPs_Config' [-Wmissing-field-initializers]
+000-   29 |         },
+000-      |         ^
+000-In file included from xspips_g.c:17:
+000/StationVT394-1-1'IntrId' declared here0-xspips.h:394:13: note: 'IntrId' declared here
+000-  394 |         u16 IntrId;             /**< Bits[11:0] Interrupt-id Bits[15:12]
+000-      |             ^~~~~~
+000/StationVT34-1-1missing initializer for field 'IntrId' of 'XSpiPs_Config' [-Wmissing-field-initializers]1-xspips_g.c:34:9: warning: missing initializer for field 'IntrId' of 'XSpiPs_Config' [-Wmissing-field-initializers]
+000-   34 |         }
+000-      |         ^
+000/StationVT394-1-1'IntrId' declared here0-xspips.h:394:13: note: 'IntrId' declared here
+000-  394 |         u16 IntrId;             /**< Bits[11:0] Interrupt-id Bits[15:12]
+000-      |             ^~~~~~
 000-"Running Make libs in ps7_cortexa9_0/libsrc/uartps_v3_13/src"
 000-
 000-make -C ps7_cortexa9_0/libsrc/uartps_v3_13/src -s libs  "SHELL=CMD" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" "
@@ -951,6 +980,14 @@
 000-RCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostart
 000-files -g -Wall -Wextra -fno-tree-loop-distribute-patterns"
 000-
+000-inbyte.c: In function 'inbyte':
+000/StationVT11-1-1control reaches end of non-void function [-Wreturn-type]1-inbyte.c:11:1: warning: control reaches end of non-void function [-Wreturn-type]
+000-   11 | }
+000-      | ^
+000-outbyte.c: In function 'outbyte':
+000/StationVT11-1-1unused parameter 'c' [-Wunused-parameter]1-outbyte.c:11:19: warning: unused parameter 'c' [-Wunused-parameter]
+000-   11 | void outbyte(char c) {
+000-      |              ~~~~~^
 000-'Finished building libraries parallelly.'
 000-
 000-make --no-print-directory archive
@@ -995,6 +1032,7 @@
 000-s7_cortexa9_0/lib/xuartps.o ps7_cortexa9_0/lib/xuartps_g.o ps7_cortexa9_0/lib/xuartps_hw.o ps7_cortexa9_0/lib/xuartps_intr.o ps
 000-7_cortexa9_0/lib/xuartps_options.o ps7_cortexa9_0/lib/xuartps_selftest.o ps7_cortexa9_0/lib/xuartps_sinit.o
 000-
+000-arm-none-eabi-ar: creating ps7_cortexa9_0/lib/libxil.a
 000-'Finished building libraries'
 000-
 000-Building the BSP Library for domain  - ps7_cortexa9_1 on processor ps7_cortexa9_1
@@ -1002,7 +1040,7 @@
 000-
 000-'Finished building libraries sequentially.'
 000-
-000-make -j 14 --no-print-directory par_libs
+000-make -j 10 --no-print-directory par_libs
 000-
 000-"Running Make include in ps7_cortexa9_1/libsrc/bram_v4_9/src"
 000-
@@ -1210,11 +1248,7 @@
 000-
 000-"Running Make libs in ps7_cortexa9_1/libsrc/scutimer_v2_5/src"
 000-
-000-xscugic_hw.c: In function 'DistInit':
 000-make -C ps7_cortexa9_1/libsrc/scutimer_v2_5/src -s libs  "SHELL=CMD" "COMPILER=arm-none-eabi-gcc" "ASSEMBLER=arm-none-eabi-as" 
-000/StationVT157-1-1#warning "Building GIC for AMP" [-Wcpp]1-xscugic_hw.c:157:2: warning: #warning "Building GIC for AMP" [-Wcpp]
-000-  157 | #warning "Building GIC for AMP"
-000-      |  ^~~~~~~
 000-"ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nosta
 000-rtfiles -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DUSE_AMP=1"
 000-
@@ -1224,6 +1258,10 @@
 000-RCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostart
 000-files -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DUSE_AMP=1"
 000-
+000-xscugic_hw.c: In function 'DistInit':
+000/StationVT157-1-1#warning "Building GIC for AMP" [-Wcpp]1-xscugic_hw.c:157:2: warning: #warning "Building GIC for AMP" [-Wcpp]
+000-  157 | #warning "Building GIC for AMP"
+000-      |  ^~~~~~~
 000-xscugic.c: In function 'DistributorInit':
 000/StationVT345-1-1#warning "Building GIC for AMP" [-Wcpp]1-xscugic.c:345:2: warning: #warning "Building GIC for AMP" [-Wcpp]
 000-  345 | #warning "Building GIC for AMP"
@@ -1344,5 +1382,5 @@
 000-'Finished building libraries'
 000-
 00255-
-13:48:37 Build Finished (took 18s.581ms)
+08:25:52 Build Finished (took 31s.870ms)
 

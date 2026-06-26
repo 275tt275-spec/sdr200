@@ -55,20 +55,6 @@ architecture Behavioral of agc is
             m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(63 DOWNTO 0)
         );
     END COMPONENT cordic_rssi;
-        
---COMPONENT ila_3 IS
---    PORT (
---    clk : IN STD_LOGIC;       
---    probe0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
---    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
---    probe2 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
---    probe3 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
---    probe4 : IN STD_LOGIC_VECTOR(17 DOWNTO 0);
---    probe5 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
---    probe6 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
---    probe7 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
---);
---END COMPONENT ila_3;
 
     signal s_axis_cartesian_tvalid : STD_LOGIC;
     signal s_axis_cartesian_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0);
@@ -109,19 +95,6 @@ architecture Behavioral of agc is
 begin
 
 --    gain_data <= s_axis_tdata * gain(17 downto 2);     
-    
---debug_agc : ila_3
---    PORT MAP (
---    clk => aclk,       
---    probe0 => s_axis_tdata,
---    probe1 => s_axis_tuser,
---    probe2(0) => s_axis_tvalid,
---    probe3 => gain_data,
---    probe4 => gain,
---    probe5 => rf_gain,
---    probe6 => m_axis_rssi_tdata,
---    probe7(0) => m_axis_dout_tvalid
---);
     
 cmd_process : process (aclk) is
 begin 

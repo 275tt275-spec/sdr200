@@ -49,6 +49,14 @@ end TXA_channel;
 
 architecture Behavioral of TXA_channel is
 
+component  ila_0 IS
+    PORT (
+        clk : IN STD_LOGIC;
+        probe0 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+        probe1 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
+    );
+END component ila_0;
+
 component floating_f2fix24 is
     port (
         aclk : IN STD_LOGIC;
@@ -519,7 +527,14 @@ cmply_0 : cmpy_24_24
         m_axis_dout_tvalid => open
     );
     
-    dac_tdata24 <= std_logic_vector(signed(mult_out_tdata(47 downto 24)) + signed(mult_out_tdata(23 downto 0))) when txa_on = '1' else (others => '0'); 
+    dac_tdata24 <= std_logic_vector(signed(mult_out_tdata(47 downto 24)) + signed(mult_out_tdata(23 downto 0))) when txa_on = '1' else (others => '0');   
+    
+debug_0 :  ila_0 
+    PORT MAP (
+        clk => aclk,
+        probe0 => mult_in_tdata,
+        probe1 => dac_tdata
+    );
 
 process(aclk)
 begin
