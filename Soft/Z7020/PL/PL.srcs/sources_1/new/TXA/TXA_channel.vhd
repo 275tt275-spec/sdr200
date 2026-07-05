@@ -49,12 +49,13 @@ end TXA_channel;
 
 architecture Behavioral of TXA_channel is
 
-component  ila_0 IS
-    PORT (
-        clk : IN STD_LOGIC;
-        probe0 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-        probe1 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
-    );
+component ila_0 IS
+PORT (
+    clk : IN STD_LOGIC;
+    probe0 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+    probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe2 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
+);
 END component ila_0;
 
 component floating_f2fix24 is
@@ -448,6 +449,14 @@ end process;
 
     resampler_in_tvalid <= modulator_out_tvalid when iq_data_select = '0' else fifo_out_tvalid;
     resampler_in_tdata <= modulator_out_tdata when iq_data_select = '0' else fifo_out_tdata;
+    
+debug_0 : ila_0
+PORT MAP (
+    clk => aclk,
+    probe0 => resampler_in_tdata,
+    probe1(0) => resampler_in_tvalid,
+    probe2(0) => resampler_in_tready
+);
 
 resampler_0 : TXA_resampler
     PORT MAP  ( 
@@ -529,12 +538,12 @@ cmply_0 : cmpy_24_24
     
     dac_tdata24 <= std_logic_vector(signed(mult_out_tdata(47 downto 24)) + signed(mult_out_tdata(23 downto 0))) when txa_on = '1' else (others => '0');   
     
-debug_0 :  ila_0 
-    PORT MAP (
-        clk => aclk,
-        probe0 => mult_in_tdata,
-        probe1 => dac_tdata
-    );
+--debug_0 :  ila_0 
+--    PORT MAP (
+--        clk => aclk,
+--        probe0 => mult_in_tdata,
+--        probe1 => dac_tdata
+--    );
 
 process(aclk)
 begin

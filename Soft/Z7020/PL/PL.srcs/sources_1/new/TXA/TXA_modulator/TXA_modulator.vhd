@@ -188,7 +188,7 @@ mply_0 : cmpy_24_16
     -- audio_data должен быть симметричен относительно 0
     -- A3E_envelope — это всегда положительная величина (несущая + звук)
     A3E_envelope <= carrier_level + audio_data;  
-    j3e_data <= mult_out_data(62 downto 39) & mult_out_data(30 downto 7) when lsb_select = '1' else
+    j3e_data <= mult_out_data(62 downto 39) & mult_out_data(30 downto 7) when lsb_select = '0' else
                 mult_out_data(30 downto 7) & mult_out_data(62 downto 39);
     iq_in_tdata <= A3E_envelope & x"000000" when (a3e_mod = '1') else j3e_data;
           

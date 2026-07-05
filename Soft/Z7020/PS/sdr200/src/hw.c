@@ -42,6 +42,7 @@
 #define VREF_BIT		 	0x01
 
 extern void SendToCore1Uint32(uint32_t type, uint32_t value);
+extern void SendToCore1(uint32_t type, uint32_t len, void* value);
 extern XScuGic IntcInstance;
 s_hw_device hw_device;
 static s_linear linear = {0};
@@ -230,6 +231,9 @@ void hw_Start(void)
 	fpga_LinearSetIQDC(&linear);
 
 	fpga_TXA_ResamplerGain(38698);
+
+	SendToCore1(SET_TXA_PS_RESTORE_CORR, sizeof(s_eeprom_iqc), eeprom_get_iqc(0));
+
 	//	fpga_TXA_ResamplerGain(9);
 }
 
@@ -657,9 +661,13 @@ void hw_SetPTT(int on, e_tx_input in)
 		hw_SetTXAFreq(e_vars->vfoA);
 
 		hw_device.TxOn = 1;
-		fpga_TXA_Enable(1);
+		if((e_vars->mode == TRX_MODE_CW) || (in == TX_TUNE))
+			fpga_TXA_Enable(1, 0);
+		else
+			fpga_TXA_Enable(1, 1);
 		if(hw_device.lin == 1)
 		{
+			SendToCore1Uint32(SET_TXA_SET_PS_MOX, 1);
 			vTaskDelay(pdMS_TO_TICKS( LINEAR_SET_DELAY ));
 			fpga_LinearEnable(&linear, 1);
 		}
@@ -670,10 +678,16 @@ void hw_SetPTT(int on, e_tx_input in)
 			atu_tune(e_vars->vfoA);
 		}
 #endif
+
 	}
 	else
 	{
-		fpga_TXA_Enable(0);
+		if(e_vars->mode == TRX_MODE_CW)
+			fpga_TXA_Enable(0, 0);
+		else
+			fpga_TXA_Enable(0, 1);
+
+		SendToCore1Uint32(SET_TXA_SET_PS_MOX, 0);
 		fpga_LinearEnable(&linear, 0);
 		hw_device.TxOn = 0;
 		hw_SetRXAFreq(e_vars->vfoA);

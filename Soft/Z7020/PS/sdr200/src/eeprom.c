@@ -651,3 +651,8 @@ uint8_t eeprom_txafbC_att(uint32_t freq)
 
 	return value;
 }
+
+s_eeprom_iqc* eeprom_get_iqc(int pos)
+{
+	return &e_const->iqc[pos];
+}

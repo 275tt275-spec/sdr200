@@ -87,5 +87,6 @@ uint8_t eeprom_rxa_att(uint32_t freq);
 uint8_t eeprom_txa_att(uint32_t freq);
 uint8_t eeprom_txafbV_att(uint32_t freq);
 uint8_t eeprom_txafbC_att(uint32_t freq);
+s_eeprom_iqc* eeprom_get_iqc(int pos);
 
 #endif /* SRC_EEPROM_H_ */

@@ -265,7 +265,7 @@ void SetTXAiqcSwap (int channel, float* cm, float* cc, float* cs)
 	a->state = SWAP;
 	a->count = 0;
 	LeaveCriticalSection (&csDSP);
-	while (_InterlockedAnd (&a->busy, 1)) Sleep(1);
+//	while (_InterlockedAnd (&a->busy, 1)) Sleep(1);
 }
 
 PORT
@@ -282,7 +282,7 @@ void SetTXAiqcStart (int channel, float* cm, float* cc, float* cs)
 	a->count = 0;
 	LeaveCriticalSection (&csDSP);
 	InterlockedBitTestAndSet   (&txa[channel].iqc.p1->run, 0);
-	while (_InterlockedAnd (&a->busy, 1)) Sleep(1);
+//	while (_InterlockedAnd (&a->busy, 1)) Sleep(1);
 }
 
 PORT
@@ -294,7 +294,7 @@ void SetTXAiqcEnd (int channel)
 	a->state = END;
 	a->count = 0;
 	LeaveCriticalSection (&csDSP);
-	while (_InterlockedAnd (&a->busy, 1)) Sleep(1);
+//	while (_InterlockedAnd (&a->busy, 1)) Sleep(1);
 	InterlockedBitTestAndReset (&txa[channel].iqc.p1->run, 0);
 }
 

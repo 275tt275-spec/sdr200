@@ -135,7 +135,7 @@ int main()
 	runs.ammod = 0;					// AM Modulator
 	runs.fmmod = 0;					// FM Modulator
 	runs.alcmeter = 0;				// ALC Meter
-	runs.iqc = 1;					// PureSignal correction
+	runs.iqc = 0;					// PureSignal correction
 	runs.cfir = 0;					// compensating FIR filter (used Protocol_2 only)
 	runs.rsmpout = 0;				// output resampler
 	runs.outmeter = 0;				// output meter
@@ -227,7 +227,7 @@ static void main_txa_tick(void)
 	{
 		udata = XLlFifo_RxGetWord(&fifo_i2s);
 		txa[channel].inbuff[in_ptr * 2] = *(float*)&udata;
-		txa[channel].inbuff[in_ptr * 2 + 1] = *(float*)&udata;
+//		txa[channel].inbuff[in_ptr * 2 + 1] = *(float*)&udata;
 
 		if(++in_ptr >= IN_SIZE)
 		{

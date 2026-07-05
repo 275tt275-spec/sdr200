@@ -200,7 +200,7 @@ void fpga_RXA_LP(const uint32_t* p);
 void fpga_RXA_HP(const uint32_t* p);
 void fpga_RXA_AudioCorrect(uint8_t value);
 uint32_t fpga_RXA_GetRSSI(void);
-void fpga_TXA_Enable(int enable);
+void fpga_TXA_Enable(int enable, int iqCan);
 void fpga_TXA_DDS(uint32_t value);
 void fpga_TXA_OFFSET(uint32_t value);
 void fpga_TXA_CTRL(uint32_t value);

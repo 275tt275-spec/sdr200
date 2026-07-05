@@ -43,7 +43,7 @@ void fpga_init(void)
 		return;
 	}
 
-	XLlFifo_Config *FifoConfig = XLlFfio_LookupConfig(FIFO_DEV_ID);
+	XLlFifo_Config *FifoConfig = XLlFfio_LookupConfig(XPAR_AXI_FIFO_WB_DEVICE_ID);
 	Status = XLlFifo_CfgInitialize(&Fifo, FifoConfig, FifoConfig->BaseAddress);
 	if (Status != XST_SUCCESS) {
 		return;
@@ -163,16 +163,27 @@ inline uint32_t fpga_RXA_GetRSSI(void)
 	return fpga_read(FPGA_RXA_GET);
 }
 
-void fpga_TXA_Enable(int enable)
+void fpga_TXA_Enable(int enable, int iqCan)
 {
 	if(enable == 1)
 	{
-		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_IQ);
-		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW | FPGA_TXA_CTRL_IQ);
+		if(iqCan == 1)
+		{
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_IQ);
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW | FPGA_TXA_CTRL_IQ);
+		}
+		else
+		{
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON);
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW);
+		}
 	}
 	else
 	{
-		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_IQ);
+		if(iqCan == 1)
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_IQ);
+		else
+			fpga_write(FPGA_TXA_CTRL, 0);
 	}
 }
 

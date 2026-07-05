@@ -128,7 +128,7 @@ static void prvMainTask( void *pvParameters )
 	for( ;; )
 	{
 		fpga_tick();
-//		RcvFromCore1Tick();
+		RcvFromCore1Tick();
 		taskYIELD();
 	}
 }
