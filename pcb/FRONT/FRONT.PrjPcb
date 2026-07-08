@@ -67,7 +67,7 @@ GenerateClassCluster=0
 DocumentUniqueId=AZQWIQYH
 
 [Document2]
-DocumentPath=FRONT_PL.SchDoc
+DocumentPath=FRONT_PL_v1.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -135,7 +135,7 @@ GenerateClassCluster=0
 DocumentUniqueId=NWOLNKAS
 
 [Document6]
-DocumentPath=FRONT_MCU.SchDoc
+DocumentPath=FRONT_MCU_v1.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -169,7 +169,7 @@ GenerateClassCluster=0
 DocumentUniqueId=XJLUODUP
 
 [Document8]
-DocumentPath=FRONT.PcbDoc
+DocumentPath=FRONT_v1.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0

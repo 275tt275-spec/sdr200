@@ -50,13 +50,13 @@ PrefsVaultGUID=
 PrefsRevisionGUID=
 
 [Document1]
-DocumentPath=PA_AMP_v1.SchDoc
+DocumentPath=PA_v2.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
 AnnotateSuffix=
 AnnotateScope=All
-AnnotateOrder=1
+AnnotateOrder=-1
 DoLibraryUpdate=1
 DoDatabaseUpdate=1
 ClassGenCCAutoEnabled=1
@@ -64,26 +64,9 @@ ClassGenCCAutoRoomEnabled=0
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=PDRVEWSG
+DocumentUniqueId=OMMFHPPO
 
 [Document2]
-DocumentPath=PA_LPF.SchDoc
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=2
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=EZEMHQII
-
-[Document3]
 DocumentPath=PA_MCU.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -100,161 +83,25 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=HSQEIDGQ
 
+[Document3]
+DocumentPath=PA_AMP.SchDoc
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=0
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=PDRVEWSG
+
 [Document4]
-DocumentPath=PA_v1.PcbDoc
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=OMMFHPPO
-
-[Document5]
-DocumentPath=..\..\..\..\Altium_library\nels_caps.SchLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=MTGWVLOV
-
-[Document6]
-DocumentPath=..\..\..\..\Altium_library\nels_chip.SchLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=ELBBSMUC
-
-[Document7]
-DocumentPath=..\..\..\..\Altium_library\nels_conn.SchLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=WRQDCEVS
-
-[Document8]
-DocumentPath=..\..\..\..\Altium_library\nels_ind.SchLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=MICHCQGQ
-
-[Document9]
-DocumentPath=..\..\..\..\Altium_library\nels_other.SchLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=IBUJXWJG
-
-[Document10]
-DocumentPath=..\..\..\..\Altium_library\nels_res.SchLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=
-
-[Document11]
-DocumentPath=..\..\..\..\Altium_library\nels.PcbLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=WHQLRYLY
-
-[Document12]
-DocumentPath=..\..\..\..\Altium_library\newMetric\PcbLib\Connectors.PcbLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=ROMGYGUE
-
-[Document13]
-DocumentPath=PA.OutJob
+DocumentPath=PA_v2.OutJob
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -271,95 +118,103 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [GeneratedDocument1]
-DocumentPath=Project Outputs for PA\Design Rule Check - PA.html
+DocumentPath=Project Outputs for PA_v2\Design Rule Check - PA_v2.html
 DItemRevisionGUID=
 
 [GeneratedDocument2]
-DocumentPath=Project Outputs for Free Documents\NC Drill\PA.DRR
+DocumentPath=Project Outputs for Free Documents\NC Drill\PA_v2.DRR
 DItemRevisionGUID=
 
 [GeneratedDocument3]
-DocumentPath=Project Outputs for PA\NC Drill\PA.DRR
+DocumentPath=Project Outputs for PA_v2\NC Drill\PA_v2.DRR
 DItemRevisionGUID=
 
 [GeneratedDocument4]
-DocumentPath=Project Outputs for Free Documents\Gerber\PA.EXTREP
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.EXTREP
 DItemRevisionGUID=
 
 [GeneratedDocument5]
-DocumentPath=Project Outputs for PA\Gerber\PA.EXTREP
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.EXTREP
 DItemRevisionGUID=
 
 [GeneratedDocument6]
-DocumentPath=Project Outputs for Free Documents\Gerber\PA.GBL
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.GBL
 DItemRevisionGUID=
 
 [GeneratedDocument7]
-DocumentPath=Project Outputs for PA\Gerber\PA.GBL
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.GBL
 DItemRevisionGUID=
 
 [GeneratedDocument8]
-DocumentPath=Project Outputs for Free Documents\Gerber\PA.GBS
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.GBO
 DItemRevisionGUID=
 
 [GeneratedDocument9]
-DocumentPath=Project Outputs for PA\Gerber\PA.GBS
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.GBO
 DItemRevisionGUID=
 
 [GeneratedDocument10]
-DocumentPath=Project Outputs for PA\Gerber\PA.GKO
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.GBS
 DItemRevisionGUID=
 
 [GeneratedDocument11]
-DocumentPath=Project Outputs for Free Documents\Gerber\PA.GM
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.GBS
 DItemRevisionGUID=
 
 [GeneratedDocument12]
-DocumentPath=Project Outputs for Free Documents\Gerber\PA.GTL
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.GM11
 DItemRevisionGUID=
 
 [GeneratedDocument13]
-DocumentPath=Project Outputs for PA\Gerber\PA.GTL
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.GM11
 DItemRevisionGUID=
 
 [GeneratedDocument14]
-DocumentPath=Project Outputs for Free Documents\Gerber\PA.GTO
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.GTL
 DItemRevisionGUID=
 
 [GeneratedDocument15]
-DocumentPath=Project Outputs for PA\Gerber\PA.GTO
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.GTL
 DItemRevisionGUID=
 
 [GeneratedDocument16]
-DocumentPath=Project Outputs for Free Documents\Gerber\PA.GTS
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.GTO
 DItemRevisionGUID=
 
 [GeneratedDocument17]
-DocumentPath=Project Outputs for PA\Gerber\PA.GTS
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.GTO
 DItemRevisionGUID=
 
 [GeneratedDocument18]
-DocumentPath=Project Outputs for Free Documents\NC Drill\PA.LDP
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.GTS
 DItemRevisionGUID=
 
 [GeneratedDocument19]
-DocumentPath=Project Outputs for PA\NC Drill\PA.LDP
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.GTS
 DItemRevisionGUID=
 
 [GeneratedDocument20]
-DocumentPath=Project Outputs for Free Documents\Gerber\PA.REP
+DocumentPath=Project Outputs for Free Documents\NC Drill\PA_v2.LDP
 DItemRevisionGUID=
 
 [GeneratedDocument21]
-DocumentPath=Project Outputs for PA\Gerber\PA.REP
+DocumentPath=Project Outputs for PA_v2\NC Drill\PA_v2.LDP
 DItemRevisionGUID=
 
 [GeneratedDocument22]
-DocumentPath=Project Outputs for Free Documents\NC Drill\PA.TXT
+DocumentPath=Project Outputs for Free Documents\Gerber\PA_v2.REP
 DItemRevisionGUID=
 
 [GeneratedDocument23]
-DocumentPath=Project Outputs for PA\NC Drill\PA.TXT
+DocumentPath=Project Outputs for PA_v2\Gerber\PA_v2.REP
+DItemRevisionGUID=
+
+[GeneratedDocument24]
+DocumentPath=Project Outputs for Free Documents\NC Drill\PA_v2.TXT
+DItemRevisionGUID=
+
+[GeneratedDocument25]
+DocumentPath=Project Outputs for PA_v2\NC Drill\PA_v2.TXT
 DItemRevisionGUID=
 
 [Configuration1]
@@ -869,7 +724,7 @@ OutputDefault1=0
 Type1=1
 Type2=1
 Type3=1
-Type4=0
+Type4=1
 Type5=1
 Type6=1
 Type7=1
@@ -884,7 +739,7 @@ Type15=1
 Type16=1
 Type17=1
 Type18=1
-Type19=0
+Type19=1
 Type20=1
 Type21=1
 Type22=1
