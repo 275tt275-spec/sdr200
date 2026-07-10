@@ -21,7 +21,7 @@
 #include "xparameters.h"
 
 #define GUI_THREAD_STACKSIZE 		2048 * 4
-#define GUI_PRIORITY				12
+#define GUI_PRIORITY				2
 
 extern void gui_thread(void *p);
 

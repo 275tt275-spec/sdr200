@@ -1420,7 +1420,7 @@ Enable DDR Controller of Zynq PS
 <B>Memory Part</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-MT41K128M16 JT-125
+MT41K256M16 RE-125
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
 
@@ -1508,7 +1508,7 @@ Provide the width of the DRAM chip
 <B>DRAM Device Capacity</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-2048 MBits
+4096 MBits
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
 
@@ -1541,7 +1541,7 @@ Defines the bank to which an active an ACTIVE, READ, WRITE, or Precharge Command
 <B>ROW Address Count</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-14
+15
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
 Provide the Row address for ACTIVE commands
@@ -9904,10 +9904,10 @@ ddrc_ctrl
 <B>3fc0</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>56</B>
+<B>a1</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1580</B>
+<B>2840</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>tRFC(min) - Minimum time from refresh to refresh or activate (spec: 75nS to 195nS). DRAM Related. Default value is set for DDR3. Dynamic Bit Field.</B>
@@ -9947,7 +9947,7 @@ ddrc_ctrl
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>4159b</B>
+<B>4285b</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DRAM Parameters 0</B>
@@ -12228,10 +12228,10 @@ ddrc_ctrl
 <B>f00000</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>f</B>
+<B>5</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>f00000</B>
+<B>500000</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Selects theAXI address bit used as row address bit 14. Valid Range: 0 to 6, Internal Base: 23 The selected address bit is determined by adding the Internal Base to the value of this field. If set to 15, row address bit 14 is set to 0.</B>
@@ -12271,7 +12271,7 @@ ddrc_ctrl
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>ff55555</B>
+<B>f555555</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>Select DRAM row address bits</B>
@@ -25179,10 +25179,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Reserved. Do not modify.</B>
@@ -25199,10 +25199,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Reserved. Do not modify.</B>
@@ -25302,7 +25302,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>18c61c</B>
+<B>18c068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>Drive and Slew controls for Address and Command pins of the DDR Interface</B>
@@ -25386,10 +25386,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Reserved. Do not modify.</B>
@@ -25406,10 +25406,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Reserved. Do not modify.</B>
@@ -25509,7 +25509,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>Drive and Slew controls for DQ pins of the DDR Interface</B>
@@ -25593,10 +25593,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Reserved. Do not modify.</B>
@@ -25613,10 +25613,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Reserved. Do not modify.</B>
@@ -25716,7 +25716,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>Drive and Slew controls for DQS pins of the DDR Interface</B>
@@ -25800,10 +25800,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Reserved. Do not modify.</B>
@@ -25820,10 +25820,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Reserved. Do not modify.</B>
@@ -25923,7 +25923,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>Drive and Slew controls for Clock pins of the DDR Interface</B>
@@ -40933,10 +40933,10 @@ ddrc_ctrl
 <B>3fc0</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>56</B>
+<B>a1</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1580</B>
+<B>2840</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>tRFC(min) - Minimum time from refresh to refresh or activate (spec: 75nS to 195nS). DRAM Related. Default value is set for DDR3. Dynamic Bit Field.</B>
@@ -40976,7 +40976,7 @@ ddrc_ctrl
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>4159b</B>
+<B>4285b</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DRAM Parameters 0</B>
@@ -43397,10 +43397,10 @@ ddrc_ctrl
 <B>f00000</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>f</B>
+<B>5</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>f00000</B>
+<B>500000</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Selects theAXI address bit used as row address bit 14. Valid Range: 0 to 11, and 15 Internal Base: 23 The selected address bit is determined by adding the Internal Base to the value of this field. If set to 15, row address bit 14 is set to 0.</B>
@@ -43440,7 +43440,7 @@ ddrc_ctrl
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>ff55555</B>
+<B>f555555</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>Select DRAM row address bits</B>
@@ -57195,10 +57195,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>DDRIO drive strength for the P devices</B>
@@ -57215,10 +57215,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>DDRIO drive strength for the N devices</B>
@@ -57318,7 +57318,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>18c61c</B>
+<B>18c068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DDR IOB Slew for Address</B>
@@ -57402,10 +57402,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>DDRIO drive strength for the P devices</B>
@@ -57422,10 +57422,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>DDRIO drive strength for the N devices</B>
@@ -57525,7 +57525,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DDR IOB Slew for Data</B>
@@ -57609,10 +57609,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>DDRIO drive strength for the P devices</B>
@@ -57629,10 +57629,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>DDRIO drive strength for the N devices</B>
@@ -57732,7 +57732,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DDR IOB Slew for Diff</B>
@@ -57816,10 +57816,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>DDRIO drive strength for the P devices</B>
@@ -57836,10 +57836,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>DDRIO drive strength for the N devices</B>
@@ -57939,7 +57939,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DDR IOB Slew for Clock</B>
@@ -72964,10 +72964,10 @@ ddrc_ctrl
 <B>3fc0</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>56</B>
+<B>a1</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1580</B>
+<B>2840</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>tRFC(min) - Minimum time from refresh to refresh or activate (spec: 75ns to 195ns). DRAM RELATED. Default value is set for DDR3.</B>
@@ -73007,7 +73007,7 @@ ddrc_ctrl
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>4159b</B>
+<B>4285b</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DRAM Parameters register 0</B>
@@ -75428,10 +75428,10 @@ ddrc_ctrl
 <B>f00000</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>f</B>
+<B>5</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>f00000</B>
+<B>500000</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Selects theAXI address bit used as row address bit 14. Valid Range: 0 to 11, and 15 Internal Base: 23 The selected address bit is determined by adding the Internal Base to the value of this field. If set to 15, row address bit 14 is set to 0.</B>
@@ -75471,7 +75471,7 @@ ddrc_ctrl
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>ff55555</B>
+<B>f555555</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>Selects the address bits used as DRAM row address bits</B>
@@ -88652,10 +88652,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Programs the DDRIO drive strength for the P devices</B>
@@ -88672,10 +88672,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Programs the DDRIO drive strength for the N devices</B>
@@ -88775,7 +88775,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>18c61c</B>
+<B>18c068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DDRIOB Drive Slew Address Register</B>
@@ -88859,10 +88859,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Programs the DDRIO drive strength for the P devices</B>
@@ -88879,10 +88879,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Programs the DDRIO drive strength for the N devices</B>
@@ -88982,7 +88982,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DDRIOB Drive Slew Data Register</B>
@@ -89066,10 +89066,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Programs the DDRIO drive strength for the P devices</B>
@@ -89086,10 +89086,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Programs the DDRIO drive strength for the N devices</B>
@@ -89189,7 +89189,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DDRIOB Drive Slew Differential Strobe Register</B>
@@ -89273,10 +89273,10 @@ SLCR_LOCK
 <B>7f</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>1c</B>
+<B>68</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Programs the DDRIO drive strength for the P devices</B>
@@ -89293,10 +89293,10 @@ SLCR_LOCK
 <B>3f80</B>
 </TD>
 <TD width=10% BGCOLOR=#FBF5EF>
-<B>c</B>
+<B>0</B>
 </TD>
 <TD width=15% BGCOLOR=#FBF5EF>
-<B>600</B>
+<B>0</B>
 </TD>
 <TD width=35% BGCOLOR=#FBF5EF>
 <B>Programs the DDRIO drive strength for the N devices</B>
@@ -89396,7 +89396,7 @@ SLCR_LOCK
 <B></B>
 </TD>
 <TD width=15% BGCOLOR=#C0C0C0>
-<B>f9861c</B>
+<B>f98068</B>
 </TD>
 <TD width=35% BGCOLOR=#C0C0C0>
 <B>DDRIOB Drive Slew Clcok Register</B>

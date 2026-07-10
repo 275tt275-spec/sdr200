@@ -459,7 +459,7 @@
             "value": "0x00100000"
           },
           "PCW_DDR_RAM_HIGHADDR": {
-            "value": "0x0FFFFFFF"
+            "value": "0x1FFFFFFF"
           },
           "PCW_DM_WIDTH": {
             "value": "4"
@@ -1366,10 +1366,10 @@
             "value": "Normal (0-85)"
           },
           "PCW_UIPARAM_DDR_MEMORY_TYPE": {
-            "value": "DDR 3"
+            "value": "DDR 3 (Low Voltage)"
           },
           "PCW_UIPARAM_DDR_PARTNO": {
-            "value": "MT41K128M16 JT-125"
+            "value": "MT41K256M16 RE-125"
           },
           "PCW_UIPARAM_DDR_TRAIN_DATA_EYE": {
             "value": "1"

@@ -18,8 +18,6 @@
 
 #include "xparameters_ps.h"
 
-#define STDIN_BASEADDRESS 0xE0000000
-#define STDOUT_BASEADDRESS 0xE0000000
 
 /******************************************************************/
 
@@ -34,7 +32,7 @@
 
 /* Definitions for peripheral PS7_DDR_0 */
 #define XPAR_PS7_DDR_0_S_AXI_BASEADDR 0x00100000
-#define XPAR_PS7_DDR_0_S_AXI_HIGHADDR 0x0FFFFFFF
+#define XPAR_PS7_DDR_0_S_AXI_HIGHADDR 0x1FFFFFFF
 
 
 /******************************************************************/
