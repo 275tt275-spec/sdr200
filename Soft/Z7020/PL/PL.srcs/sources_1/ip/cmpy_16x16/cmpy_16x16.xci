@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "cmpy_16x16",
     "component_reference": "xilinx.com:ip:cmpy:6.0",
-    "ip_revision": "23",
+    "ip_revision": "22",
     "gen_directory": "../../../../PL.gen/sources_1/ip/cmpy_16x16",
     "parameters": {
       "component_parameters": {
@@ -78,12 +78,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
-        "IPREVISION": [ { "value": "23" } ],
+        "IPREVISION": [ { "value": "22" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../PL.gen/sources_1/ip/cmpy_16x16" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },

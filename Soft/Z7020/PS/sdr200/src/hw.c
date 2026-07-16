@@ -485,7 +485,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 	uint32_t fos_correct = 0;  /* fos gain */
 	uint32_t fpga_mode = 0;
 	uint32_t fpga_lsb = 0;
-	uint32_t out_correct = 2;  /* audio hp and lp gain*/
+	uint32_t out_correct = (6 << 16) | (6 << 0);  /* audio hp and lp gain*/
 	uint32_t freq_offset;
 
 	switch (mode)
@@ -498,7 +498,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		fos_filter = fos_ssb;
 		lp_filter = lp_2800;
 		hp_filter = hp_200;
-		out_correct = 2;
+		out_correct = (6 << 16) | (6 << 0);
 		fos_correct = 7;
 		freq_offset = 6041; // 1475 Hz
 		break;
@@ -510,7 +510,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		fos_filter = fos_ssb;
 		lp_filter = lp_2800;
 		hp_filter = hp_200;
-		out_correct = 2;
+		out_correct = (6 << 16) | (6 << 0);
 		fos_correct = 7;
 		freq_offset = 6041; // 1475 Hz
 		break;
@@ -522,7 +522,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		fos_filter = fos_digital;
 		lp_filter = lp_4000;
 		hp_filter = hp_200;
-		out_correct = 2;
+		out_correct = (6 << 16) | (6 << 0);
 		fos_correct = 7;
 		freq_offset = 8602; // 2100 Hz
 		break;
@@ -533,7 +533,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		fos_filter = fos_am;
 		lp_filter = lp_5000;
 		hp_filter = hp_50;
-		out_correct = 3;
+		out_correct = (7 << 16) | (6 << 0);
 		fos_correct = 7;
 		break;
 	case TRX_MODE_CW:
@@ -544,7 +544,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		fos_filter = fos_cw;
 		lp_filter = lp_1400;
 		hp_filter = hp_400;
-		out_correct = 0;
+		out_correct = (5 << 16) | (6 << 0);
 		fos_correct = 7;
 		freq_offset = 3277; // 800 Hz
 		break;
@@ -556,7 +556,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		fos_filter = fos_fm;
 		lp_filter = lp_5000;
 		hp_filter = hp_50;
-		out_correct = 3;
+		out_correct = (6 << 16) | (6 << 0);
 		freq_offset = 0;
 		fos_correct = 7;
 		break;
@@ -568,7 +568,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		fpga_lsb = 0;
 		lp_filter = lp_2800;
 		hp_filter = hp_200;
-		out_correct = 2;
+		out_correct = (6 << 16) | (6 << 0);
 		fos_correct = 7;
 		freq_offset = 6041; // 1475 Hz
 	}
