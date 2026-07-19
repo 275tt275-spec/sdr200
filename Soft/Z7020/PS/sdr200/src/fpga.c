@@ -120,7 +120,7 @@ inline void fpga_RXA_GainRF(uint32_t value)
 
 void fpga_RXA_AGC(s_agc* agc)
 {
-	fpga_write(FPGA_RXA_AGC_ON, agc->on);
+	fpga_write(FPGA_RXA_AGC_ON, agc->hold_on);
 	fpga_write(FPGA_RXA_AGC_MAX, agc->rssi_max);
 	fpga_write(FPGA_RXA_AGC_MAX2, agc->rssi_max_fast);
 	fpga_write(FPGA_RXA_AGC_MIN, agc->rssi_min);

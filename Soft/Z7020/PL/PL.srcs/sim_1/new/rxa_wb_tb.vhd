@@ -25,7 +25,7 @@ architecture Behavioral of tb_RXA_wide is
     constant FS            : real := 122880000.0;  -- Частота дискретизации (50 МГц)
     constant FC            : real := 15000000.0;  -- Частота несущей АМ (1.5 МГц)
     constant FM            : real := 5000.0;      -- Частота модуляции (5 кГц)
-    constant MOD_INDEX     : real := 0.8;         -- Коэффициент АМ модуляции (80%)
+    constant MOD_INDEX     : real := 0.0;         -- Коэффициент АМ модуляции (80%)
     constant CARRIER_AMPL  : real := 15000.0;     -- Амплитуда несущей (в пределах 16-бит Signed)
     
     -- ТУМБЛЕР ДЛЯ ПРОВЕРКИ: 
@@ -72,7 +72,7 @@ begin
         dds_valid <= '0';
 
         -- Основной цикл генерации потока данных АЦП
-        while sample_idx < 10000 loop  -- Генерируем 10000 отсчетов
+        while sample_idx < 100000 loop  -- Генерируем 10000 отсчетов
             t := real(sample_idx) / FS;
             
             -- Модулирующий звуковой сигнал (Синусоида 100 кГц)

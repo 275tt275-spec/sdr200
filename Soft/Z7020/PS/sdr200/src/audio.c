@@ -91,6 +91,7 @@ void audio_set_input(e_audio_input in)
 {
 	if(in == AUDIO_IN_USB)
 	{
+		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, 0x038);
 		nau8822_register_write(NAU8822_REG_INPUT_CONTROL, 0);
 		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, 0);
 //		nau8822_register_write(NAU8822_REG_LEFT_MIXER_CONTROL, (0 << 6) | ( 1 << 5));
@@ -104,6 +105,7 @@ void audio_set_input(e_audio_input in)
 	}
 	else
 	{
+		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, 0x038 | (3 << 7));
 		nau8822_register_write(NAU8822_REG_INPUT_CONTROL, (3 << 4) | (3 << 0));
 		nau8822_register_write(NAU8822_REG_LEFT_MIXER_CONTROL, 0);
 		nau8822_register_write(NAU8822_REG_RIGHT_MIXER_CONTROL, 0);

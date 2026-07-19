@@ -93,7 +93,7 @@ component dac_out is
        s_dco_n : in STD_LOGIC
     );
     end component dac_out;
-    
+        
     signal daci_tdata, dacq_tdata : STD_LOGIC_VECTOR ( 15 downto 0 );
 
 begin

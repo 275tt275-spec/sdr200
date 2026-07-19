@@ -602,7 +602,7 @@ void hw_SetAGC(e_agc_type type)
 
 	switch(type) {
 	case AGC_FAST:
-		agc.on = 1;
+		agc.hold_on = (16 << 16) | 1;
 		agc.rssi_max = 0x08000000;
 		agc.rssi_max_fast = 0x10000000;
 		agc.rssi_min = 0x04000000;
@@ -613,7 +613,7 @@ void hw_SetAGC(e_agc_type type)
 		agc.gain_dec_fast = 200;
 		break;
 	case AGC_MIDDLE:
-		agc.on = 1;
+		agc.hold_on = (32 << 16) | 1;
 		agc.rssi_max = 0x08000000;
 		agc.rssi_max_fast = 0x10000000;
 		agc.rssi_min = 0x04000000;
@@ -624,7 +624,7 @@ void hw_SetAGC(e_agc_type type)
 		agc.gain_dec_fast = 100;
 		break;
 	case AGC_SLOW:
-		agc.on = 1;
+		agc.hold_on = (80 << 16) | 1;
 		agc.rssi_max = 0x08000000;
 		agc.rssi_max_fast = 0x10000000;
 		agc.rssi_min = 0x04000000;
@@ -635,7 +635,7 @@ void hw_SetAGC(e_agc_type type)
 		agc.gain_dec_fast = 20;
 		break;
 	default:
-		agc.on = 0;
+		agc.hold_on = 0;
 	}
 
 	fpga_RXA_AGC(&agc);
@@ -782,22 +782,24 @@ void hw_SetTXAMode(e_trx_mode mode)
 
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
-			fos_gain = 5;
+			fos_gain = 6;
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
 			freq_offset = 6041; // 1475 Hz
+			audio_gain = 71000;
 			break;
 		case TRX_MODE_LSB:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_LSB);
 
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 1;
-			fos_gain = 5;
+			fos_gain = 6;
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
 			freq_offset = 6041; // 1475 Hz
+			audio_gain = 71000;
 			break;
 		case TRX_MODE_DIGITAL:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_DIGU);
@@ -818,6 +820,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			fos_filter = fos_am;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
+			audio_gain = 50000;
 			break;
 		case TRX_MODE_CW:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_CWU);
@@ -832,11 +835,12 @@ void hw_SetTXAMode(e_trx_mode mode)
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_USB);
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
-			fos_gain = 5;
+			fos_gain = 6;
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
 			freq_offset = 6041; // 1475 Hz
+			audio_gain = 71000;
 		}
 
 		audio_set_input(audio);

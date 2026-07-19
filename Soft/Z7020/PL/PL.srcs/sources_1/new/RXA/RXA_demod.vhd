@@ -66,6 +66,7 @@ architecture Behavioral of RXA_demod is
     COMPONENT dds_16_24 IS
     PORT (
         aclk : IN STD_LOGIC;
+        aclken : IN STD_LOGIC;        
         s_axis_config_tvalid : IN STD_LOGIC;
         s_axis_config_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         m_axis_data_tvalid : OUT STD_LOGIC;
@@ -104,6 +105,11 @@ architecture Behavioral of RXA_demod is
     signal f3e_demod : std_logic_vector(31 downto 0) := (others => '0');  
     signal demod_out_data : std_logic_vector(31 downto 0) := (others => '0');   
     signal demod_out_en : std_logic := '0';
+-- ќптимизированный DC Remover дл€ 16 к√ц („астота среза ~39 √ц)
+    signal a3e_raw_data   : signed(31 downto 0) := (others => '0');
+    signal dc_est         : signed(37 downto 0) := (others => '0'); -- ”меньшено с 48 до 38 бит
+    signal a3e_clean_data : signed(31 downto 0) := (others => '0');
+
 
 begin
 
@@ -134,7 +140,8 @@ end process;
     
 dds_0 : dds_16_24
     PORT MAP (
-        aclk => cordic_in_tvalid,
+        aclk => aclk,
+        aclken => cordic_in_tvalid,
         s_axis_config_tvalid => config_tvalid,
         s_axis_config_tdata => config_tdata,
         m_axis_data_tvalid => open,
@@ -160,6 +167,24 @@ a3e_cordic_0 : cordic_a3e
       m_axis_dout_tvalid => a3e_out_tvalid,
       m_axis_dout_tdata => a3e_out_tdata
     );
+    
+-- ¬ысокопроизводительный DC Remover дл€ сетки 16 к√ц
+    process(aclk)
+    begin
+        if rising_edge(aclk) then
+            if a3e_out_tvalid = '1' then
+                -- ‘иксируем сырое значение амплитуды јћ из CORDIC
+                a3e_raw_data <= signed(a3e_out_tdata(31 downto 0));
+                
+                -- ‘ормула IIR: dc_est = dc_est + raw_data - (dc_est >> 6)
+                -- —двиг на 6 бит идеально подходит дл€ полосы 16 к√ц
+                dc_est <= dc_est + resize(a3e_raw_data, 38) - shift_right(dc_est, 6);
+                
+                -- ¬ычитаем посто€нную составл€ющую из сигнала
+                a3e_clean_data <= a3e_raw_data - resize(shift_right(dc_est, 6), 32);
+            end if;
+        end if;
+    end process;
         
 process(aclk)
 begin
@@ -167,7 +192,8 @@ begin
 	    demod_out_en <= '0';
 	    if modulation = "01" then       -- a3e
 	        if a3e_out_tvalid = '1' then
-                demod_out_data <= a3e_out_tdata(31 downto 0);
+--                demod_out_data <= a3e_out_tdata(31 downto 0);
+                demod_out_data <= std_logic_vector(a3e_clean_data);
                 demod_out_en <= '1';
             end if;  
         elsif modulation = "11" then     -- f3e   

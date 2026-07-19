@@ -126,7 +126,7 @@ typedef enum tag_fpga_mod {
 
 typedef struct tag_agc
 {
-	uint32_t on;
+	uint32_t hold_on;
 	uint32_t rssi_max;
 	uint32_t rssi_max_fast;
 	uint32_t rssi_min;

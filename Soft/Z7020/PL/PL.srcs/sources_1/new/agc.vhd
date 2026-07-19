@@ -89,7 +89,7 @@ architecture Behavioral of agc is
     signal rd_addr : STD_LOGIC_VECTOR (5 downto 0) := (others => '0');
     signal rssi_rd : STD_LOGIC_VECTOR (31 downto 0);
     signal rssi_max_value : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
-    signal rssi_max_valid : STD_LOGIC := '1';
+--    signal rssi_max_valid : STD_LOGIC := '1';
     signal agc_on : STD_LOGIC := '1';
     signal rf_gain : STD_LOGIC_VECTOR (15 downto 0) := x"0020";
     signal rf_gain_old : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
@@ -105,10 +105,18 @@ architecture Behavioral of agc is
     signal rssi_gt_max      : std_logic := '0';
     signal rssi_lt_min_fast : std_logic := '0';
     signal rssi_lt_min      : std_logic := '0';
+    
+    -- Регистр для хранения настроек времени удержания (задается из PS)
+    signal agc_hold_cfg : unsigned(15 downto 0) := x"0064"; -- по умолчанию 100 тактов    
+    -- Текущий счетчик тактов удержания
+    signal hold_counter : unsigned(15 downto 0) := (others => '0');    
+    -- Разрешение на увеличение усиления
+    signal gain_inc_allowed : std_logic := '0';
 
 begin
 
---    gain_data <= s_axis_tdata * gain(17 downto 2);     
+--    gain_data <= s_axis_tdata * gain(17 downto 2);   
+
     
 cmd_process : process (aclk) is
 begin 
@@ -118,6 +126,7 @@ begin
                 rf_gain <= cfg_dina(15 downto 0); 
             elsif cfg_addra = "001" then
                 agc_on <= cfg_dina(0);    
+                agc_hold_cfg <= unsigned(cfg_dina(31 downto 16)); 
             elsif cfg_addra = "010" then
                 rssi_max <= cfg_dina;
             elsif cfg_addra = "011" then
@@ -195,20 +204,8 @@ max_tree_inst : ram_max_finder
             data_in        => m_axis_rssi_tdata,
             data_in_valid  => m_axis_rssi_tvalid,
             max_out        => rssi_max_value,
-            max_out_valid  => rssi_max_valid
+            max_out_valid  => open
         );
-    
---process(aclk)
---begin
---	if rising_edge(aclk) then	
---		if m_axis_dout_tvalid = '1' then
---		    m_axis_rssi_tdata <= std_logic_vector(abs(signed(m_axis_dout_tdata(31 downto 0)))); 
---		    m_axis_rssi_tvalid <= '1';     
---		else
---		   m_axis_rssi_tvalid <= '0';            
---		end if;  
---	end if;
---end process;
     
 --    m_axis_rssi_tdata <= std_logic_vector(abs(signed(m_axis_dout_tdata(31 downto 0)))); 
     m_axis_tdata <= gain_tdata;
@@ -223,6 +220,26 @@ begin
         if rssi_max_value < rssi_min         then rssi_lt_min <= '1';      else rssi_lt_min <= '0';      end if;
     end if;
 end process;
+
+hold_timer_process : process (aclk) is
+begin
+    if rising_edge(aclk) then
+        -- Если сигнал в норме или превышен, сбрасываем таймер удержания
+        if (rssi_gt_max = '1') or (rssi_gt_max_fast = '1') or (rssi_lt_min = '0') then
+            hold_counter     <= (others => '0');
+            gain_inc_allowed <= '0';
+        else
+            -- Если сигнал стабильно слабый, считаем такты
+            if hold_counter < agc_hold_cfg then
+                hold_counter     <= hold_counter + 1;
+                gain_inc_allowed <= '0';
+            else
+                -- Время удержания истекло, разрешаем поднять Gain
+                gain_inc_allowed <= '1';
+            end if;
+        end if;
+    end if;
+end process hold_timer_process;
 
 agc_process : process (aclk) is
 begin
@@ -246,11 +263,13 @@ begin
                         gain <= gain - gain_dec_fast;
                     elsif (rssi_gt_max = '1') and (gain >= gain_dec) then
                         gain <= gain - gain_dec;
-                    elsif rssi_max_valid = '1' then
-                        if (rssi_lt_min_fast = '1') and (gain < ("01" & x"FFFF" - gain_inc_fast)) then
-                            gain <= gain + gain_inc_fast;
-                        elsif (rssi_lt_min = '1') and (gain < ("01" & x"FFFF" - gain_inc)) then
-                            gain <= gain + gain_inc;
+                    else 
+                        if gain_inc_allowed = '1' then
+                            if (rssi_lt_min_fast = '1') and (gain < ("01" & x"FFFF" - gain_inc_fast)) then
+                                gain <= gain + gain_inc_fast;
+                            elsif (rssi_lt_min = '1') and (gain < ("01" & x"FFFF" - gain_inc)) then
+                                gain <= gain + gain_inc;
+                            end if;
                         end if;
                     end if;
                 end if;
