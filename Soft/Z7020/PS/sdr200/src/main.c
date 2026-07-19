@@ -183,11 +183,11 @@ void SendToCore1(uint32_t type, uint32_t len, void* value)
 	if(pBuffer->rd_cnt != counter)
 	{
 		vTaskDelay(pdMS_TO_TICKS( DELAY_4_MSECOND ));
-		Xil_DCacheInvalidateRange((INTPTR)&pBuffer->rd_cnt, 4);
-		if(pBuffer->rd_cnt != counter)
-		{
-			return;
-		}
+//		Xil_DCacheInvalidateRange((INTPTR)&pBuffer->rd_cnt, 4);
+//		if(pBuffer->rd_cnt != counter)
+//		{
+//			return;
+//		}
 	}
 
 	pBuffer->wr_cnt = ++counter;

@@ -485,7 +485,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 	uint32_t fos_correct = 0;  /* fos gain */
 	uint32_t fpga_mode = 0;
 	uint32_t fpga_lsb = 0;
-	uint32_t out_correct = (6 << 16) | (6 << 0);  /* audio hp and lp gain*/
+	uint32_t out_correct = ((6 << 16) | (6 << 0));  /* audio hp and lp gain*/
 	uint32_t freq_offset;
 
 	switch (mode)
@@ -498,7 +498,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		fos_filter = fos_ssb;
 		lp_filter = lp_2800;
 		hp_filter = hp_200;
-		out_correct = (6 << 16) | (6 << 0);
+		out_correct = ((6 << 16) | (6 << 0));
 		fos_correct = 7;
 		freq_offset = 6041; // 1475 Hz
 		break;
@@ -573,7 +573,7 @@ void hw_SetRXAMode(e_trx_mode mode)
 		freq_offset = 6041; // 1475 Hz
 	}
 
-	hw_device.TXA_offset = 0;
+//	hw_device.TXA_offset = 0;
 
 	fpga_RXA_MOD(fpga_mode);
 	fpga_RXA_OFFSET(freq_offset);
@@ -661,15 +661,23 @@ void hw_SetPTT(int on, e_tx_input in)
 		hw_SetTXAFreq(e_vars->vfoA);
 
 		hw_device.TxOn = 1;
+#if 0
 		if((e_vars->mode == TRX_MODE_CW) || (in == TX_TUNE))
 			fpga_TXA_Enable(1, 0);
 		else
 			fpga_TXA_Enable(1, 1);
+#else
+		fpga_TXA_Enable(1, 0);
+#endif
 		if(hw_device.lin == 1)
 		{
+			SendToCore1Uint32(SET_TXA_SET_PS_TURNON, 1);
 			SendToCore1Uint32(SET_TXA_SET_PS_MOX, 1);
+
 			vTaskDelay(pdMS_TO_TICKS( LINEAR_SET_DELAY ));
 			fpga_LinearEnable(&linear, 1);
+
+			SendToCore1Uint32(SET_TXA_SET_PS_MANCAL, 1);
 		}
 
 #if 0
@@ -682,16 +690,25 @@ void hw_SetPTT(int on, e_tx_input in)
 	}
 	else
 	{
+#if 0
+		SendToCore1Uint32(SET_TXA_SET_PS_MANCAL, 0);
+
 		if(e_vars->mode == TRX_MODE_CW)
 			fpga_TXA_Enable(0, 0);
 		else
 			fpga_TXA_Enable(0, 1);
 
 		SendToCore1Uint32(SET_TXA_SET_PS_MOX, 0);
+#else
+		fpga_TXA_Enable(0, 0);
+#endif
 		fpga_LinearEnable(&linear, 0);
 		hw_device.TxOn = 0;
 		hw_SetRXAFreq(e_vars->vfoA);
 		hw_SetRXAAtt(e_vars->RXAATT);
+
+//		SendToCore1Uint32(SET_TXA_SET_PS_TURNON, 0);
+//		SendToCore1Uint32(SET_TXA_SET_PS_RESET, 1);
 	}
 }
 
@@ -824,7 +841,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 
 		audio_set_input(audio);
 		fpga_TXA_MOD(fpga_mode);
-		fpga_TXA_LSB(fpga_lsb);
+		fpga_TXA_LSB(fpga_lsb == 0);
 		fpga_TXA_FOSGAIN(fos_gain);
 		fpga_TXA_FOS(fos_filter);
 		fpga_TXA_OFFSET(freq_offset);
@@ -887,7 +904,20 @@ inline void hw_SetLiner(int en)
 {
 	hw_device.lin = en;
 	if(hw_device.TxOn)
+	{
 		fpga_LinearEnable(&linear, en);
+		if(en)
+		{
+			SendToCore1Uint32(SET_TXA_SET_PS_TURNON, 1);
+			SendToCore1Uint32(SET_TXA_SET_PS_MOX, 1);
+			SendToCore1Uint32(SET_TXA_SET_PS_MANCAL, 1);
+		}
+		else
+		{
+			SendToCore1Uint32(SET_TXA_SET_PS_TURNON, 0);
+			SendToCore1Uint32(SET_TXA_SET_PS_RESET, 1);
+		}
+	}
 }
 
 void hw_SetLinerDDSIn(double freq)

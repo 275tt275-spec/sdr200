@@ -108,8 +108,8 @@ typedef float complex[2];
 extern "C" {
 #endif
 	void* malloc0(size_t nb_bytes);
-	bool InterlockedBitTestAndReset(volatile void *addr,  int bit);
-	bool InterlockedBitTestAndSet(volatile void *addr, int bit);
+	bool InterlockedBitTestAndReset(volatile long *Base, long Offset);
+	bool InterlockedBitTestAndSet(volatile long *Base, long Offset);
 #ifdef __cplusplus
 }
 #endif

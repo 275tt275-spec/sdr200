@@ -91,7 +91,7 @@ begin
 	       fir_delay <= 1;
 	    end if;	    
 	    
-	    if fir_delay < 7680 and fir_delay /= 0 then -- �������� ����� �������� �� 1 �����
+	    if fir_delay < 7680 and fir_delay /= 0 then 
 	       fir_delay <= fir_delay + 1;	        
 	    elsif fir_delay = 7680 then 
 	       config_tvalid <= '1'; 

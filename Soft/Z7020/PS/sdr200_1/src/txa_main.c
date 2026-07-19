@@ -1,7 +1,7 @@
 
 #include "txa_main.h"
 
-#define DEFAULT_COEFF	128
+#define DEFAULT_COEFF	256
 
 struct _txa txa[1];
 struct _ch ch;
@@ -621,11 +621,11 @@ void TXASetupBPFilters(int channel)
 		CalcBandpassFilter (txa[channel].bp0.p, -2700, -150, 2.0);
 		if (txa[channel].compressor.p->run)
 		{
-			CalcBandpassFilter (txa[channel].bp1.p, txa[channel].f_low, txa[channel].f_high, 2.0);
+			CalcBandpassFilter (txa[channel].bp1.p, -2700, -150, 2.0);
 			txa[channel].bp1.p->run = 1;
 			if (txa[channel].osctrl.p->run)
 			{
-				CalcBandpassFilter (txa[channel].bp2.p, txa[channel].f_low, txa[channel].f_high, 1.0);
+				CalcBandpassFilter (txa[channel].bp2.p, -2700, -150, 1.0);
 				txa[channel].bp2.p->run = 1;
 			}
 		}
@@ -634,11 +634,11 @@ void TXASetupBPFilters(int channel)
 		CalcBandpassFilter (txa[channel].bp0.p, 150, 2700, 2.0);
 		if (txa[channel].compressor.p->run)
 		{
-			CalcBandpassFilter (txa[channel].bp1.p, txa[channel].f_low, txa[channel].f_high, 2.0);
+			CalcBandpassFilter (txa[channel].bp1.p, 150, 2700, 2.0);
 			txa[channel].bp1.p->run = 1;
 			if (txa[channel].osctrl.p->run)
 			{
-				CalcBandpassFilter (txa[channel].bp2.p, txa[channel].f_low, txa[channel].f_high, 1.0);
+				CalcBandpassFilter (txa[channel].bp2.p, 150, 2700, 1.0);
 				txa[channel].bp2.p->run = 1;
 			}
 		}

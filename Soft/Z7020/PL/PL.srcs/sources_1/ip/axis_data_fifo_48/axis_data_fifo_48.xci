@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "axis_data_fifo_48",
     "component_reference": "xilinx.com:ip:axis_data_fifo:2.0",
-    "ip_revision": "11",
+    "ip_revision": "12",
     "gen_directory": "../../../../PL.gen/sources_1/ip/axis_data_fifo_48",
     "parameters": {
       "component_parameters": {
@@ -11,7 +11,7 @@
         "TID_WIDTH": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "TDEST_WIDTH": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "TUSER_WIDTH": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "FIFO_DEPTH": [ { "value": "128", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "FIFO_DEPTH": [ { "value": "512", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "FIFO_MODE": [ { "value": "1", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "IS_ACLK_ASYNC": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "ACLKEN_CONV_MODE": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -40,7 +40,7 @@
         "C_AXIS_TDEST_WIDTH": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_AXIS_TUSER_WIDTH": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_AXIS_SIGNAL_SET": [ { "value": "0b00000000000000000000000000000011", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
-        "C_FIFO_DEPTH": [ { "value": "128", "resolve_type": "generated", "format": "long", "usage": "all" } ],
+        "C_FIFO_DEPTH": [ { "value": "512", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_FIFO_MODE": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_IS_ACLK_ASYNC": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_SYNCHRONIZER_STAGE": [ { "value": "3", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -66,12 +66,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
-        "IPREVISION": [ { "value": "11" } ],
+        "IPREVISION": [ { "value": "12" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../PL.gen/sources_1/ip/axis_data_fifo_48" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
-        "SWVERSION": [ { "value": "2023.2" } ],
+        "SWVERSION": [ { "value": "2023.2.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },

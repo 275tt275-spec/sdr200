@@ -32,7 +32,6 @@ end audio_filter;
 
 architecture Behavioral of audio_filter is
 
-    
     COMPONENT fir_audio_lp IS
     PORT (
         aclk : IN STD_LOGIC;
@@ -133,9 +132,9 @@ architecture Behavioral of audio_filter is
     signal hp_out_tdata  : STD_LOGIC_VECTOR(31 DOWNTO 0);
     signal hp_out_tvalid : STD_LOGIC;
     
-    signal lp_shift : integer range 0 to 16 := 1;
-    signal hp_shift : integer range 0 to 16 := 1;
- 
+    signal lp_shift : integer range 0 to 16 := 6;
+    signal hp_shift : integer range 0 to 16 := 6;
+     
 begin
 
 -- ==============================================
@@ -157,8 +156,8 @@ begin
                 idx_hp <= 0;
                 delay_count_lp <= 0;
                 delay_count_hp <= 0;                
-                lp_shift <= 1;
-                hp_shift <= 1;
+                lp_shift <= 6;
+                hp_shift <= 6;
                                 
                 config_tdata <= (others => '0');
                 
@@ -237,8 +236,8 @@ begin
                             end if;
                             
                         when x"10" =>  -- Настройка коррекции усиления
-                            lp_shift <= to_integer(unsigned(cfg_dina(2 downto 0)));
-                            hp_shift <= to_integer(unsigned(cfg_dina(18 downto 16)));                            
+                            lp_shift <= to_integer(unsigned(cfg_dina));
+                            hp_shift <= to_integer(unsigned(cfg_dina));                            
                         when others => null;  -- Игнорируем неизвестные адреса
                     end case;
                 end if;
@@ -311,6 +310,5 @@ round_lp : axis_shift_sat_round_32to24
         m_axis_tready => '1',
         overflow => open
     );
-
 
 end Behavioral;

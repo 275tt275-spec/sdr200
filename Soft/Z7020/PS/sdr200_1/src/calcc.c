@@ -555,10 +555,16 @@ void pscc (int channel, int size, float* tx, float* rx)
 		{
 			case LRESET:
 				InterlockedExchange (&a->ctrl.current_state, LRESET);
+				a->ctrl.calcinprogress = 0;
 				a->ctrl.reset = 0;
 				if (!a->ctrl.turnon)
 					if (InterlockedBitTestAndReset(&a->ctrl.running, 0))
+					{
 //						ReleaseSemaphore(a->Sem_TurnOff, 1, 0);
+						EnterCriticalSection(&a->ctrl.cs_SafeToEnd);
+						SetTXAiqcEnd(a->channel);
+						LeaveCriticalSection(&a->ctrl.cs_SafeToEnd);
+					}
 				a->info[14] = 0;
 				a->ctrl.env_maxtx = 0.0;
 				a->ctrl.bs_count = 0;
@@ -690,9 +696,27 @@ void pscc (int channel, int size, float* tx, float* rx)
 				break;
 			case LCALC:
 				InterlockedExchange (&a->ctrl.current_state, LCALC);
+#if 0
+
 				if (!a->ctrl.calcinprogress)	
 				{
 					a->ctrl.calcinprogress = 1;
+					if (!InterlockedAnd(&a->calccorr_bypass, 0xffffffff))
+					{
+						calc(a);
+						if (a->scOK)
+						{
+							EnterCriticalSection (&a->ctrl.cs_SafeToEnd);
+							if (!InterlockedBitTestAndSet(&a->ctrl.running, 0))
+								SetTXAiqcStart(a->channel, a->cm, a->cc, a->cs);
+							else
+								SetTXAiqcSwap(a->channel, a->cm, a->cc, a->cs);
+							LeaveCriticalSection(&a->ctrl.cs_SafeToEnd);
+						}
+						InterlockedBitTestAndSet(&a->ctrl.calcdone, 0);
+					}
+
+
 //					ReleaseSemaphore(a->Sem_CalcCorr, 1, 0);
 				}
 
@@ -716,6 +740,36 @@ void pscc (int channel, int size, float* tx, float* rx)
 						a->ctrl.state = LSETUP;
 					else a->ctrl.state = LWAIT;
 				}
+#else
+				calc(a);
+				if (a->scOK)
+				{
+					if (!InterlockedBitTestAndSet(&a->ctrl.running, 0))
+						SetTXAiqcStart(a->channel, a->cm, a->cc, a->cs);
+					else
+						SetTXAiqcSwap(a->channel, a->cm, a->cc, a->cs);
+
+					memcpy (a->info, a->binfo, 8 * sizeof (int));
+					a->info[14] = _InterlockedAnd (&a->ctrl.running, 1);
+					a->ctrl.calcinprogress = 0;
+					if (a->ctrl.reset)
+						a->ctrl.state = LRESET;
+					else if (a->ctrl.turnon)
+						a->ctrl.state = LTURNON;
+					else if (a->scOK)
+					{
+						a->ctrl.bs_count = 0;
+						a->ctrl.state = LDELAY;
+					}
+					else if (++(a->ctrl.bs_count) >= 2)
+						a->ctrl.state = LRESET;
+					else if (InterlockedAnd (&a->mox, 1) && InterlockedAnd (&a->solidmox, 1))
+						a->ctrl.state = LSETUP;
+					else a->ctrl.state = LWAIT;
+				}
+				else
+					a->ctrl.state = LRESET;
+#endif
 				break;
 			case LDELAY:
 				InterlockedExchange (&a->ctrl.current_state, LDELAY);

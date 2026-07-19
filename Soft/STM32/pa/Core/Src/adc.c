@@ -34,8 +34,8 @@ static uint32_t 	acc_current = 0;
 static uint32_t 	acc_voltage = 0;
 static s_adc_poly	coeff_ImA = {0, 1.6 * (1 << 16), -10 * (1 << 16)};
 static s_adc_poly	coeff_V10mV = {0, 0.883 * (1 << 16), 0 * (1 << 16)};
-static s_adc_poly	coeff_biasPA0 = {0, -2.0 * (1 << 16), 1660 * (1 << 16)};
-static s_adc_poly	coeff_biasPA1 = {0, -2.0 * (1 << 16), 1660 * (1 << 16)};
+static s_adc_poly	coeff_biasPA0 = {0, -2.0 * (1 << 16), 1390 * (1 << 16)};
+static s_adc_poly	coeff_biasPA1 = {0, -2.0 * (1 << 16), 1390 * (1 << 16)};
 
 void adc_start(void)
 {
@@ -94,10 +94,12 @@ static void adc_measure(void)
 		{
 			gpio_set_fail();
 		}
+#if 0
 		if((pa_V10mV > MAX_VOLTAGE) || (pa_V10mV < MIN_VOLTAGE))
 		{
 			gpio_set_fail();
 		}
+#endif
 	}
 }
 

@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\projects\StationVT\Soft\Calibrator\x64\Debug\KompexSQLiteWrapper_d.dll</FullPath>
+      <FullPath>D:\projects\sdr200\Soft\pcSoft\Calibrator\x64\Debug\KompexSQLiteWrapper_d.dll</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

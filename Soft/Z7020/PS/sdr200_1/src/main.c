@@ -31,8 +31,8 @@
 #include "shared_region.h"
 #include "comm.h"
 
-#define IN_SIZE 64
-#define DSP_SIZE 64
+#define IN_SIZE 128
+#define DSP_SIZE 128
 #define IQC_SIZE 64
 
 #define SGI_FROM_CORE0  		0  // Core 1 слушает SGI 0 (настроенный контроллером Core 0)
@@ -120,7 +120,7 @@ int main()
 	runs.phrot = 0;					// phase rotator
 	runs.micmeter = 0;				// MIC meter
 	runs.amsq = 0;					// downward expander capture
-	runs.eqp = 1;					// pre-EQ
+	runs.eqp = 0;					// pre-EQ
 	runs.eqmeter = 0;				// EQ meter
 	runs.preemph = 0;				// FM pre-emphasis
 	runs.leveler = 1;				// Leveler
@@ -184,8 +184,8 @@ int main()
 	set_dsp(IN_SIZE, DSP_SIZE, 16000, 16000, 16000);
 	create_txa(channel, &runs);
 
-	SetPSRunCal(channel, 1);
-	SetPSMox(channel, 1);
+//	SetPSRunCal(channel, 1);
+//	SetPSMox(channel, 1);
 
     while(1)
     {
@@ -200,7 +200,8 @@ int main()
 
 static void main_cmd_tick(void)
 {
-	if (data_ready) {
+//	if (data_ready)
+	{
 	      // Инвалидация кэша перед чтением
 	      Xil_DCacheInvalidateRange((INTPTR)&Core0toCore1->wr_cnt, 3 * sizeof(uint32_t));
 	      if(rd_cnt_old != Core0toCore1->wr_cnt)
@@ -211,9 +212,9 @@ static void main_cmd_tick(void)
 	    		  main_parse_cmd(Core0toCore1->type, Core0toCore1->lenght, (const uint8_t*)&Core0toCore1->data);
 	    	  }
 	    	  rd_cnt_old = Core0toCore1->wr_cnt;
-	    	  Core0toCore1->rd_cnt = rd_cnt_old;
-	    	  Xil_DCacheFlushRange((INTPTR)&Core0toCore1->rd_cnt, sizeof(uint32_t));
 	      }
+    	  Core0toCore1->rd_cnt = rd_cnt_old;
+    	  Xil_DCacheFlushRange((INTPTR)&Core0toCore1->rd_cnt, sizeof(uint32_t));
 	      data_ready = 0;  // Сброс флага
 	}
 }
@@ -248,6 +249,12 @@ static void main_txa_tick(void)
 
 static void main_iqc_tick(void)
 {
+#define TEMP_SIZE	16384
+	static float temp_tx[TEMP_SIZE];
+	static float temp_rx[TEMP_SIZE];
+	static int temp_ptr = 0;
+
+
 	uint32_t world_0 = XLlFifo_iRxOccupancy(&fifo_iqc0);
 	uint32_t world_1 = XLlFifo_iRxOccupancy(&fifo_iqc1);
 	if(world_0 && world_1)
@@ -264,7 +271,15 @@ static void main_iqc_tick(void)
 		iqc_tx[iqc_ptr * 2 + 1] = iqc_tx[iqc_ptr * 2 + 1] / 32768.;
 		iqc_rx[iqc_ptr * 2] = iqc_rx[iqc_ptr * 2] / 32768.;
 		iqc_rx[iqc_ptr * 2 + 1] = iqc_rx[iqc_ptr * 2 + 1] / 32768.;
+#if 1
+		temp_tx[temp_ptr] = iqc_tx[iqc_ptr * 2];
+		temp_rx[temp_ptr++] = iqc_rx[iqc_ptr * 2];
+		temp_tx[temp_ptr] = iqc_tx[iqc_ptr * 2 + 1];
+		temp_rx[temp_ptr++] = iqc_rx[iqc_ptr * 2 + 1];
 
+		if(temp_ptr >= TEMP_SIZE)
+			temp_ptr = 0;
+#endif
 		if(++iqc_ptr >= IQC_SIZE)
 		{
 			XGpioPs_WritePin(&GpioInstance, GPIO_TEST_PIN_1, 0x1);

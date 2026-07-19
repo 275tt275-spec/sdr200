@@ -171,6 +171,7 @@ architecture Behavioral of RXA is
     COMPONENT audio_filter IS
     Port ( 
         aclk : in STD_LOGIC;
+        aresetn       : in  STD_LOGIC;
         s_axis_in_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_in_tvalid : in STD_LOGIC;
         m_axis_out_tdata : out STD_LOGIC_VECTOR (23 downto 0);
@@ -233,7 +234,7 @@ architecture Behavioral of RXA is
     signal real_rssi_tdata : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
     signal agc_cfg_wr : STD_LOGIC := '0';
     signal audio_clk : STD_LOGIC;
-
+    
 begin
 
     cfg_douta <= real_rssi_tdata;
@@ -427,6 +428,7 @@ demodulator_0 : RXA_demod
 audio_filter_0 : audio_filter
     PORT MAP ( 
         aclk => audio_clk,
+        aresetn => aresetn,
         s_axis_in_tdata => demod_s24_out_tdata,
         s_axis_in_tvalid => demod_s24_out_tvalid,
         m_axis_out_tdata => m_axis_demod_tdata,

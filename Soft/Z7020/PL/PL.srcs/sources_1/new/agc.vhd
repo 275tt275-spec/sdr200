@@ -55,6 +55,20 @@ architecture Behavioral of agc is
             m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(63 DOWNTO 0)
         );
     END COMPONENT cordic_rssi;
+    
+     COMPONENT ram_max_finder IS
+        GENERIC (
+            DATA_WIDTH  : positive := 32;
+            WINDOW_SIZE : positive := 64
+        );
+        PORT (
+            aclk           : in  std_logic;
+            data_in        : in  std_logic_vector(31 downto 0);
+            data_in_valid  : in  std_logic;
+            max_out        : out std_logic_vector(31 downto 0);
+            max_out_valid  : out std_logic
+        );
+    END COMPONENT;
 
     signal s_axis_cartesian_tvalid : STD_LOGIC;
     signal s_axis_cartesian_tdata : STD_LOGIC_VECTOR(63 DOWNTO 0) := (others => '0');
@@ -160,15 +174,41 @@ rssi_0 : cordic_rssi
     
 process(aclk)
 begin
-	if rising_edge(aclk) then	
-		if m_axis_dout_tvalid = '1' then
-		    m_axis_rssi_tdata <= std_logic_vector(abs(signed(m_axis_dout_tdata(31 downto 0)))); 
-		    m_axis_rssi_tvalid <= '1';     
-		else
-		   m_axis_rssi_tvalid <= '0';            
-		end if;  
-	end if;
+    if rising_edge(aclk) then
+        if m_axis_dout_tvalid = '1' then
+            -- 1 такт: берем модуль значения
+            m_axis_rssi_tdata     <= std_logic_vector(abs(signed(m_axis_dout_tdata(31 downto 0))));
+            m_axis_rssi_tvalid    <= '1';
+        else
+            m_axis_rssi_tvalid    <= '0';
+        end if;
+    end if;
 end process;
+
+max_tree_inst : ram_max_finder
+        GENERIC MAP (
+            DATA_WIDTH  => 32,
+            WINDOW_SIZE => 64
+        )
+        PORT MAP (
+            aclk           => aclk,
+            data_in        => m_axis_rssi_tdata,
+            data_in_valid  => m_axis_rssi_tvalid,
+            max_out        => rssi_max_value,
+            max_out_valid  => rssi_max_valid
+        );
+    
+--process(aclk)
+--begin
+--	if rising_edge(aclk) then	
+--		if m_axis_dout_tvalid = '1' then
+--		    m_axis_rssi_tdata <= std_logic_vector(abs(signed(m_axis_dout_tdata(31 downto 0)))); 
+--		    m_axis_rssi_tvalid <= '1';     
+--		else
+--		   m_axis_rssi_tvalid <= '0';            
+--		end if;  
+--	end if;
+--end process;
     
 --    m_axis_rssi_tdata <= std_logic_vector(abs(signed(m_axis_dout_tdata(31 downto 0)))); 
     m_axis_tdata <= gain_tdata;
@@ -226,53 +266,5 @@ begin
         end if;
     end if;
 end process agc_process;
-
-max_fifo_gen : for k in 0 to 31 generate	
-    RAM64X1D_inst : RAM64X1D
-    generic map (
-        INIT => X"0000000000000000", -- Initial contents of RAM
-        IS_WCLK_INVERTED => '0') -- Specifies active high/low WCLK
-    port map (
-        DPO => rssi_rd(k), -- Read-only 1-bit data output
-        SPO => open, -- R/W 1-bit data output
-        A0 => wr_addr(0), -- R/W address[0] input bit
-        A1 => wr_addr(1), -- R/W address[1] input bit
-        A2 => wr_addr(2), -- R/W address[2] input bit
-        A3 => wr_addr(3), -- R/W address[3] input bit
-        A4 => wr_addr(4), -- R/W address[4] input bit
-        A5 => wr_addr(5), -- R/W address[4] input bit
-        D => m_axis_rssi_tdata(k), -- Write 1-bit data input
-        DPRA0 => rd_addr(0), -- Read-only address[0] input bit
-        DPRA1 => rd_addr(1), -- Read-only address[1] input bit
-        DPRA2 => rd_addr(2), -- Read-only address[2] input bit
-        DPRA3 => rd_addr(3), -- Read-only address[3] input bit
-        DPRA4 => rd_addr(4), -- Read-only address[4] input bit
-        DPRA5 => rd_addr(5), -- Read-only address[4] input bit
-        WCLK => aclk,               -- Write clock input
-        WE => m_axis_rssi_tvalid    -- Write enable input
-    );
-end generate ;
-
--- Calculate max value form 64 vector	
-process(aclk)
-begin 
-   if rising_edge(aclk) then
-        if m_axis_rssi_tvalid = '1' then
-            wr_addr <= std_logic_vector(signed(wr_addr) + 1);
-            rssi_max_value <= rssi_rd;
-            rd_addr <= (others => '0');
-            rssi_max_valid <= '0';
-        end if;
-        if rssi_max_valid = '0' and rd_addr /= "111111" then
-            rd_addr <= std_logic_vector(signed(rd_addr) + 1);
-            if rssi_max_value < rssi_rd then
-                rssi_max_value <= rssi_rd;
-            end if; 
-        else
-            rssi_max_valid <= '1';   
-            rd_addr <= (others => '0');    
-        end if;              
-   end if;
-end process;
 
 end Behavioral;

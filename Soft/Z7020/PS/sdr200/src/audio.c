@@ -45,7 +45,7 @@ will be to unmute any outputs, and then begin normal operation.
 	/* Power Management 3 */
 	nau8822_register_write(NAU8822_REG_POWER_MANAGEMENT_3, 0x1FF);
 	/* Audio Interface */
-	nau8822_register_write(NAU8822_REG_AUDIO_INTERFACE, (3 << 5));
+	nau8822_register_write(NAU8822_REG_AUDIO_INTERFACE, (3 << 5) | (1 << 1));
 	/* Clock control 1 */
 	nau8822_register_write(NAU8822_REG_CLOCKING, 3 << 5); /* master clock source divide by 3 */
 	/* Clock control 2 */
@@ -56,8 +56,8 @@ will be to unmute any outputs, and then begin normal operation.
 	nau8822_register_write(NAU8822_REG_AUX1_MIXER, (1 << 0)); /* Right DAC output to AUX1 MIXER input path control */
 	/* Right Speaker Submixer */
 	nau8822_register_write(NAU8822_REG_RIGHT_SPEAKER_CONTROL, (1 << 4)); /* right speaker amplifier connected to submixer output (inverts RMIX for BTL) */
-	audio_speaker_volume(56, 56);
-	audio_headphone_volume(56, 56);
+	audio_speaker_volume(63, 63);
+	audio_headphone_volume(63, 63);
 	audio_dac_volume(255, 255);
 
 	nau8822_register_write(NAU8822_REG_DAC_CONTROL, (1 << 3)); /* 128x oversampling */
@@ -104,9 +104,9 @@ void audio_set_input(e_audio_input in)
 	}
 	else
 	{
-		nau8822_register_write(NAU8822_REG_INPUT_CONTROL, (3 << 4) | ( 3 << 0));
-//		nau8822_register_write(NAU8822_REG_LEFT_MIXER_CONTROL, 0);
-//		nau8822_register_write(NAU8822_REG_RIGHT_MIXER_CONTROL, 0);
+		nau8822_register_write(NAU8822_REG_INPUT_CONTROL, (3 << 4) | (3 << 0));
+		nau8822_register_write(NAU8822_REG_LEFT_MIXER_CONTROL, 0);
+		nau8822_register_write(NAU8822_REG_RIGHT_MIXER_CONTROL, 0);
 
 		nau8822_register_write(NAU8822_REG_LEFT_INP_PGA_CONTROL, 16);
 		nau8822_register_write(NAU8822_REG_RIGHT_INP_PGA_CONTROL, (1 << 8) | 16);
