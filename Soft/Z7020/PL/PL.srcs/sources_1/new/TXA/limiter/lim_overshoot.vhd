@@ -28,7 +28,7 @@ Port (
         fir_reload_tlast : in STD_LOGIC;
         fir_config_tdata : in STD_LOGIC_VECTOR(7 DOWNTO 0);
         fir_config_tvalid : in STD_LOGIC;
-        over : out STD_LOGIC;
+        over : out std_logic_vector(1 downto 0);
         denom_dbg : out std_logic_vector(15 downto 0); 
         aclk : in STD_LOGIC
     );
@@ -116,9 +116,20 @@ component lim_translate_cordic
     signal fir_in_tdata : std_logic_vector(47 downto 0);
     signal fir_in_tvalid : std_logic;
     signal fir_out_tdata : std_logic_vector(63 downto 0);
+    signal fir_out_tvalid : std_logic;
     type T_STATE is (IDLE, S0, S1, S2, S3, S4, S5);
     signal state : T_STATE := IDLE;
     signal delay_tvalid : std_logic := '0';
+    signal m_axis_data_tvalid_reg : std_logic := '0';
+    -- Константа сдвига для компенсации затухания.
+    -- GAIN_SHIFT = 0 -> срез (31 downto 8) [базовый]
+    -- GAIN_SHIFT = 1 -> срез (30 downto 7) [+6 дБ усиления]
+    -- GAIN_SHIFT = 2 -> срез (29 downto 6) [+12 дБ усиления] -- Выбрано по умолчанию
+    -- GAIN_SHIFT = 3 -> срез (28 downto 5) [+18 дБ усиления]
+    constant GAIN_SHIFT : integer := 7;     
+    -- Промежуточные сигналы
+    signal ch_a_24 : std_logic_vector(23 downto 0) := (others => '0');
+    signal ch_b_24 : std_logic_vector(23 downto 0) := (others => '0');
 
 begin
 
@@ -190,11 +201,22 @@ begin
        end if; 
        if state = S4 then    
            state <= S5; 
-           corr1 <= corr(15 downto 1) & '0';                       -- gain 2
+           if corr(15) = '1' then
+                corr1 <= x"FFFF"; -- Жесткая сатурация на максимуме
+            else
+                -- Если старший бит '0', переполнения нет. 
+                -- Безопасно сдвигаем влево (умножаем на 2)
+                corr1 <= corr(14 downto 0) & '0'; 
+            end if;
        end if;  
        if state = S5 then    
            state <= IDLE;  
-           denom <= corr1 + limit; 
+           -- Защита знаменателя от переполнения
+            if (x"FFFF" - corr1) < limit then
+                denom <= x"FFFF";
+            else
+                denom <= corr1 + limit;
+            end if;
            delay_tvalid <= '1';
        end if;                         
 	end if;
@@ -268,7 +290,7 @@ div_1 : lim_div
 
     fir_in_tdata <= divout_0 & divout_1;
     fir_in_tvalid <= divout_valid_0;
-    over <= div_over_0 or div_over_1;
+    over(0) <= div_over_0 or div_over_1;
      
 fir_0 : lim_lpf_fir
     PORT MAP (
@@ -283,12 +305,91 @@ fir_0 : lim_lpf_fir
         s_axis_reload_tready => open,
         s_axis_reload_tlast => fir_reload_tlast,
         s_axis_reload_tdata => fir_reload_tdata,
-        m_axis_data_tvalid => m_axis_data_tvalid,
+        m_axis_data_tvalid => fir_out_tvalid,
         m_axis_data_tdata => fir_out_tdata,
         event_s_reload_tlast_missing => open,
         event_s_reload_tlast_unexpected => open
     );
     
-    m_axis_data_tdata <= fir_out_tdata(63) & fir_out_tdata(54 downto 32) & fir_out_tdata(31) & fir_out_tdata(22 downto 0);
+ process(aclk)
+    -- Временные буферные переменные для каналов, чтобы код легко читался
+    variable val_a : std_logic_vector(31 downto 0);
+    variable val_b : std_logic_vector(31 downto 0);
+    
+    -- Знаковые биты каждого канала
+    variable sign_a : std_logic;
+    variable sign_b : std_logic;
+    
+    -- Переменные-флаги переполнения
+    variable overflow_a : boolean;
+    variable overflow_b : boolean;
+begin
+    if rising_edge(aclk) then
+        -- По умолчанию сбрасываем валидность шины Stream
+        m_axis_data_tvalid_reg <= '0';
+        over(1) <= '0';
+
+        if fir_out_tvalid = '1' then
+            m_axis_data_tvalid_reg <= '1';
+            -- Выделяем каналы по 32 бита во временные переменные
+            val_a := fir_out_tdata(63 downto 32);
+            val_b := fir_out_tdata(31 downto 0);            
+            -- Запоминаем исходные знаковые биты
+            sign_a := val_a(31);
+            sign_b := val_b(31);
+            -- ====================================================================
+            -- 1. АППАРАТНАЯ ПРОВЕРКА ПЕРЕПОЛНЕНИЯ ДЛЯ КАНАЛА А
+            -- ====================================================================
+            -- Целевое 24-битное окно при GAIN_SHIFT = 2 - это биты (29 downto 6).
+            -- Значит, все старшие биты от 31 до 29 (включая 29) должны быть равны знаку.
+            -- Проверяем биты с 31 по 29. Если хотя бы один из них отличается от знака - это переполнение.
+            
+            overflow_a := false;
+            for i in 31 downto (31 - GAIN_SHIFT) loop
+                if val_a(i) /= sign_a then
+                    overflow_a := true;
+                end if;
+            end loop;
+            if overflow_a then
+                -- Жестко ограничиваем (сатурируем) сигнал
+                over(1) <= '1';
+                if sign_a = '0' then
+                    ch_a_24 <= x"7FFFFF"; -- Максимум в плюс
+                else
+                    ch_a_24 <= x"800000"; -- Максимум в минус
+                end if;
+            else
+                -- Переполнения нет, вырезаем окно данных с нужным сдвигом усиления
+                ch_a_24 <= val_a((31 - GAIN_SHIFT) downto (8 - GAIN_SHIFT));
+            end if;
+            -- ====================================================================
+            -- 2. АППАРАТНАЯ ПРОВЕРКА ПЕРЕПОЛНЕНИЯ ДЛЯ КАНАЛА Б
+            -- ====================================================================
+            overflow_b := false;
+            for i in 31 downto (31 - GAIN_SHIFT) loop
+                if val_b(i) /= sign_b then
+                    overflow_b := true;
+                end if;
+            end loop;
+            if overflow_b then
+                -- Жестко ограничиваем (сатурируем) сигнал
+                over(1) <= '1';
+                if sign_b = '0' then
+                    ch_b_24 <= x"7FFFFF";
+                else
+                    ch_b_24 <= x"800000";
+                end if;
+            else
+                -- Переполнения нет, вырезаем окно данных с нужным сдвигом усиления
+                ch_b_24 <= val_b((31 - GAIN_SHIFT) downto (8 - GAIN_SHIFT));
+            end if;
+        end if;
+        -- 3. Плотная склейка двух каналов в 48-битную шину TDATA
+        m_axis_data_tdata <= ch_a_24 & ch_b_24;
+    end if;
+end process;
+    
+    m_axis_data_tvalid <= m_axis_data_tvalid_reg;
+--    m_axis_data_tdata <= fir_out_tdata(63) & fir_out_tdata(54 downto 32) & fir_out_tdata(31) & fir_out_tdata(22 downto 0);
 
 end Behavioral;

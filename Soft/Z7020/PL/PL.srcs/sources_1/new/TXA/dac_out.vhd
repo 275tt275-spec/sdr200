@@ -45,10 +45,13 @@ architecture Behavioral of dac_out is
 
     signal nclk : std_logic;
     signal dci : std_logic;
-    signal dco, dco_clk, dac_retsetn : std_logic;
+    signal dco, dco_clk, dac_resetn : std_logic;
     signal dout_i, dout_q : STD_LOGIC_VECTOR (15 downto 0);
     signal dout : STD_LOGIC_VECTOR (15 downto 0);
     signal dint_in, dint_out: STD_LOGIC_VECTOR (31 downto 0);
+    signal sync_reset_reg : std_logic_vector(1 downto 0) := "11";
+    attribute ASYNC_REG : string;
+    attribute ASYNC_REG of sync_reset_reg : signal is "TRUE";
     
 begin
 
@@ -60,7 +63,7 @@ begin
 clock_converter_0: clock_converter_32_0
     port map (
         m_axis_aclk => dco_clk,
-        m_axis_aresetn => dac_retsetn,
+        m_axis_aresetn => dac_resetn,
         s_axis_aclken => '1',
         m_axis_aclken => '1',
         m_axis_tdata => dint_out,
@@ -73,18 +76,15 @@ clock_converter_0: clock_converter_32_0
         s_axis_tvalid => '1'
     );
     
--- Регистр для синхронизации сброса в выходной тактовый домен
-FDRE_inst : FDRE
-    generic map (
-        INIT => '1'                                 -- Начальное значение
-    )
-    port map (
-        Q  => dac_retsetn,                          -- Выход
-        C  => dco_clk,                              -- Такт
-        CE => '1',                                  -- Разрешение такта
-        R  => '0',                                  -- Сброс
-        D  => aresetn                               -- Вход
-    );
+process(dco_clk)
+begin
+    if rising_edge(dco_clk) then
+        sync_reset_reg(0) <= aresetn;
+        sync_reset_reg(1) <= sync_reset_reg(0);
+    end if;
+end process;
+
+    dac_resetn <= sync_reset_reg(1);
 
 -- Дифференциальный входной буфер для такта ЦАП
 dco_ibufds : IBUFDS

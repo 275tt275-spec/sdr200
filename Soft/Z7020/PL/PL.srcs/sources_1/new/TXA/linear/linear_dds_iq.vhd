@@ -82,8 +82,8 @@ entity linear_dds_iq is
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (4 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
         s_axis_dds_tdata : in STD_LOGIC_VECTOR (31 downto 0);
-        dout_i : out  STD_LOGIC_VECTOR (23 downto 0);
-        dout_q : out  STD_LOGIC_VECTOR (23 downto 0);
+        dout_i : out  STD_LOGIC_VECTOR (15 downto 0);
+        dout_q : out  STD_LOGIC_VECTOR (15 downto 0);
         cfg_dout : out  STD_LOGIC_VECTOR (31 downto 0);
         m_ovf : out std_logic_vector(3 downto 0)
     );
@@ -250,8 +250,6 @@ signal agc_k_out : std_logic_vector(15 downto 0);
 
 signal dout_i_int, dout_q_int : std_logic_vector(15 downto 0);
 
-signal adc_shifts : std_logic_vector(2 downto 0) := (others => '0');
-
 --signal rms_dout : std_logic_vector(31 downto 0);
 signal rms_l : std_logic_vector(15 downto 0) := (others => '0');
 
@@ -260,37 +258,13 @@ signal overflow_i, overflow_q, overm_i, overm_q : STD_LOGIC;
 signal cfg_addr : std_logic_vector(3 downto 0);
 signal cfg_wr : std_logic := '0';
 
-    constant ACLK_DIVIDER : integer := ((122880000 / 32000) - 1);
-    signal sync_cnt : std_logic_vector(11 downto 0) := (others => '0');
-    signal valid32 : std_logic;
-
 begin
 
-valid32 <= '1' when sync_cnt = ACLK_DIVIDER else '0';
+    dout_i <= dout_i_int;
+    dout_q <= dout_q_int;
 
-process(aclk)
-begin
-    if rising_edge(aclk) then
-        if sync_cnt = ACLK_DIVIDER then
-            sync_cnt <= (others => '0');
-        else
-            sync_cnt <= sync_cnt + 1;
-        end if;
-    end if;
-end process;
-
-dout_i <= dout_i_int & x"00";
-dout_q <= dout_q_int & x"00";
-
----- Feedback from ADC
-din2c <= din2  							when adc_shifts = "000" else
-			din2(14 downto 0) & '0'		when adc_shifts = "001" else
-			din2(13 downto 0) & "00"	when adc_shifts = "010" else
-			din2(12 downto 0) & "000"	when adc_shifts = "011" else
-			din2(11 downto 0) & "0000"	when adc_shifts = "100" else
-			din2(10 downto 0) & "00000"	when adc_shifts = "101" else
-			din2(9 downto 0) & "000000"	when adc_shifts = "110" else
-			din2(8 downto 0) & "0000000";
+    ---- Feedback from ADC
+    din2c <= din2;
 
 inst_adc2zeroif : adc2zeroif
 		port map (
@@ -306,8 +280,6 @@ inst_adc2zeroif : adc2zeroif
 			q_out => fir_q
 		);
 		
--- PHASE Block
-
     wr_m <= s_axis_cfg_tvalid when s_axis_cfg_tdest(4) = '1' else '0';        
     m_cs <= '1' when s_axis_cfg_tdest(4) = '1' else '0';
     cfg_addr <= s_axis_cfg_tdest(3 downto 0);
@@ -554,8 +526,6 @@ begin
 --				elsif s_axis_cfg_tdata(2 downto 0) = "001" then
 --					cfg_dout <= rms_dout;
 				end if;                            
-            elsif cfg_addr = x"1" then
-                adc_shifts <= s_axis_cfg_tdata(2 downto 0);    
             elsif cfg_addr = x"2" then
                 agc_k <= s_axis_cfg_tdata(2 downto 0); 
             elsif cfg_addr = x"3" then

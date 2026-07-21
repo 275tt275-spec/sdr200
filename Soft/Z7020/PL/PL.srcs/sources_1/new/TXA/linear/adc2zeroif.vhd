@@ -48,14 +48,10 @@ architecture Behavioral of adc2zeroif is
 
 signal adc_no_dc, adc_no_dc_prev : std_logic_vector(15 downto 0);
 signal i_raw, q_raw : std_logic_vector(17 downto 0);
-signal mult_i_raw, mult_q_raw : std_logic_vector(17 downto 0);
 signal mult_i_hi_freq, mult_q_hi_freq : std_logic_vector(35 downto 0);
 signal i_hi_freq, q_hi_freq : std_logic_vector(17 downto 0);
 signal mult_cosine, mult_sine : std_logic_vector(17 downto 0);
 signal mult_icos, mult_qcos, mult_isin, mult_qsin : std_logic_vector(35 downto 0);
-
-signal scope_d : std_logic_vector(63 downto 0);
-signal scope_trg : std_logic_vector(1 downto 0) := "00";
 
 signal i_out_r : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
 signal q_out_r : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');

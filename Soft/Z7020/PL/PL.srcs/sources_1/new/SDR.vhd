@@ -111,24 +111,12 @@ entity SDR is
         CW_KEY : in STD_LOGIC;
         CAT_DTR : in STD_LOGIC;
         CAT_RTC : in STD_LOGIC;
-        irq : out STD_LOGIC; 
         m_axis_ser0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_axis_ser0_tvalid : out STD_LOGIC;
         m_axis_ser0_tlast : out STD_LOGIC;
         m_axis_ser1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_axis_ser1_tvalid : out STD_LOGIC;    
         m_axis_ser1_tlast : out STD_LOGIC; 
-        resetn_fifo : out STD_LOGIC; 
-        m_axis_i2s_tdata : out STD_LOGIC_VECTOR (23 downto 0);
-        m_axis_i2s_tvalid : out STD_LOGIC;   
-        m_axis_i2s_tlast : out STD_LOGIC; 
-        m_linear_iq0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_linear_iq0_tvalid : out std_logic;
-        m_linear_iq0_tlast : out STD_LOGIC; 
-        m_linear_iq1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_linear_iq1_tvalid : out std_logic;
-        m_linear_iq1_tlast : out STD_LOGIC; 
-        gpio_out : out STD_LOGIC_VECTOR (5 downto 0);
         TX_ON : out std_logic;
         TX_FAIL : in std_logic;
 		aclk_122 : out std_logic
@@ -153,6 +141,19 @@ architecture Behavioral of SDR is
             m_axis_tdata : out STD_LOGIC_VECTOR ( 15 downto 0 )
         );
     END COMPONENT clock_converter_2;
+    
+    COMPONENT adc_sync is
+    Port (         
+        adc0_data : in std_logic_vector(15 downto 0);
+        adc0_clk : in STD_LOGIC;
+        adc1_data : in std_logic_vector(15 downto 0);
+        adc1_clk : in STD_LOGIC;
+        adc0_out : out std_logic_vector(15 downto 0);
+        adc1_out : out std_logic_vector(15 downto 0);
+        aresetn : in STD_LOGIC;
+        aclk : in STD_LOGIC
+    );
+    end COMPONENT adc_sync;
     
     component adc_input is
         port (
@@ -212,10 +213,6 @@ architecture Behavioral of SDR is
         cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
 		cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
         cfg_wr : in STD_LOGIC;
-        m_linear_iq0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_linear_iq0_tvalid : out std_logic;
-        m_linear_iq1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_linear_iq1_tvalid : out std_logic;
         aresetn : in STD_LOGIC;
         aclk : in STD_LOGIC
     );
@@ -325,8 +322,7 @@ begin
                   HW_cfg_douta;                                  
 
     HW_cfg_douta <= x"0000000" & CAT_DTR & CAT_RTC & CW_KEY & PTT;   
-    
-    gpio_out <= (others => '0');  
+
     m_axis_ser1_tdata <= (others => '0');  
     
 cmd_process : process (aclk) is
@@ -416,39 +412,51 @@ adc_input_1: component adc_input
         adc_max_value => adc1_max_value,
         adc_max_rst => adc1_max_rst,
         adc_clk_out => aclk1
+    );  
+    
+adc_sync_0 : adc_sync
+    Port map (         
+        adc0_data => m_axis_adc0_tdata,
+        adc0_clk => aclk,
+        adc1_data => m_axis_adc1_tdata,
+        adc1_clk => aclk1,
+        adc0_out => axis_adc0_tdata,
+        adc1_out => axis_adc1_tdata,
+        aresetn => aresetn,
+        aclk => aclk
     );
     
-clock_converter_0: clock_converter_2
-    port map (
-        m_axis_aclk => aclk,
-        m_axis_aresetn => aresetn,
-        s_axis_aclken => '1',
-        m_axis_aclken => '1',
-        m_axis_tdata => axis_adc0_tdata,
-        m_axis_tready => '1',
-        m_axis_tvalid => open,
-        s_axis_aclk => aclk,
-        s_axis_aresetn => aresetn,
-        s_axis_tdata => m_axis_adc0_tdata,
-        s_axis_tready => open,
-        s_axis_tvalid => '1'
-    );
-    
-clock_converter_1: clock_converter_2
-    port map (
-        m_axis_aclk => aclk,
-        m_axis_aresetn => aresetn,
-        s_axis_aclken => '1',
-        m_axis_aclken => '1',
-        m_axis_tdata => axis_adc1_tdata,
-        m_axis_tready => '1',
-        m_axis_tvalid => open,
-        s_axis_aclk => aclk1,
-        s_axis_aresetn => aresetn,
-        s_axis_tdata => m_axis_adc1_tdata,
-        s_axis_tready => open,
-        s_axis_tvalid => '1'
-    );
+--clock_converter_0: clock_converter_2
+--    port map (
+--        m_axis_aclk => aclk,
+--        m_axis_aresetn => aresetn,
+--        s_axis_aclken => '1',
+--        m_axis_aclken => '1',
+--        m_axis_tdata => axis_adc0_tdata,
+--        m_axis_tready => '1',
+--        m_axis_tvalid => open,
+--        s_axis_aclk => aclk,
+--        s_axis_aresetn => aresetn,
+--        s_axis_tdata => m_axis_adc0_tdata,
+--        s_axis_tready => open,
+--        s_axis_tvalid => '1'
+--    );
+--    
+--clock_converter_1: clock_converter_2
+--    port map (
+--        m_axis_aclk => aclk,
+--        m_axis_aresetn => aresetn,
+--        s_axis_aclken => '1',
+--        m_axis_aclken => '1',
+--        m_axis_tdata => axis_adc1_tdata,
+--        m_axis_tready => '1',
+--        m_axis_tvalid => open,
+--        s_axis_aclk => aclk1,
+--        s_axis_aresetn => aresetn,
+--        s_axis_tdata => m_axis_adc1_tdata,
+--        s_axis_tready => open,
+--        s_axis_tvalid => '1'
+--    );
     
 RXA_0: RXA
     port map ( 
@@ -516,25 +524,14 @@ TXA_0 : TXA
         cfg_dina => bram_dina,
 		cfg_douta => TXA_cfg_douta,
         cfg_wr => TXA_wr,
-        m_linear_iq0_tdata => m_linear_iq0_tdata,
-        m_linear_iq0_tvalid => m_linear_iq0_tvalid,
-        m_linear_iq1_tdata => m_linear_iq1_tdata,
-        m_linear_iq1_tvalid => m_linear_iq1_tvalid,
         aresetn => aresetn,                     
         aclk => aclk
     );
     
     m_axis_ser0_tlast <= '1';
     m_axis_ser1_tlast <= '1';
-    m_linear_iq0_tlast <= '1';
-    m_linear_iq1_tlast <= '1';
-    resetn_fifo <= aresetn;
     
     s_axis_audioR_tdata <= s_axis_audioL_tdata;
-    
-   m_axis_i2s_tdata <= m_axis_audioR_tdata;
-   m_axis_i2s_tvalid <= m_axis_audio_tvalid;
-   m_axis_i2s_tlast <= '1';
     
 audio_0 : i2s
     port map ( 

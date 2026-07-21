@@ -36,7 +36,7 @@ entity lim_proc is
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (2 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
-        lim_over : out STD_LOGIC_VECTOR (3 downto 0);
+        lim_over : out STD_LOGIC_VECTOR (5 downto 0);
         aclk : in STD_LOGIC
     );
 end lim_proc;
@@ -93,7 +93,7 @@ architecture Behavioral of lim_proc is
         fir_reload_tlast : in STD_LOGIC;
         fir_config_tdata : in STD_LOGIC_VECTOR(7 DOWNTO 0);
         fir_config_tvalid : in STD_LOGIC;
-        over : out STD_LOGIC;
+        over : out STD_LOGIC_VECTOR(1 DOWNTO 0);
         divisor_dbg : out std_logic_vector(15 downto 0); 
         aclk : in STD_LOGIC
     );
@@ -111,7 +111,7 @@ architecture Behavioral of lim_proc is
         fir_reload_tlast : in STD_LOGIC;
         fir_config_tdata : in STD_LOGIC_VECTOR(7 DOWNTO 0);
         fir_config_tvalid : in STD_LOGIC;
-        over :out STD_LOGIC;
+        over : out STD_LOGIC_VECTOR(1 DOWNTO 0);
         denom_dbg : out std_logic_vector(15 downto 0); 
         aclk : in STD_LOGIC
     );
@@ -178,7 +178,7 @@ architecture Behavioral of lim_proc is
     signal fir_coeff : integer range 0 to 63 := 0;
     signal fir_delay : integer range 0 to 8191 := 0;
     
-    signal iq_out_0, iq_out_1 : std_logic_vector(41 downto 0);
+    signal iq_out_0, iq_out_1 : std_logic_vector(41 downto 0) := (others => '0');
     signal iq_out_tdata : std_logic_vector(47 downto 0);
     signal iq_out_valid : STD_LOGIC := '0';
     signal lim_en : STD_LOGIC := '1';
@@ -323,7 +323,7 @@ clipper_0 : lim_limiter
         fir_reload_tlast => fir_reload_tlast,
         fir_config_tdata => fir_config_tdata,
         fir_config_tvalid => fir_config_tvalid,
-        over => lim_over(2),
+        over => lim_over(3 downto 2),
         divisor_dbg => divisor_dbg,
         aclk => aclk
     );
@@ -340,7 +340,7 @@ PORT MAP (
         fir_reload_tlast => fir_reload_tlast,
         fir_config_tdata => fir_config_tdata,
         fir_config_tvalid => fir_config_tvalid,
-        over => lim_over(3),
+        over => lim_over(5 downto 4),
         denom_dbg => denom_dbg,
         aclk => aclk
     );
@@ -353,8 +353,10 @@ begin
 	if rising_edge(aclk) then   
 	   mult2in_tvalid_r <= mult2in_tvalid;
 	   iq_out_valid <= mult2in_tvalid_r;
-	   iq_out_0 <= mult2in_tdata(47 downto 24) * lim_out_gain;
-       iq_out_1 <= mult2in_tdata(23 downto 0) * lim_out_gain;
+	   if mult2in_tvalid = '1' then
+           iq_out_0 <= mult2in_tdata(47 downto 24) * lim_out_gain;
+           iq_out_1 <= mult2in_tdata(23 downto 0) * lim_out_gain;
+       end if;    
 	   if iq_out_0(41 downto 35) = "1111111" or iq_out_0(41 downto 35) = "0000000" then
 	       lim_over(1) <= '0'; 
 	       iq_out_tdata(47 downto 24) <= iq_out_0(35 downto 12);

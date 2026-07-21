@@ -129,7 +129,7 @@ architecture Behavioral of RXA_channel is
         o_data : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
     );
     END COMPONENT round37to32;
-    
+        
     COMPONENT fir_ddc_0
     PORT (
         aclk : IN STD_LOGIC;

@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "axis_data_fifo_48",
     "component_reference": "xilinx.com:ip:axis_data_fifo:2.0",
-    "ip_revision": "12",
+    "ip_revision": "11",
     "gen_directory": "../../../../PL.gen/sources_1/ip/axis_data_fifo_48",
     "parameters": {
       "component_parameters": {
@@ -66,12 +66,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
-        "IPREVISION": [ { "value": "12" } ],
+        "IPREVISION": [ { "value": "11" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../PL.gen/sources_1/ip/axis_data_fifo_48" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
-        "SWVERSION": [ { "value": "2023.2.2" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },

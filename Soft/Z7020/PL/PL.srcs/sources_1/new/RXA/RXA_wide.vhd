@@ -59,17 +59,32 @@ architecture Behavioral of RXA_wide is
     );
     end component dds16a;
     
-    COMPONENT cmpy_16x16 IS
+--    COMPONENT cmpy_16x16 IS
+--    PORT (
+--        aclk : IN STD_LOGIC;
+--        s_axis_a_tvalid : IN STD_LOGIC;
+--        s_axis_a_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+--        s_axis_b_tvalid : IN STD_LOGIC;
+--        s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+--        m_axis_dout_tvalid : OUT STD_LOGIC;
+--        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+--    );
+--    END COMPONENT cmpy_16x16;
+    
+    component cmpy_16x16r24 IS
     PORT (
         aclk : IN STD_LOGIC;
+        aresetn : IN STD_LOGIC;
         s_axis_a_tvalid : IN STD_LOGIC;
         s_axis_a_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
         s_axis_b_tvalid : IN STD_LOGIC;
         s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        s_axis_ctrl_tvalid : IN STD_LOGIC;
+        s_axis_ctrl_tdata : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
         m_axis_dout_tvalid : OUT STD_LOGIC;
         m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
     );
-    END COMPONENT cmpy_16x16;
+    END component cmpy_16x16r24;
     
     COMPONENT round31to24 IS
     PORT (
@@ -132,6 +147,8 @@ architecture Behavioral of RXA_wide is
     signal fir2wb_in_tready : STD_LOGIC;
     signal fir2wb_in_tvalid : STD_LOGIC;
     signal fir2wb_out_tdata : STD_LOGIC_VECTOR (47 downto 0);
+    signal lfsr_reg : std_logic_vector(15 downto 0) := x"A5A5"; -- Стартовое число (не 0)
+    signal ctrl_tdata : std_logic_vector(7 downto 0) := (others => '0');
 
 begin
 
@@ -146,13 +163,27 @@ dds_0 : dds16a
     
     mult_in <= s_axis_signal_tdata & s_axis_signal_tdata;
     
-mult_0 : cmpy_16x16
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        -- Классический полином LFSR x^16 + x^14 + x^13 + x^11 + 1
+        lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(2) xor lfsr_reg(3) xor lfsr_reg(5)) & lfsr_reg(15 downto 1);
+    end if;
+end process;
+
+    ctrl_tdata(0) <= lfsr_reg(0); -- Подаем случайный бит в нулевой разряд
+    ctrl_tdata(7 downto 1) <= (others => '0');
+    
+mult_0 : cmpy_16x16r24
     PORT MAP (
-      aclk => aclk, 
+        aclk => aclk, 
+        aresetn => aresetn,
         s_axis_a_tvalid => '1',
         s_axis_a_tdata => mult_in,
         s_axis_b_tvalid => '1',
         s_axis_b_tdata => dds_out,
+        s_axis_ctrl_tvalid => '1',
+        s_axis_ctrl_tdata => ctrl_tdata,
         m_axis_dout_tvalid => open,
         m_axis_dout_tdata => mult_out
     );
