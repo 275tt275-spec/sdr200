@@ -32,7 +32,7 @@ architecture sim of audio_proc_tb is
     
     signal tb_m_axis_audio_tdata  : std_logic_vector(23 downto 0);
     signal tb_m_axis_audio_tvalid : std_logic;
-    signal tb_lim_over           : std_logic_vector(5 downto 0);
+    signal tb_lim_over           : std_logic_vector(6 downto 0);
 
     -- Сигнал завершения симуляции
     signal sim_done : boolean := false;
@@ -47,7 +47,7 @@ architecture sim of audio_proc_tb is
         s_axis_cfg_tdata    : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest    : in STD_LOGIC_VECTOR (2 downto 0);
         s_axis_cfg_tvalid   : in STD_LOGIC;
-        lim_over            : out STD_LOGIC_VECTOR (5 downto 0);
+        lim_over            : out STD_LOGIC_VECTOR (6 downto 0);
         aclk                : in STD_LOGIC
     );
     end component;
@@ -96,20 +96,27 @@ begin
         wait until rising_edge(tb_aclk);
         tb_s_axis_cfg_tvalid <= '0';
         
-        -- Подача команды включения лимитера (dest = "110", data = 1)
         wait until rising_edge(tb_aclk);
-        tb_s_axis_cfg_tdest  <= "110";
-        tb_s_axis_cfg_tdata  <= x"00000001";
+        tb_s_axis_cfg_tdest  <= "000";
+        tb_s_axis_cfg_tdata  <= x"000037FF";
         tb_s_axis_cfg_tvalid <= '1';        
         wait until rising_edge(tb_aclk);
         tb_s_axis_cfg_tvalid <= '0';
-                
+        
         wait until rising_edge(tb_aclk);
         tb_s_axis_cfg_tdest  <= "010";
         tb_s_axis_cfg_tdata  <= x"00001FFF";
         tb_s_axis_cfg_tvalid <= '1';        
         wait until rising_edge(tb_aclk);
         tb_s_axis_cfg_tvalid <= '0';
+        
+        -- Подача команды включения лимитера (dest = "110", data = 1)
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "110";
+        tb_s_axis_cfg_tdata  <= x"00000001";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';            
         
         tb_s_axis_cfg_tdata  <= (others => '0');
         tb_s_axis_cfg_tdest  <= (others => '0');
@@ -124,7 +131,7 @@ begin
         variable s_word : std_logic_vector(23 downto 0);
     begin
         -- Укажите имя вашего нового 24-битного файла
-        file_open(infile, "E:\\Projects\\sdr200\\Soft\\Z7020\\PL\\sinus.raw", READ_MODE);
+        file_open(infile, "E:\\Projects\\sdr200\\Soft\\Z7020\\PL\\lfm.raw", READ_MODE);
         
         tb_s_axis_audio_tvalid <= '0';
         tb_s_axis_audio_tdata  <= (others => '0');
@@ -194,7 +201,7 @@ begin
                 
                 -- 2. Запись флага лимитера tb_lim_over
                 -- Дополняем 6-битный сигнал четырьмя старшими нулями до 1 байта (8 бит)
-                lim_word := "00" & tb_lim_over;
+                lim_word := "0" & tb_lim_over;
                 -- Преобразуем полученный байт в символ и пишем на диск (1 байт на сэмпл)
                 char_b := character'val(to_integer(unsigned(lim_word)));
                 write(out_lim_file, char_b);

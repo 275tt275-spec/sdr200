@@ -40,7 +40,7 @@ entity audio_proc is
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (2 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
-        lim_over : out STD_LOGIC_VECTOR (5 downto 0);
+        lim_over : out STD_LOGIC_VECTOR (6 downto 0);
         aclk : in STD_LOGIC
     );
 end audio_proc;
@@ -58,14 +58,14 @@ component lim_proc is
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (2 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
-        lim_over : out STD_LOGIC_VECTOR (5 downto 0);
+        lim_over : out STD_LOGIC_VECTOR (6 downto 0);
         aclk : in STD_LOGIC
     );
     end component lim_proc;    
     
     signal lim_out_tdata : std_logic_vector(23 downto 0);
     signal lim_out_tvalid : std_logic;
-    signal over : STD_LOGIC_VECTOR (5 downto 0);
+    signal over : STD_LOGIC_VECTOR (6 downto 0);
     signal lim_en : STD_LOGIC := '1';
 
 begin

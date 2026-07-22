@@ -54,14 +54,6 @@ end TXA_modulator;
 
 architecture Behavioral of TXA_modulator is
 
-    component ila_0 IS
-    PORT (
-        clk : IN STD_LOGIC;
-        probe0 : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
-        probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
-    );
-    END component ila_0;
-
     COMPONENT dds_16_16 IS
     PORT (
         aclk : IN STD_LOGIC;
@@ -229,12 +221,5 @@ txa_fos_0 : TXA_fos
    
    m_axis_iq_tdata <= fos_out_tdata when tx_on = '1' else (others => '0');
    m_axis_iq_tvalid <= fos_out_tvalid;
-   
-   debug_0 : ila_0
-    PORT MAP(
-        clk => aclk,
-        probe0 => fos_out_tdata(23 downto 0),
-        probe1(0) => fos_out_tvalid
-    );
    
 end Behavioral;

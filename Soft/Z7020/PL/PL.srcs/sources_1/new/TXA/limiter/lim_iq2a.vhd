@@ -24,6 +24,7 @@ entity lim_iq2a is
         s_axis_iq_tvalid : in STD_LOGIC; 
         dds_data : in STD_LOGIC_VECTOR (31 downto 0);
         dds_tvalid : in STD_LOGIC;
+        over : out STD_LOGIC;
         aclk : in STD_LOGIC
     );
 end lim_iq2a;
@@ -58,7 +59,16 @@ end component audio_base_fir;
     signal multout_tvalid : std_logic;	
     signal summa_tdata : std_logic_vector(23 downto 0);
 	signal fir_out_tdata : std_logic_vector(31 downto 0);
+	signal fir_out_tvalid : std_logic;
 --	signal multout40_tdata_0, multout40_tdata_1 : STD_LOGIC_VECTOR(39 DOWNTO 0);
+    signal m_axis_audio_tvalid_reg : std_logic := '0';
+    -- Константа сдвига для компенсации затухания.
+    -- GAIN_SHIFT = 0 -> срез (31 downto 8) [базовый]
+    -- GAIN_SHIFT = 1 -> срез (30 downto 7) [+6 дБ усиления]
+    -- GAIN_SHIFT = 2 -> срез (29 downto 6) [+12 дБ усиления] -- Выбрано по умолчанию
+    -- GAIN_SHIFT = 3 -> срез (28 downto 5) [+18 дБ усиления]
+    constant GAIN_SHIFT : integer := 3;     
+    signal ch_24 : std_logic_vector(23 downto 0) := (others => '0');
 
 begin
 
@@ -88,10 +98,46 @@ fir_0 : audio_base_fir
         s_axis_data_tvalid => multout_tvalid,
         s_axis_data_tready => open,
         s_axis_data_tdata => summa_tdata,
-        m_axis_data_tvalid => m_axis_audio_tvalid,
+        m_axis_data_tvalid => fir_out_tvalid,
         m_axis_data_tdata => fir_out_tdata
     );
+    
+process(aclk)
+    variable val : std_logic_vector(31 downto 0);
+    variable sign : std_logic;
+    variable overflow : boolean;
+begin
+    if rising_edge(aclk) then
+        -- По умолчанию сбрасываем валидность шины Stream
+        m_axis_audio_tvalid_reg <= '0';
+        over <= '0';
 
-    m_axis_audio_tdata <= fir_out_tdata(31) & fir_out_tdata(28 downto 6);
+        if fir_out_tvalid = '1' then
+            m_axis_audio_tvalid_reg <= '1';
+            val := fir_out_tdata;           
+            sign := val(31);
+            overflow := false;
+            for i in 31 downto (31 - GAIN_SHIFT) loop
+                if val(i) /= sign then
+                    overflow := true;
+                end if;
+            end loop;
+            if overflow then
+                over <= '1';
+                if sign = '0' then
+                    ch_24 <= x"7FFFFF"; -- Максимум в плюс
+                else
+                    ch_24 <= x"800000"; -- Максимум в минус
+                end if;
+            else
+                ch_24 <= val((31 - GAIN_SHIFT) downto (8 - GAIN_SHIFT));
+            end if;
+        end if;
+        m_axis_audio_tdata <= ch_24;
+    end if;
+end process;
+    
+    m_axis_audio_tvalid <= m_axis_audio_tvalid_reg;
+ --   m_axis_audio_tdata <= fir_out_tdata(31) & fir_out_tdata(28 downto 6);
 
 end Behavioral;

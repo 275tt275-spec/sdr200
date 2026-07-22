@@ -36,7 +36,7 @@ entity lim_proc is
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (2 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
-        lim_over : out STD_LOGIC_VECTOR (5 downto 0);
+        lim_over : out STD_LOGIC_VECTOR (6 downto 0);
         aclk : in STD_LOGIC
     );
 end lim_proc;
@@ -134,6 +134,7 @@ architecture Behavioral of lim_proc is
         s_axis_iq_tvalid : in STD_LOGIC; 
         dds_data : in STD_LOGIC_VECTOR (31 downto 0);
         dds_tvalid : in STD_LOGIC;
+        over : out STD_LOGIC;
         aclk : in STD_LOGIC
     );
     END COMPONENT  lim_iq2a;
@@ -391,6 +392,7 @@ iq2a_0 : lim_iq2a
         s_axis_iq_tvalid => iq_out_valid,
         dds_data => dds_tdata,
         dds_tvalid => dds_tvalid,
+        over => lim_over(6),
         aclk => aclk
     );
 

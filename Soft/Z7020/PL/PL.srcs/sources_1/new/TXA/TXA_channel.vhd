@@ -94,7 +94,7 @@ component fir_audio_0 IS
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (2 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
-        lim_over : out STD_LOGIC_VECTOR (5 downto 0);
+        lim_over : out STD_LOGIC_VECTOR (6 downto 0);
         aclk : in STD_LOGIC
     );
     end component audio_proc;
@@ -214,7 +214,7 @@ component fir_audio_0 IS
     signal lim_proc_cfg_tvalid : STD_LOGIC;
     signal modulator_cfg_tvalid : STD_LOGIC;
     signal resampler_cfg_tvalid : STD_LOGIC;
-    signal lim_over : STD_LOGIC_VECTOR(5 DOWNTO 0) := (others => '0');
+    signal lim_over : STD_LOGIC_VECTOR(6 DOWNTO 0) := (others => '0');
     signal cfg_addr : std_logic_vector(3 downto 0);
     signal cfg_wr : std_logic := '0';
     
