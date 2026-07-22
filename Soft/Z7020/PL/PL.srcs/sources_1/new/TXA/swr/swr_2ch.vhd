@@ -38,7 +38,7 @@ entity swr_2ch is
         s_axis_adc0_tdata : in STD_LOGIC_VECTOR (15 downto 0);
         s_axis_adc1_tdata : in STD_LOGIC_VECTOR (15 downto 0);
         s_axis_dds_tdata : in STD_LOGIC_VECTOR (31 downto 0);
-        cfg_addra : in STD_LOGIC_VECTOR (1 downto 0);
+        cfg_addra : in STD_LOGIC_VECTOR (0 downto 0);
         cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
         cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
         cfg_wr : in STD_LOGIC
@@ -53,8 +53,6 @@ component swr_channel is
         aresetn : in STD_LOGIC;
         s_axis_adc_tdata : in STD_LOGIC_VECTOR (15 downto 0);
         s_axis_dds_tdata : in STD_LOGIC_VECTOR (31 downto 0);
-        m_iq_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_iq_tvalid : out STD_LOGIC;
         m_rssi_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         m_angle_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         m_tvalid : out STD_LOGIC;
@@ -62,24 +60,23 @@ component swr_channel is
     );
 end component swr_channel;
 
-    signal cic_gain_0, cic_gain_1 : STD_LOGIC_VECTOR (1 downto 0) := (others => '0');
+    signal cic_gain_0, cic_gain_1 : STD_LOGIC_VECTOR (1 downto 0) := "11";
     signal rssi_0, rssi_1 : STD_LOGIC_VECTOR (15 downto 0);
     signal angle_0, angle_1 : STD_LOGIC_VECTOR (15 downto 0);
     signal ch_valid_0, ch_valid_1 : STD_LOGIC;
-    signal rssi_data, angle_data, swr_data : STD_LOGIC_VECTOR (31 downto 0);
+    signal rssi_data, angle_data : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
     signal iq_data_0, iq_data_1 : STD_LOGIC_VECTOR (31 downto 0);
     signal iq_valid_0, iq_valid_1 : STD_LOGIC;
 
 begin
 
-    cfg_douta <= rssi_data when cfg_addra = "01" else 
-                 angle_data when cfg_addra = "10" else swr_data;
+    cfg_douta <= rssi_data when cfg_addra = "0" else angle_data;
 
 cmd_process : process (aclk) is
 begin 
    if rising_edge(aclk) then
         if cfg_wr = '1' then 
-            if cfg_addra = "00" then
+            if cfg_addra = "0" then
                 cic_gain_0 <= cfg_dina(1 downto 0); 
                 cic_gain_1 <= cfg_dina(17 downto 16); 
             end if; 
@@ -95,8 +92,8 @@ begin
             rssi_data(15 downto 0) <= rssi_0;
         end if;
         if ch_valid_1 = '1' then 
-            angle_data(31 downto 15) <= angle_1;
-            rssi_data(31 downto 15) <= rssi_1;
+            angle_data(31 downto 16) <= angle_1;
+            rssi_data(31 downto 16) <= rssi_1;
         end if;
    end if;
 end process out_process;
@@ -106,9 +103,7 @@ ch_0 : swr_channel
         aclk => aclk,
         aresetn => aresetn,
         s_axis_adc_tdata => s_axis_adc0_tdata,
-        s_axis_dds_tdata => s_axis_dds_tdata,
-        m_iq_tdata => iq_data_0,
-        m_iq_tvalid => iq_valid_0,     
+        s_axis_dds_tdata => s_axis_dds_tdata,    
         m_rssi_tdata => rssi_0,
         m_angle_tdata => angle_0,
         m_tvalid => ch_valid_0,
@@ -121,8 +116,6 @@ ch_1 : swr_channel
         aresetn => aresetn,
         s_axis_adc_tdata => s_axis_adc1_tdata,
         s_axis_dds_tdata => s_axis_dds_tdata,
-        m_iq_tdata => iq_data_0,
-        m_iq_tvalid => iq_valid_0,
         m_rssi_tdata => rssi_1,
         m_angle_tdata => angle_1,
         m_tvalid => ch_valid_1,

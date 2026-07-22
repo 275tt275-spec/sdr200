@@ -53,6 +53,8 @@ architecture Behavioral of adc_sync is
     signal fifo1_prog_empty : std_logic;
     signal fifo0_empty      : std_logic;
     signal fifo1_empty      : std_logic;
+    signal fifo0_valid      : std_logic;
+    signal fifo1_valid      : std_logic;
     signal sync_read_en     : std_logic := '0';
     
     -- Состояния конечного автомата (FSM)
@@ -60,6 +62,9 @@ architecture Behavioral of adc_sync is
     signal sync_state : t_sync_state := IDLE;
 
 begin
+
+    fifo0_empty <= not fifo0_valid;
+    fifo1_empty <= not fifo1_valid;
 
 -- Автомат выравнивания отсчетов АЦП0 и АЦП1
 p_fifo_sync_align : process(aclk)
@@ -110,9 +115,9 @@ port map (
         s_axis_tvalid => '1',
         s_axis_tready => open,
         s_axis_tdata => adc0_data,
-        m_axis_tvalid => open,
+        m_axis_tvalid => fifo0_valid,
         m_axis_tready => sync_read_en,
-        m_axis_tdata => axis_adc0_tdata,
+        m_axis_tdata => adc0_out,
         axis_prog_empty => fifo0_prog_empty
 );
 
@@ -127,9 +132,9 @@ port map (
         s_axis_tvalid => '1',
         s_axis_tready => open,
         s_axis_tdata => adc1_data,
-        m_axis_tvalid => open,
+        m_axis_tvalid => fifo1_valid,
         m_axis_tready => sync_read_en,
-        m_axis_tdata => axis_adc1_tdata,
+        m_axis_tdata => adc1_out,
         axis_prog_empty => fifo1_prog_empty
 );
 

@@ -37,8 +37,6 @@ entity swr_channel is
         aresetn : in STD_LOGIC;
         s_axis_adc_tdata : in STD_LOGIC_VECTOR (15 downto 0);
         s_axis_dds_tdata : in STD_LOGIC_VECTOR (31 downto 0);
-        m_iq_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_iq_tvalid : out STD_LOGIC;
         m_rssi_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         m_angle_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         m_tvalid : out STD_LOGIC;
@@ -216,6 +214,8 @@ fir_0 : fir_swr_0
         m_axis_data_tdata => fir1_out_tdata
     );
     
+    fir2_in_tdata <= fir1_out_tdata(63 downto 40) & fir1_out_tdata(31 downto 8);
+    
 fir_1 : fir_swr_1
     PORT MAP (
         aclk => aclk,
@@ -226,7 +226,7 @@ fir_1 : fir_swr_1
         m_axis_data_tdata => fir2_out_tdata
     );
     
-    cordic_in_tdata <= fir2_out_tdata(63) & fir2_out_tdata(63 downto 41) & fir2_out_tdata(31) & fir2_out_tdata(31 downto 9);
+    cordic_in_tdata <= fir2_out_tdata(63) & fir2_out_tdata(61 downto 39) & fir2_out_tdata(31) & fir2_out_tdata(29 downto 7);
     cordic_in_tvalid <= fir2_out_tvalid;
     
 cordic_0 : cordic_swr
@@ -241,7 +241,5 @@ cordic_0 : cordic_swr
     m_rssi_tdata <= cordic_out_tdata(22 downto 7);
     m_angle_tdata <= cordic_out_tdata(46 downto 31);
     m_tvalid <= cordic_out_tvalid;  
-    m_iq_tdata <= fir2_out_tdata(63 downto 48) & fir2_out_tdata(31 downto 16);
-    m_iq_tvalid <= fir2_out_tvalid;
     
 end Behavioral;

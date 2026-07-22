@@ -21,7 +21,6 @@ create_clock -period 8.000 -name RGMII_txc -waveform {0.000 4.000} [get_ports RG
 create_clock -period 8.138 -name ADC1_CLK -waveform {0.000 4.069} [get_ports ADC1_CLK_clk_p]
 create_clock -period 8.138 -name ADC0_CLK -waveform {0.000 4.069} [get_ports ADC0_CLK_clk_p]
 set_clock_groups -asynchronous -group [get_clocks ADC0_CLK] -group [get_clocks ADC1_CLK]
-set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins adc_input_0/BUFG_inst/O]] -group [get_clocks -of_objects [get_pins adc_input_1/BUFG_inst/O]]
 set_input_delay -clock ADC0_CLK -max 2.500 [get_ports {ADC0_OUT_P[*]}]
 set_input_delay -clock ADC0_CLK -min 1.000 [get_ports {ADC0_OUT_P[*]}]
 set_input_delay -clock ADC0_CLK -max 2.500 [get_ports {ADC0_OUT_P[*]}] -clock_fall -add_delay

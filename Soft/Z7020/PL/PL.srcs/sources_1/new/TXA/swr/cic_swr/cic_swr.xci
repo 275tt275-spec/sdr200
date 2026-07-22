@@ -30,7 +30,7 @@
         "Input_Data_Width": [ { "value": "16", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "Quantization": [ { "value": "Truncation", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
         "Output_Data_Width": [ { "value": "24", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "Use_Xtreme_DSP_Slice": [ { "value": "true", "resolve_type": "user", "format": "bool", "usage": "all" } ],
+        "Use_Xtreme_DSP_Slice": [ { "value": "true", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "Use_Streaming_Interface": [ { "value": "true", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "HAS_ACLKEN": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "HAS_ARESETN": [ { "value": "true", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],

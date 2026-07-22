@@ -44,12 +44,12 @@ entity RXA is
         m_axis_wb_tvalid : out STD_LOGIC;
         m_axis_wb_tlast : out STD_LOGIC;
         m_axis_wb_tready : in STD_LOGIC;
-        m_axis_nb0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_axis_nb0_tvalid : out STD_LOGIC;
-        m_axis_nb0_tuser : out STD_LOGIC_VECTOR (0 downto 0);
-        m_axis_nb1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_axis_nb1_tvalid : out STD_LOGIC;
-        m_axis_nb1_tuser : out STD_LOGIC_VECTOR (0 downto 0);
+--       m_axis_nb0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+--       m_axis_nb0_tvalid : out STD_LOGIC;
+--       m_axis_nb0_tuser : out STD_LOGIC_VECTOR (0 downto 0);
+--        m_axis_nb1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+--        m_axis_nb1_tvalid : out STD_LOGIC;
+--        m_axis_nb1_tuser : out STD_LOGIC_VECTOR (0 downto 0);
         m_axis_demod_tdata : out STD_LOGIC_VECTOR (23 downto 0);
         m_axis_demod_tvalid : out STD_LOGIC;
 		cfg_addra : in STD_LOGIC_VECTOR (7 downto 0);
@@ -144,30 +144,7 @@ architecture Behavioral of RXA is
            j3e_lsb : in STD_LOGIC
    );
     END COMPONENT RXA_demod;
-    
-    COMPONENT dc_removal_24 is
-    port(
-        -- The clock domain used for all interfaces.
-        clk : in std_logic;
-    
-        -- synchronous reset
-        rst : in std_logic;
-    
-        -- enable automatic removal
-        enable : in std_logic;
-    
-        -- input bus interface
-        in_tdata : in std_logic_vector(23 downto 0);
-        in_tvalid : in std_logic;
-        in_tready : out std_logic;
-    
-        -- output bus interface
-        out_tdata : out std_logic_vector(23 downto 0);
-        out_tvalid : out std_logic;
-        out_tready : in std_logic
-    );
-    END COMPONENT dc_removal_24;
-    
+      
     COMPONENT audio_filter IS
     Port ( 
         aclk : in STD_LOGIC;
@@ -304,26 +281,26 @@ narrow_0 : RXA_channel
         aclk => aclk
     );
     
-narrow_1 : RXA_channel
-    PORT MAP  (
-        m_axis_data_tdata => narrow_out1_tdata,
-        m_axis_data_tuser => narrow_out1_tuser,
-        m_axis_data_tvalid => narrow_out1_tvalid,
-        s_axis_signal_tdata => s_axis_adc1_tdata,
-        dds_value => dds_nr,
-        dds_valid => dds_nr_valid,
-        aresetn => aresetn,
-        aclk => aclk
-    );
+--narrow_1 : RXA_channel
+--    PORT MAP  (
+--        m_axis_data_tdata => narrow_out1_tdata,
+--        m_axis_data_tuser => narrow_out1_tuser,
+--        m_axis_data_tvalid => narrow_out1_tvalid,
+--        s_axis_signal_tdata => s_axis_adc1_tdata,
+--        dds_value => dds_nr,
+--        dds_valid => dds_nr_valid,
+--        aresetn => aresetn,
+--        aclk => aclk
+--    );
     
 -- output 16 KSamples
     
-    m_axis_nb0_tdata <= narrow_out0_tdata;
-    m_axis_nb0_tvalid <= narrow_out0_tvalid;
-    m_axis_nb0_tuser <= narrow_out0_tuser;
-    m_axis_nb1_tdata <= narrow_out1_tdata;
-    m_axis_nb1_tvalid <= narrow_out1_tvalid;
-    m_axis_nb1_tuser <= narrow_out1_tuser;
+--   m_axis_nb0_tdata <= narrow_out0_tdata;
+--   m_axis_nb0_tvalid <= narrow_out0_tvalid;
+--   m_axis_nb0_tuser <= narrow_out0_tuser;
+--    m_axis_nb1_tdata <= narrow_out1_tdata;
+--    m_axis_nb1_tvalid <= narrow_out1_tvalid;
+--    m_axis_nb1_tuser <= narrow_out1_tuser;
     fos_cfg_tdata <= cfg_dina;
     
 narrow_fos_0 : fos
