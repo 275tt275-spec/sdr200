@@ -29,6 +29,10 @@ architecture Behavioral of adc_input is
     signal adc_abs : signed(15 downto 0) := x"0000"; 
     signal adc_clk, adc_clk0 : STD_LOGIC;
     
+    signal adc_clk_global : STD_LOGIC;
+    signal adc_clk_local : STD_LOGIC;
+    signal adc_clk_io    : STD_LOGIC;
+    
     ATTRIBUTE X_INTERFACE_INFO : STRING;
     ATTRIBUTE X_INTERFACE_PARAMETER : STRING;
     ATTRIBUTE X_INTERFACE_PARAMETER OF adc_max_rst: SIGNAL IS "XIL_INTERFACENAME adc_max_rst, POLARITY ACTIVE_HIGH, INSERT_VIP 0";
@@ -47,11 +51,31 @@ generic map (
       IB => clk_n
 );
 
+add_bufio : BUFIO
+port map (
+    O => adc_clk_io, -- Этот клок идет строго на вход C примитивов IDDR
+    I => adc_clk0    -- Выход вашего входного IBUFDS
+);
+
+add_bufr : BUFR
+generic map (
+    BUFR_DIVIDE => "BYPASS", -- Частоту не делим
+    SIM_DEVICE  => "7SERIES"
+)
+port map (
+    O   => adc_clk_local, -- Этот клок пойдет на процессы и выход модуля
+    CE  => '1',
+    CLR => '0',
+    I   => adc_clk0
+);
+
 add_bufg : BUFG
    port map (
-      O => adc_clk, -- 1-bit output: Clock output
-      I => adc_clk0  -- 1-bit input: Clock input
+      O => adc_clk_global, -- 1-bit output: Clock output
+      I => adc_clk_local  -- 1-bit input: Clock input
    );
+   
+  adc_clk_out <= adc_clk_global;
    
 lbl : for k in 0 to 15 generate
     dbuf : IBUFDS
@@ -75,7 +99,7 @@ lbl : for k in 0 to 15 generate
     port map (
        Q1 => adc_data_buf(k), -- 1-bit output for positive edge of clock
        Q2 => open, -- 1-bit output for negative edge of clock
-       C => adc_clk,   -- 1-bit clock input
+       C => adc_clk_io, -- Идеальный быстрый клок периферии
        CE => '1', -- 1-bit clock enable input
        D => adc_data(k),   -- 1-bit DDR data input
        R => '0',   -- 1-bit reset
@@ -83,7 +107,7 @@ lbl : for k in 0 to 15 generate
        );
 end generate;
 
-    adc_clk_out <= adc_clk;
+--    adc_clk_out <= adc_clk_logic;
     adc_out_data <= adc_data_buf when adc_rand_en = '0' else rxa_tdata_rand;                      
 
     rxa_tdata_rand(0) <= adc_data_buf(0); 
@@ -94,7 +118,7 @@ end generate;
     m_axis_data_tdata <= adc_out_data;    
     adc_max_value <= std_logic_vector(adc_max);
 
-process(adc_clk)
+process(adc_clk_local)
 begin
 	if rising_edge(adc_clk) then
 	   adc_abs <= abs(signed(adc_out_data));

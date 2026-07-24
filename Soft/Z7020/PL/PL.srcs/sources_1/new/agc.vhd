@@ -50,6 +50,7 @@ architecture Behavioral of agc is
         PORT (
             aclk : IN STD_LOGIC;
             s_axis_cartesian_tvalid : IN STD_LOGIC;
+            s_axis_cartesian_tready : OUT STD_LOGIC;
             s_axis_cartesian_tdata : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
             m_axis_dout_tvalid : OUT STD_LOGIC;
             m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(63 DOWNTO 0)
@@ -176,6 +177,7 @@ rssi_0 : cordic_rssi
     PORT MAP(
         aclk => aclk,
         s_axis_cartesian_tvalid => s_axis_cartesian_tvalid,
+        s_axis_cartesian_tready => open,
         s_axis_cartesian_tdata => s_axis_cartesian_tdata,
         m_axis_dout_tvalid => m_axis_dout_tvalid,
         m_axis_dout_tdata => m_axis_dout_tdata

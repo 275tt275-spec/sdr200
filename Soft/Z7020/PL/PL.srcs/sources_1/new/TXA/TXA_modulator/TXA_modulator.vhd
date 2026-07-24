@@ -93,7 +93,8 @@ architecture Behavioral of TXA_modulator is
     signal audio_gain : STD_LOGIC_VECTOR (17 downto 0) := "00" & x"3FFF";
     signal audio_data_42 : STD_LOGIC_VECTOR (41 downto 0);
     signal audio_data : STD_LOGIC_VECTOR (23 downto 0);
-    signal audio_data_valid : std_logic := '0';    
+    signal audio_data_valid : std_logic := '0';  
+    signal audio_data_valid_r : std_logic := '0';  
     signal freq_offset_data : STD_LOGIC_VECTOR (15 downto 0) := x"1799";
     signal freq_offset_valid : std_logic := '0';
     signal freq_offset_valid_r : std_logic := '0';
@@ -144,13 +145,14 @@ begin
 		end if;  
 	end if;
 end process;
-    
-    audio_data_42 <= s_axis_audio_tdata * audio_gain;
-    
+        
 process(aclk)
 begin
 	if rising_edge(aclk) then 
-	   audio_data_valid <= s_axis_audio_tvalid;
+	   -- 1. Двойной сдвиг валидности (конвейер на 2 такта)
+        audio_data_valid_r <= s_axis_audio_tvalid;
+        audio_data_valid   <= audio_data_valid_r; -- теперь строго синхронен с audio_data!
+       audio_data_42 <= s_axis_audio_tdata * audio_gain;
 	   if audio_data_42(41 downto 38) = "1111" or audio_data_42(41 downto 38) = "0000" then
 	       audio_data <= audio_data_42(38 downto 15);
 	   elsif  audio_data_42(41) = '0' then  

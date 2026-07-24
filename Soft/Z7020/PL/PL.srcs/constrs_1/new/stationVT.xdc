@@ -21,17 +21,20 @@ create_clock -period 8.000 -name RGMII_txc -waveform {0.000 4.000} [get_ports RG
 create_clock -period 8.138 -name ADC1_CLK -waveform {0.000 4.069} [get_ports ADC1_CLK_clk_p]
 create_clock -period 8.138 -name ADC0_CLK -waveform {0.000 4.069} [get_ports ADC0_CLK_clk_p]
 set_clock_groups -asynchronous -group [get_clocks ADC0_CLK] -group [get_clocks ADC1_CLK]
-set_input_delay -clock ADC0_CLK -max 2.500 [get_ports {ADC0_OUT_P[*]}]
-set_input_delay -clock ADC0_CLK -min 1.000 [get_ports {ADC0_OUT_P[*]}]
-set_input_delay -clock ADC0_CLK -clock_fall -max -add_delay 2.500 [get_ports {ADC0_OUT_P[*]}]
-set_input_delay -clock ADC0_CLK -clock_fall -min -add_delay 1.000 [get_ports {ADC0_OUT_P[*]}]
-set_input_delay -clock ADC1_CLK -max 2.500 [get_ports {ADC1_OUT_P[*]}]
-set_input_delay -clock ADC1_CLK -min 1.000 [get_ports {ADC1_OUT_P[*]}]
-set_input_delay -clock ADC1_CLK -clock_fall -max -add_delay 2.500 [get_ports {ADC1_OUT_P[*]}]
-set_input_delay -clock ADC1_CLK -clock_fall -min -add_delay 1.000 [get_ports {ADC1_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC0_CLK] -max 2.700 [get_ports {ADC0_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC0_CLK] -min 1.300 [get_ports {ADC0_OUT_P[*]}]
+set_input_delay -clock ADC1_CLK -max 2.700 [get_ports {ADC1_OUT_P[*]}]
+set_input_delay -clock ADC1_CLK -min 1.300 [get_ports {ADC1_OUT_P[*]}]
+# Разрешаем Vivado фиксировать данные на следующем периоде клока
+set_multicycle_path -setup -from [get_ports {ADC0_OUT_P[*]}] 2
+set_multicycle_path -hold  -from [get_ports {ADC0_OUT_P[*]}] 1
+# Разрешаем Vivado фиксировать данные на следующем периоде клока
+set_multicycle_path -setup -from [get_ports {ADC1_OUT_P[*]}] 2
+set_multicycle_path -hold  -from [get_ports {ADC1_OUT_P[*]}] 1
 
 set_input_jitter ADC1_CLK 0.100
 create_clock -period 8.138 -name DAC_DCO -waveform {0.000 4.069} [get_ports DAC_DCO_P]
+set_clock_groups -asynchronous -group [get_clocks ADC1_CLK] -group [get_clocks DAC_DCO]
 #False path constraints to async inputs coming directly to synchronizer
 set_false_path -to [get_pins -hier -filter {name =~ *idelayctrl_reset_gen/*reset_sync*/PRE }]
 set_false_path -to [get_pins -of [get_cells -hier -filter { name =~ *i_MANAGEMENT/SYNC_*/data_sync* }] -filter { name =~ *D }]
@@ -53,7 +56,12 @@ set_output_delay -clock [get_clocks RGMII_txc] -max 0.750 [get_ports {{RGMII_td[
 set_output_delay -clock [get_clocks RGMII_txc] -min -0.700 [get_ports {{RGMII_td[*]} RGMII_tx_ctl}]
 set_output_delay -clock [get_clocks RGMII_txc] -clock_fall -max -add_delay 0.750 [get_ports {{RGMII_td[*]} RGMII_tx_ctl}]
 set_output_delay -clock [get_clocks RGMII_txc] -clock_fall -min -add_delay -0.700 [get_ports {{RGMII_td[*]} RGMII_tx_ctl}]
-
+set_clock_groups -asynchronous \
+    -group [get_clocks ADC0_CLK] \
+    -group [get_clocks ADC1_CLK] \
+    -group [get_clocks RGMII_rxc] \
+    -group [get_clocks RGMII_txc] \
+    -group [get_clocks -of_objects [get_pins -hierarchical *gmii_to_rgmii_0*]]
 
 set_property PACKAGE_PIN AB2 [get_ports MDIO_PHY_mdc]
 set_property PACKAGE_PIN Y4 [get_ports MDIO_PHY_mdio_io]
@@ -77,10 +85,6 @@ set_property PACKAGE_PIN M19 [get_ports ADC0_CLK_clk_p]
 set_property PACKAGE_PIN M20 [get_ports ADC0_CLK_clk_n]
 set_property PACKAGE_PIN B19 [get_ports ADC1_CLK_clk_p]
 set_property PACKAGE_PIN B20 [get_ports ADC1_CLK_clk_n]
-#set_input_delay -clock [get_clocks ADC1_CLK] -max 4.000  [get_ports {ADC1_OUT_P[*]}]
-#set_input_delay -clock [get_clocks ADC1_CLK] -min -4.000 [get_ports {ADC1_OUT_P[*]}]
-#set_output_delay -clock [get_clocks DAC_DCO] -max 3.500 [get_ports {DAC_D_P[*]}]
-#set_output_delay -clock [get_clocks DAC_DCO] -min -3.500 [get_ports {DAC_D_P[*]}]
 
 set_property PACKAGE_PIN K19 [get_ports {ADC0_OUT_P[0]}]
 set_property PACKAGE_PIN J18 [get_ports {ADC0_OUT_P[1]}]
