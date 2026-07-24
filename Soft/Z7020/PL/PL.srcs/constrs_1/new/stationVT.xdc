@@ -166,6 +166,5 @@ set_property -dict {PACKAGE_PIN W13 IOSTANDARD LVDS_25} [get_ports RF_DATAOUT_N]
 set_property DONT_TOUCH false [get_cells -hier -filter {REF_NAME =~ *DSP48E1*}]
 set_property DONT_TOUCH false [get_nets -hier -filter {DRIVER_COUNT == 0}]
 
-set_property RAM_STYLE block [get_cells -hierarchical -filter {NAME =~ *axi_interconnect_0* && PRIMITIVE_SUBGROUP == LUTRAM}]
 set_property RAM_STYLE block [get_cells -hierarchical -filter {NAME =~ *axi_interconnect_0*}]
 

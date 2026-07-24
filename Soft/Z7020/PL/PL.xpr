@@ -209,6 +209,12 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/new/TXA/audio_proc.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/new/axis_shift_sat_round_32to24.vhd">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -246,6 +252,42 @@
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/new/i2s.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_a2iq.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_div.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_iq2a.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_limiter.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_overshoot.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_proc.vhd">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -344,55 +386,6 @@
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/new/TXA/swr/swr_channel.vhd">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/TXA/audio_proc.vhd">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_a2iq.vhd">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_div.vhd">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_iq2a.vhd">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_limiter.vhd">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_overshoot.vhd">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/TXA/limiter/lim_proc.vhd">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -805,7 +798,6 @@
     <FileSet Name="audio_base_fir" Type="BlockSrcs" RelSrcDir="$PSRCDIR/audio_base_fir" RelGenDir="$PGENDIR/audio_base_fir">
       <File Path="$PSRCDIR/sources_1/ip/audio_base_fir/audio_base_fir.xci">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -819,7 +811,6 @@
     <FileSet Name="lim_eq_fir" Type="BlockSrcs" RelSrcDir="$PSRCDIR/lim_eq_fir" RelGenDir="$PGENDIR/lim_eq_fir">
       <File Path="$PSRCDIR/sources_1/ip/lim_eq_fir/lim_eq_fir.xci">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -924,7 +915,6 @@
     <FileSet Name="div_24_16" Type="BlockSrcs" RelSrcDir="$PSRCDIR/div_24_16" RelGenDir="$PGENDIR/div_24_16">
       <File Path="$PSRCDIR/sources_1/ip/div_24_16/div_24_16.xci">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -938,7 +928,6 @@
     <FileSet Name="lim_translate_cordic" Type="BlockSrcs" RelSrcDir="$PSRCDIR/lim_translate_cordic" RelGenDir="$PGENDIR/lim_translate_cordic">
       <File Path="$PSRCDIR/sources_1/ip/lim_translate_cordic/lim_translate_cordic.xci">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -952,7 +941,6 @@
     <FileSet Name="lim_lpf_fir" Type="BlockSrcs" RelSrcDir="$PSRCDIR/lim_lpf_fir" RelGenDir="$PGENDIR/lim_lpf_fir">
       <File Path="$PSRCDIR/sources_1/ip/lim_lpf_fir/lim_lpf_fir.xci">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -966,7 +954,6 @@
     <FileSet Name="dds_16" Type="BlockSrcs" RelSrcDir="$PSRCDIR/dds_16" RelGenDir="$PGENDIR/dds_16">
       <File Path="$PSRCDIR/sources_1/new/TXA/limiter/dds_16/dds_16.xci">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -980,7 +967,6 @@
     <FileSet Name="cmpy_16_24" Type="BlockSrcs" RelSrcDir="$PSRCDIR/cmpy_16_24" RelGenDir="$PGENDIR/cmpy_16_24">
       <File Path="$PSRCDIR/sources_1/new/TXA/limiter/cmpy_16_24/cmpy_16_24.xci">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
