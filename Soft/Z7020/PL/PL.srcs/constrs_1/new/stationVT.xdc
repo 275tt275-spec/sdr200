@@ -23,12 +23,12 @@ create_clock -period 8.138 -name ADC0_CLK -waveform {0.000 4.069} [get_ports ADC
 set_clock_groups -asynchronous -group [get_clocks ADC0_CLK] -group [get_clocks ADC1_CLK]
 set_input_delay -clock ADC0_CLK -max 2.500 [get_ports {ADC0_OUT_P[*]}]
 set_input_delay -clock ADC0_CLK -min 1.000 [get_ports {ADC0_OUT_P[*]}]
-set_input_delay -clock ADC0_CLK -max 2.500 [get_ports {ADC0_OUT_P[*]}] -clock_fall -add_delay
-set_input_delay -clock ADC0_CLK -min 1.000 [get_ports {ADC0_OUT_P[*]}] -clock_fall -add_delay
+set_input_delay -clock ADC0_CLK -clock_fall -max -add_delay 2.500 [get_ports {ADC0_OUT_P[*]}]
+set_input_delay -clock ADC0_CLK -clock_fall -min -add_delay 1.000 [get_ports {ADC0_OUT_P[*]}]
 set_input_delay -clock ADC1_CLK -max 2.500 [get_ports {ADC1_OUT_P[*]}]
 set_input_delay -clock ADC1_CLK -min 1.000 [get_ports {ADC1_OUT_P[*]}]
-set_input_delay -clock ADC1_CLK -max 2.500 [get_ports {ADC1_OUT_P[*]}] -clock_fall -add_delay
-set_input_delay -clock ADC1_CLK -min 1.000 [get_ports {ADC1_OUT_P[*]}] -clock_fall -add_delay
+set_input_delay -clock ADC1_CLK -clock_fall -max -add_delay 2.500 [get_ports {ADC1_OUT_P[*]}]
+set_input_delay -clock ADC1_CLK -clock_fall -min -add_delay 1.000 [get_ports {ADC1_OUT_P[*]}]
 
 set_input_jitter ADC1_CLK 0.100
 create_clock -period 8.138 -name DAC_DCO -waveform {0.000 4.069} [get_ports DAC_DCO_P]
@@ -163,7 +163,9 @@ set_property -dict {PACKAGE_PIN T18 IOSTANDARD LVDS_25} [get_ports RF_CLOCKOUT_N
 set_property -dict {PACKAGE_PIN V13 IOSTANDARD LVDS_25} [get_ports RF_DATAOUT_P]
 set_property -dict {PACKAGE_PIN W13 IOSTANDARD LVDS_25} [get_ports RF_DATAOUT_N]
 
-set_property DONT_TOUCH FALSE [get_cells -hier -filter {REF_NAME =~ *DSP48E1*}]
-set_property DONT_TOUCH FALSE [get_nets -hier -filter {DRIVER_COUNT == 0}]
+set_property DONT_TOUCH false [get_cells -hier -filter {REF_NAME =~ *DSP48E1*}]
+set_property DONT_TOUCH false [get_nets -hier -filter {DRIVER_COUNT == 0}]
 
+set_property RAM_STYLE block [get_cells -hierarchical -filter {NAME =~ *axi_interconnect_0* && PRIMITIVE_SUBGROUP == LUTRAM}]
+set_property RAM_STYLE block [get_cells -hierarchical -filter {NAME =~ *axi_interconnect_0*}]
 

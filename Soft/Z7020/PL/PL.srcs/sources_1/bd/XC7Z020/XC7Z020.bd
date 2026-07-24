@@ -2370,6 +2370,9 @@
         "inst_hier_path": "axi_interconnect_0",
         "xci_name": "XC7Z020_axi_interconnect_0_0",
         "parameters": {
+          "ENABLE_ADVANCED_OPTIONS": {
+            "value": "1"
+          },
           "NUM_MI": {
             "value": "7"
           },
@@ -2377,7 +2380,7 @@
             "value": "2"
           },
           "STRATEGY": {
-            "value": "2"
+            "value": "1"
           }
         },
         "interface_ports": {
@@ -2580,7 +2583,7 @@
                 "value": "1"
               },
               "STRATEGY": {
-                "value": "2"
+                "value": "1"
               }
             },
             "interface_ports": {
@@ -4968,13 +4971,13 @@
                 "offset": "0x40000000",
                 "range": "8K"
               },
-              "SEG_axi_fifo_mm_s_0_Mem0": {
+              "SEG_axi_fifo_wb_Mem0": {
                 "address_block": "/axi_fifo_wb/S_AXI/Mem0",
                 "offset": "0x43C00000",
                 "range": "64K",
                 "offset_high_param": "C_HIGHADDR"
               },
-              "SEG_axi_fifo_mm_s_0_Mem1": {
+              "SEG_axi_fifo_wb_Mem1": {
                 "address_block": "/axi_fifo_wb/S_AXI_FULL/Mem1",
                 "offset": "0x43C10000",
                 "range": "64K",
@@ -4996,7 +4999,7 @@
                 "offset": "0x42C10000",
                 "range": "64K"
               },
-              "SEG_axi_uartlite_2_Reg": {
+              "SEG_axi_uartlite_debug_Reg": {
                 "address_block": "/axi_uartlite_debug/S_AXI/Reg",
                 "offset": "0x42C20000",
                 "range": "64K"

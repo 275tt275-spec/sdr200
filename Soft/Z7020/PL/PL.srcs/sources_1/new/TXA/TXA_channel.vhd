@@ -38,7 +38,7 @@ entity TXA_channel is
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
         cfg_data_out : out STD_LOGIC_VECTOR (31 downto 0);
-        m_dds_tdata : out STD_LOGIC_VECTOR(31 DOWNTO 0);
+--        m_dds_tdata : out STD_LOGIC_VECTOR(31 DOWNTO 0);
         aresetn : in std_logic;
         aclk : in std_logic
     );
@@ -396,11 +396,10 @@ dds_0 : dds16a
     m_axis_data_tdata => dds_tdata
   );
   
-  m_dds_tdata <= dds_tdata;
+--  m_dds_tdata <= dds_tdata;
   mult_in_tdata <= linear_out_q & linear_out_i; 
 
---  mult_in_tdata <= linear_in_q & linear_in_i when test_reg(0) = '0' else
---                  test_data & test_data;
+--  mult_in_tdata <= linear_in_q(23 downto 8) & linear_in_i(23 downto 8);
 
 --cmply_0 : cmpy_24_24
 --   PORT MAP (

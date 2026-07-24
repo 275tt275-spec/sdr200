@@ -37,10 +37,10 @@ entity adc_2ch is
         ADC0_CLK_P : in STD_LOGIC;
         ADC0_OUT_N : in STD_LOGIC_VECTOR ( 15 downto 0 );
         ADC0_OUT_P : in STD_LOGIC_VECTOR ( 15 downto 0 );
-        ADC1_OUT_N : in STD_LOGIC_VECTOR ( 15 downto 0 );
-        ADC1_OUT_P : in STD_LOGIC_VECTOR ( 15 downto 0 );
         ADC1_CLK_N : in STD_LOGIC;
         ADC1_CLK_P : in STD_LOGIC;
+        ADC1_OUT_N : in STD_LOGIC_VECTOR ( 15 downto 0 );
+        ADC1_OUT_P : in STD_LOGIC_VECTOR ( 15 downto 0 );
         adc0_out : out std_logic_vector(15 downto 0);
         adc1_out : out std_logic_vector(15 downto 0);
         rst_async : in STD_LOGIC;
@@ -82,16 +82,16 @@ architecture Behavioral of adc_2ch is
     signal aclk_0, aclk_1 : STD_LOGIC;
     signal aresetn : std_logic := '1';
     signal rst_sig : std_logic := '0';
-    signal rst_r, rst_r1 : std_logic := '0';
+    signal rst_shift : std_logic_vector(3 downto 0) := (others => '1');
 
 begin
 
 adc_input_0: component adc_input
     port map (
-        clk_p => ADC1_CLK_P,
-        clk_n => ADC1_CLK_N,
-        din_p => ADC1_OUT_P,
-        din_n => ADC1_OUT_N,
+        clk_p => ADC0_CLK_P,
+        clk_n => ADC0_CLK_N,
+        din_p => ADC0_OUT_P,
+        din_n => ADC0_OUT_N,
         m_axis_data_tdata => adc_data_in_0,
         adc_rand_en => '1',
         adc_max_value => open,
@@ -101,10 +101,10 @@ adc_input_0: component adc_input
     
 adc_input_1: component adc_input
     port map (
-        clk_p => ADC0_CLK_P,
-        clk_n => ADC0_CLK_N,
-        din_p => ADC0_OUT_P,
-        din_n => ADC0_OUT_N,
+        clk_p => ADC1_CLK_P,
+        clk_n => ADC1_CLK_N,
+        din_p => ADC1_OUT_P,
+        din_n => ADC1_OUT_N,
         m_axis_data_tdata => adc_data_in_1,
         adc_rand_en => '1',
         adc_max_value => open,
@@ -126,23 +126,21 @@ adc_sync_0 : adc_sync
     
 p_synchronous_reset : process (aclk_0, rst_async) is
 begin
-
     if rst_async = '1' then
-        rst_r <= '1';  
+        -- При асинхронном сбросе немедленно заполняем регистр единицами
+        rst_shift <= (others => '1');
+        aresetn   <= '0';
     elsif rising_edge(aclk_0) then
-        rst_r <= '0'; 
-    end if;     
-
-   if rising_edge(aclk_0) then        
-      rst_r1 <= rst_r; 
-      
-      if rst_r /= rst_r1 and rst_r = '1' then
-         aresetn <= '0';
-      else
-         aresetn <= '1'; 
-      end if;
-      
-   end if;
+        -- Синхронно сдвигаем ноль в регистр, создавая задержку отпускания
+        rst_shift <= rst_shift(2 downto 0) & '0';
+        
+        -- Снимаем сброс (переводим в '1') только когда весь регистр заполнится нулями
+        if rst_shift(3) = '0' then
+            aresetn <= '1';
+        else
+            aresetn <= '0';
+        end if;
+    end if;
 end process p_synchronous_reset;
 
     aclk_out <= aclk_0;

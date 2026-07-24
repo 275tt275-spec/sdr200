@@ -43,7 +43,7 @@ entity TXA is
         DAC_DCO_N : in STD_LOGIC;
         DAC_D_N : out STD_LOGIC_VECTOR ( 15 downto 0 );
         DAC_D_P : out STD_LOGIC_VECTOR ( 15 downto 0 );
-		cfg_addra : in STD_LOGIC_VECTOR (8 downto 0);
+		cfg_addra : in STD_LOGIC_VECTOR (7 downto 0);
         cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
 		cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
         cfg_wr : in STD_LOGIC;
@@ -66,25 +66,25 @@ component TXA_channel is
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
         cfg_data_out : out STD_LOGIC_VECTOR (31 downto 0);
-        m_dds_tdata : out STD_LOGIC_VECTOR(31 DOWNTO 0);
+--        m_dds_tdata : out STD_LOGIC_VECTOR(31 DOWNTO 0);
         aresetn : in std_logic;
         aclk : in std_logic
     );
     end component TXA_channel;
     
-component swr_2ch is
-    Port ( 
-        aclk : in STD_LOGIC;
-        aresetn : in STD_LOGIC;
-        s_axis_adc0_tdata : in STD_LOGIC_VECTOR (15 downto 0);
-        s_axis_adc1_tdata : in STD_LOGIC_VECTOR (15 downto 0);
-        s_axis_dds_tdata : in STD_LOGIC_VECTOR (31 downto 0);
-        cfg_addra : in STD_LOGIC_VECTOR (0 downto 0);
-        cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
-        cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
-        cfg_wr : in STD_LOGIC
-    );
-    end component swr_2ch;
+--component swr_2ch is
+--    Port ( 
+--        aclk : in STD_LOGIC;
+--        aresetn : in STD_LOGIC;
+--        s_axis_adc0_tdata : in STD_LOGIC_VECTOR (15 downto 0);
+--        s_axis_adc1_tdata : in STD_LOGIC_VECTOR (15 downto 0);
+--        s_axis_dds_tdata : in STD_LOGIC_VECTOR (31 downto 0);
+--        cfg_addra : in STD_LOGIC_VECTOR (0 downto 0);
+--        cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
+--        cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
+--        cfg_wr : in STD_LOGIC
+--    );
+--    end component swr_2ch;
 
 component dac_out is
     Port (
@@ -102,15 +102,15 @@ component dac_out is
     end component dac_out;
         
     signal daci_tdata, dacq_tdata : STD_LOGIC_VECTOR ( 15 downto 0 );
-    signal dds_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0);
-    signal cfg_douta_txa, cfg_douta_swr : STD_LOGIC_VECTOR (31 downto 0);
-    signal cfg_wr_txa, cfg_wr_swr : STD_LOGIC := '0';
+--    signal dds_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0);
+--    signal cfg_douta_txa, cfg_douta_swr : STD_LOGIC_VECTOR (31 downto 0);
+--    signal cfg_wr_txa, cfg_wr_swr : STD_LOGIC := '0';
 
 begin
 
-    cfg_douta <= cfg_douta_txa when cfg_addra(8) = '0' else cfg_douta_swr;
-    cfg_wr_txa <= cfg_wr when cfg_addra(8) = '0' else '0';
-    cfg_wr_swr <= cfg_wr when cfg_addra(8) = '1' else '0';
+--    cfg_douta <= cfg_douta_txa when cfg_addra(8) = '0' else cfg_douta_swr;
+--    cfg_wr_txa <= cfg_wr when cfg_addra(8) = '0' else '0';
+--    cfg_wr_swr <= cfg_wr when cfg_addra(8) = '1' else '0';
 
 TXA_channel_0 : TXA_channel
     port map ( 
@@ -122,9 +122,9 @@ TXA_channel_0 : TXA_channel
         s_adc_data_rx1 => s_adc_data_rx1,
         s_axis_cfg_tdata => cfg_dina,
         s_axis_cfg_tdest => cfg_addra(7 downto 0),
-        s_axis_cfg_tvalid => cfg_wr_txa,
-        cfg_data_out => cfg_douta_txa,
-        m_dds_tdata => dds_tdata,
+        s_axis_cfg_tvalid => cfg_wr,
+        cfg_data_out => cfg_douta,
+--        m_dds_tdata => dds_tdata,
         aresetn => aresetn,
         aclk => aclk
     );
@@ -143,17 +143,17 @@ dac_out_0 : dac_out
        s_dco_n => DAC_DCO_N
     );
     
-swr_0 : swr_2ch
-    Port map ( 
-        aclk => aclk,
-        aresetn => aresetn,
-        s_axis_adc0_tdata => s_adc_data_rx0,
-        s_axis_adc1_tdata => s_adc_data_rx1,
-        s_axis_dds_tdata => dds_tdata,
-        cfg_addra => cfg_addra(0 downto 0),
-        cfg_dina => cfg_dina,
-        cfg_douta => cfg_douta_swr,
-        cfg_wr => cfg_wr_swr
-    );
+--swr_0 : swr_2ch
+--    Port map ( 
+--        aclk => aclk,
+--        aresetn => aresetn,
+--        s_axis_adc0_tdata => s_adc_data_rx0,
+--        s_axis_adc1_tdata => s_adc_data_rx1,
+--        s_axis_dds_tdata => dds_tdata,
+--        cfg_addra => cfg_addra(0 downto 0),
+--        cfg_dina => cfg_dina,
+--        cfg_douta => cfg_douta_swr,
+--        cfg_wr => cfg_wr_swr
+--    );
 
 end Behavioral;

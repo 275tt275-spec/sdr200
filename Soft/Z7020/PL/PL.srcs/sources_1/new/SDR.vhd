@@ -56,8 +56,9 @@
 -- 0x0203  dac_tdata_max
 -- 0x0204  float_out_max
 -- 0x03__   SWR
--- 0x0300  magnitude 16 bit chan A & 16 bit chan B (absolute)
--- 0x0301  angle 16 bit chan A & 16 bit chan B (signed) 
+-- 0x0300  swr 16 bit inc & 16 bit ref (absolute)
+-- 0x0301  magnitude 16 bit chan A & 16 bit chan B (absolute)
+-- 0x0302  angle 16 bit chan A & 16 bit chan B (signed) 
 ----------------------------------------------------------------------------------
 
 
@@ -122,49 +123,67 @@ end SDR;
 
 architecture Behavioral of SDR is
     
-    COMPONENT clock_converter_2 is
-        Port (
-            s_axis_aresetn : in STD_LOGIC;
-            m_axis_aresetn : in STD_LOGIC;
-            s_axis_aclken : in STD_LOGIC;
-            m_axis_aclken : in STD_LOGIC;
-            s_axis_aclk : in STD_LOGIC;
-            s_axis_tvalid : in STD_LOGIC;
-            s_axis_tready : out STD_LOGIC;
-            s_axis_tdata : in STD_LOGIC_VECTOR ( 15 downto 0 );
-            m_axis_aclk : in STD_LOGIC;
-            m_axis_tvalid : out STD_LOGIC;
-            m_axis_tready : in STD_LOGIC;
-            m_axis_tdata : out STD_LOGIC_VECTOR ( 15 downto 0 )
-        );
-    END COMPONENT clock_converter_2;
+--   COMPONENT clock_converter_2 is
+--       Port (
+--           s_axis_aresetn : in STD_LOGIC;
+--           m_axis_aresetn : in STD_LOGIC;
+--           s_axis_aclken : in STD_LOGIC;
+--           m_axis_aclken : in STD_LOGIC;
+--           s_axis_aclk : in STD_LOGIC;
+--           s_axis_tvalid : in STD_LOGIC;
+--           s_axis_tready : out STD_LOGIC;
+--           s_axis_tdata : in STD_LOGIC_VECTOR ( 15 downto 0 );
+--           m_axis_aclk : in STD_LOGIC;
+--           m_axis_tvalid : out STD_LOGIC;
+--           m_axis_tready : in STD_LOGIC;
+--           m_axis_tdata : out STD_LOGIC_VECTOR ( 15 downto 0 )
+--       );
+--   END COMPONENT clock_converter_2;
     
-    COMPONENT adc_sync is
-    Port (         
-        adc0_data : in std_logic_vector(15 downto 0);
-        adc0_clk : in STD_LOGIC;
-        adc1_data : in std_logic_vector(15 downto 0);
-        adc1_clk : in STD_LOGIC;
+    COMPONENT adc_2ch is
+    Port ( 
+        ADC0_CLK_N : in STD_LOGIC;
+        ADC0_CLK_P : in STD_LOGIC;
+        ADC0_OUT_N : in STD_LOGIC_VECTOR ( 15 downto 0 );
+        ADC0_OUT_P : in STD_LOGIC_VECTOR ( 15 downto 0 );
+        ADC1_CLK_N : in STD_LOGIC;
+        ADC1_CLK_P : in STD_LOGIC;
+        ADC1_OUT_N : in STD_LOGIC_VECTOR ( 15 downto 0 );
+        ADC1_OUT_P : in STD_LOGIC_VECTOR ( 15 downto 0 );
         adc0_out : out std_logic_vector(15 downto 0);
         adc1_out : out std_logic_vector(15 downto 0);
-        aresetn : in STD_LOGIC;
-        aclk : in STD_LOGIC
+        rst_async : in STD_LOGIC;
+        aresetn_out : out STD_LOGIC;
+        aclk_out : out STD_LOGIC
     );
-    end COMPONENT adc_sync;
+    end COMPONENT adc_2ch;
     
-    component adc_input is
-        port (
-            clk_p : in STD_LOGIC;
-            clk_n : in STD_LOGIC;
-            din_p : in STD_LOGIC_VECTOR (15 downto 0);
-            din_n : in STD_LOGIC_VECTOR (15 downto 0);
-            m_axis_data_tdata : out STD_LOGIC_VECTOR (15 downto 0);
-            adc_rand_en : in STD_LOGIC; 
-            adc_max_value : out STD_LOGIC_VECTOR (15 downto 0);
-            adc_max_rst : in STD_LOGIC;
-            adc_clk_out : out STD_LOGIC
-        );
-    end component adc_input;
+--  COMPONENT adc_sync is
+--  Port (         
+--      adc0_data : in std_logic_vector(15 downto 0);
+--      adc0_clk : in STD_LOGIC;
+--      adc1_data : in std_logic_vector(15 downto 0);
+--      adc1_clk : in STD_LOGIC;
+--      adc0_out : out std_logic_vector(15 downto 0);
+--      adc1_out : out std_logic_vector(15 downto 0);
+--      aresetn : in STD_LOGIC;
+--      aclk : in STD_LOGIC
+--  );
+--  end COMPONENT adc_sync;
+--  
+--  component adc_input is
+--      port (
+--          clk_p : in STD_LOGIC;
+--          clk_n : in STD_LOGIC;
+--          din_p : in STD_LOGIC_VECTOR (15 downto 0);
+--          din_n : in STD_LOGIC_VECTOR (15 downto 0);
+--          m_axis_data_tdata : out STD_LOGIC_VECTOR (15 downto 0);
+--          adc_rand_en : in STD_LOGIC; 
+--          adc_max_value : out STD_LOGIC_VECTOR (15 downto 0);
+--          adc_max_rst : in STD_LOGIC;
+--          adc_clk_out : out STD_LOGIC
+--      );
+--  end component adc_input;
     
     component RXA is
     Port ( 
@@ -178,12 +197,12 @@ architecture Behavioral of SDR is
         m_axis_wb_tvalid : out STD_LOGIC;
         m_axis_wb_tlast : out STD_LOGIC;
         m_axis_wb_tready : in STD_LOGIC;
---        m_axis_nb0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
---        m_axis_nb0_tvalid : out STD_LOGIC;
---        m_axis_nb0_tuser : out STD_LOGIC_VECTOR (0 downto 0);
---        m_axis_nb1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
---        m_axis_nb1_tvalid : out STD_LOGIC;
---        m_axis_nb1_tuser : out STD_LOGIC_VECTOR (0 downto 0);
+        m_axis_nb0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_axis_nb0_tvalid : out STD_LOGIC;
+        m_axis_nb0_tuser : out STD_LOGIC_VECTOR (0 downto 0);
+        m_axis_nb1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
+        m_axis_nb1_tvalid : out STD_LOGIC;
+        m_axis_nb1_tuser : out STD_LOGIC_VECTOR (0 downto 0);
         m_axis_demod_tdata : out STD_LOGIC_VECTOR (23 downto 0);
         m_axis_demod_tvalid : out STD_LOGIC;
 		cfg_addra : in STD_LOGIC_VECTOR (7 downto 0);
@@ -206,7 +225,7 @@ architecture Behavioral of SDR is
         DAC_DCO_N : in STD_LOGIC;
         DAC_D_N : out STD_LOGIC_VECTOR ( 15 downto 0 );
         DAC_D_P : out STD_LOGIC_VECTOR ( 15 downto 0 );
-		cfg_addra : in STD_LOGIC_VECTOR (8 downto 0);
+		cfg_addra : in STD_LOGIC_VECTOR (7 downto 0);
         cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
 		cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
         cfg_wr : in STD_LOGIC;
@@ -215,22 +234,22 @@ architecture Behavioral of SDR is
     );
     end component TXA;
         
---   component swr is
---   Port ( 
---       s_axis_data0_tdata : in STD_LOGIC_VECTOR (31 downto 0);
---       s_axis_data0_tuser : in STD_LOGIC_VECTOR (0 downto 0);
---       s_axis_data0_tvalid : in STD_LOGIC;
---       s_axis_data1_tdata : in STD_LOGIC_VECTOR (31 downto 0);
---       s_axis_data1_tuser : in STD_LOGIC_VECTOR (0 downto 0);
---       s_axis_data1_tvalid : in STD_LOGIC;
---       cfg_addra : in STD_LOGIC_VECTOR (7 downto 0);
---       cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
---	cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
---       cfg_wr : in STD_LOGIC;                      
---       aresetn : in STD_LOGIC;
---       aclk : in STD_LOGIC
---   );
---   end component swr;
+   component swr is
+   Port ( 
+       s_axis_data0_tdata : in STD_LOGIC_VECTOR (31 downto 0);
+       s_axis_data0_tuser : in STD_LOGIC_VECTOR (0 downto 0);
+       s_axis_data0_tvalid : in STD_LOGIC;
+       s_axis_data1_tdata : in STD_LOGIC_VECTOR (31 downto 0);
+       s_axis_data1_tuser : in STD_LOGIC_VECTOR (0 downto 0);
+       s_axis_data1_tvalid : in STD_LOGIC;
+       cfg_addra : in STD_LOGIC_VECTOR (7 downto 0);
+       cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
+	   cfg_douta : out STD_LOGIC_VECTOR (31 downto 0);
+       cfg_wr : in STD_LOGIC;                      
+       aresetn : in STD_LOGIC;
+       aclk : in STD_LOGIC
+   );
+   end component swr;
     
     component i2s is
     Port ( 
@@ -251,30 +270,22 @@ architecture Behavioral of SDR is
 
     signal aclk : std_logic;
     signal aclk1 : std_logic;
-    signal aresetn : std_logic := '1';
-    signal rst_sig : std_logic := '0';
-    signal rst_r, rst_r1 : std_logic := '0';
-    
-    signal adc0_max_rst : std_logic := '0';
-    signal adc0_max_value : std_logic_vector(15 downto 0);
-    signal m_axis_adc0_tdata : std_logic_vector(15 downto 0);
-    signal axis_adc0_tdata : std_logic_vector(15 downto 0);
-    signal adc1_max_rst : std_logic := '0';
-    signal adc1_max_value : std_logic_vector(15 downto 0);
-    signal m_axis_adc1_tdata : std_logic_vector(15 downto 0);
-    signal axis_adc1_tdata : std_logic_vector(15 downto 0);
-    signal rst_global : std_logic := '0';
+    signal aresetn : std_logic;
+    signal rst_sig : std_logic := '0'; 
+--    signal  rst_r, rst_r1 : std_logic := '0';    
+--    signal m_axis_adc0_tdata, m_axis_adc1_tdata : std_logic_vector(15 downto 0);
+    signal axis_adc0_tdata, axis_adc1_tdata : std_logic_vector(15 downto 0);
+--    signal adc0_max_rst, adc1_max_rst : std_logic := '0';
+--    signal adc0_max_value, adc1_max_value : std_logic_vector(15 downto 0);
     signal cfg_douta : std_logic_vector(31 downto 0) := (others => '0');
-    signal HW_cfg_douta : std_logic_vector(31 downto 0);
-    signal RXA_cfg_douta : std_logic_vector(31 downto 0);
-    signal TXA_cfg_douta : std_logic_vector(31 downto 0);
-    signal HW_wr, RXA_wr, TXA_wr : std_logic := '0';
---    signal axis_swrnb0_tdata : STD_LOGIC_VECTOR (31 downto 0);
---    signal axis_swrnb0_tvalid : STD_LOGIC;
---    signal axis_swrnb0_tuser : STD_LOGIC_VECTOR (0 downto 0);
---    signal axis_swrnb1_tdata : STD_LOGIC_VECTOR (31 downto 0);
---    signal axis_swrnb1_tvalid : STD_LOGIC;
---    signal axis_swrnb1_tuser : STD_LOGIC_VECTOR (0 downto 0);
+    signal HW_cfg_douta, RXA_cfg_douta, TXA_cfg_douta, SWR_cfg_douta : std_logic_vector(31 downto 0);
+    signal HW_wr, RXA_wr, TXA_wr, SWR_wr : std_logic := '0';
+    signal axis_swrnb0_tdata : STD_LOGIC_VECTOR (31 downto 0);
+    signal axis_swrnb0_tvalid : STD_LOGIC;
+    signal axis_swrnb0_tuser : STD_LOGIC_VECTOR (0 downto 0);
+    signal axis_swrnb1_tdata : STD_LOGIC_VECTOR (31 downto 0);
+    signal axis_swrnb1_tvalid : STD_LOGIC;
+    signal axis_swrnb1_tuser : STD_LOGIC_VECTOR (0 downto 0);
     signal s_axis_audioL_tdata : STD_LOGIC_VECTOR (23 downto 0);
     signal s_axis_audioR_tdata : STD_LOGIC_VECTOR (23 downto 0);
     signal s_axis_audio_tvalid : STD_LOGIC;
@@ -314,7 +325,7 @@ begin
     cfg_addra <= bram_addra(12 downto 2);
     bram_douta <= RXA_cfg_douta when cfg_addra(10 downto 8) = "001" or cfg_addr_r(10 downto 8) = "001" else 
                   TXA_cfg_douta when cfg_addra(10 downto 8) = "010" or cfg_addr_r(10 downto 8) = "010" else 
-                  TXA_cfg_douta when cfg_addra(10 downto 8) = "011" or cfg_addr_r(10 downto 8) = "011" else 
+                  SWR_cfg_douta when cfg_addra(10 downto 8) = "011" or cfg_addr_r(10 downto 8) = "011" else 
                   HW_cfg_douta;                                  
 
     HW_cfg_douta <= x"0000000" & CAT_DTR & CAT_RTC & CW_KEY & PTT;   
@@ -326,12 +337,16 @@ begin
    if rising_edge(aclk) then
         HW_wr <= '0';    
         RXA_wr <= '0';
-        TXA_wr <= '0';   
+        TXA_wr <= '0'; 
+        rst_sig <= '0';  
         if bram_ena = '1' then
             cfg_addr_r <= cfg_addra;  
             if bram_wea = x"F" then 
                 if cfg_addra(10 downto 8) = "000" then
-                    HW_wr <= '1';    
+                    HW_wr <= '1';  
+                    if cfg_addra(7 downto 0) = x"00" then
+                        rst_sig <= '1';
+                    end if;  
                 elsif cfg_addra(10 downto 8) = "001" then
                     RXA_wr <= '1';
                 elsif cfg_addra(10 downto 8) = "010" then
@@ -340,79 +355,96 @@ begin
                         TX_ON <= bram_dina(1);      
                     end if; 
                 elsif cfg_addra(10 downto 8) = "011" then
-                    TXA_wr <= '1';     
+                    SWR_wr <= '1';     
                 end if;        
             end if;  
         end if;
    end if;
 end process cmd_process;
 
-p_synchronous_reset : process (aclk, rst_sig) is
-begin
+--p_synchronous_reset : process (aclk, rst_sig) is
+--begin
+--
+----    if rising_edge(aclk) then 
+----        rst_sig <= '0';
+----        if HW_wr = '1' then
+----            if cfg_addra(7 downto 0) = x"00" then
+----                rst_sig <= '1';
+----            end if;
+----        end if;    
+----    end if;
+--
+--    if rst_sig = '1' then
+--        rst_r <= '1';  
+--    elsif rising_edge(aclk) then
+--        rst_r <= '0'; 
+--    end if;     
+--
+--   if rising_edge(aclk) then        
+--      rst_r1 <= rst_r; 
+--      
+--      if rst_r /= rst_r1 and rst_r = '1' then
+--         aresetn <= '0';
+--      else
+--         aresetn <= '1'; 
+--      end if;
+--      
+--   end if;
+--end process p_synchronous_reset;
 
-    if rising_edge(aclk) then 
-        rst_sig <= '0';
-        if HW_wr = '1' then
-            if cfg_addra(7 downto 0) = x"00" then
-                rst_sig <= '1';
-            end if;
-        end if;    
-    end if;
-
-    if rst_sig = '1' then
-        rst_r <= '1';  
-    elsif rising_edge(aclk) then
-        rst_r <= '0'; 
-    end if;     
-
-   if rising_edge(aclk) then        
-      rst_r1 <= rst_r; 
-      
-      if rst_r /= rst_r1 and rst_r = '1' then
-         aresetn <= '0';
-      else
-         aresetn <= '1'; 
-      end if;
-      
-   end if;
-end process p_synchronous_reset;
-
-adc_input_0: component adc_input
-    port map (
-        clk_p => ADC1_CLK_P,
-        clk_n => ADC1_CLK_N,
-        din_p => ADC1_OUT_P,
-        din_n => ADC1_OUT_N,
-        m_axis_data_tdata => m_axis_adc0_tdata,
-        adc_rand_en => '1',
-        adc_max_value => adc0_max_value,
-        adc_max_rst => adc0_max_rst,
-        adc_clk_out => aclk
-    );
+--adc_input_0: component adc_input
+--    port map (
+--        clk_p => ADC1_CLK_P,
+--        clk_n => ADC1_CLK_N,
+--        din_p => ADC1_OUT_P,
+--        din_n => ADC1_OUT_N,
+--        m_axis_data_tdata => m_axis_adc0_tdata,
+--        adc_rand_en => '1',
+--        adc_max_value => adc0_max_value,
+--        adc_max_rst => adc0_max_rst,
+--        adc_clk_out => aclk
+--    );
+--    
+--adc_input_1: component adc_input
+--    port map (
+--        clk_p => ADC0_CLK_P,
+--        clk_n => ADC0_CLK_N,
+--        din_p => ADC0_OUT_P,
+--        din_n => ADC0_OUT_N,
+--        m_axis_data_tdata => m_axis_adc1_tdata,
+--        adc_rand_en => '1',
+--        adc_max_value => adc1_max_value,
+--        adc_max_rst => adc1_max_rst,
+--        adc_clk_out => aclk1
+--    );  
+--    
+--adc_sync_0 : adc_sync
+--    Port map (         
+--        adc0_data => m_axis_adc0_tdata,
+--        adc0_clk => aclk,
+--        adc1_data => m_axis_adc1_tdata,
+--        adc1_clk => aclk1,
+--        adc0_out => axis_adc0_tdata,
+--        adc1_out => axis_adc1_tdata,
+--        aresetn => aresetn,
+--        aclk => aclk
+--    );
     
-adc_input_1: component adc_input
-    port map (
-        clk_p => ADC0_CLK_P,
-        clk_n => ADC0_CLK_N,
-        din_p => ADC0_OUT_P,
-        din_n => ADC0_OUT_N,
-        m_axis_data_tdata => m_axis_adc1_tdata,
-        adc_rand_en => '1',
-        adc_max_value => adc1_max_value,
-        adc_max_rst => adc1_max_rst,
-        adc_clk_out => aclk1
-    );  
-    
-adc_sync_0 : adc_sync
-    Port map (         
-        adc0_data => m_axis_adc0_tdata,
-        adc0_clk => aclk,
-        adc1_data => m_axis_adc1_tdata,
-        adc1_clk => aclk1,
+adc_0 : adc_2ch
+    Port map( 
+        ADC0_CLK_N => ADC1_CLK_N,
+        ADC0_CLK_P => ADC1_CLK_P,
+        ADC0_OUT_N => ADC1_OUT_N,
+        ADC0_OUT_P => ADC1_OUT_P,
+        ADC1_OUT_N => ADC0_OUT_N,
+        ADC1_OUT_P => ADC0_OUT_P,
+        ADC1_CLK_N => ADC0_CLK_N,
+        ADC1_CLK_P => ADC0_CLK_P,
         adc0_out => axis_adc0_tdata,
         adc1_out => axis_adc1_tdata,
-        aresetn => aresetn,
-        aclk => aclk
+        rst_async => rst_sig,
+        aresetn_out => aresetn,
+        aclk_out => aclk
     );
     
 RXA_0: RXA
@@ -427,12 +459,12 @@ RXA_0: RXA
         m_axis_wb_tvalid => axis_wb_tvalid,
         m_axis_wb_tlast => m_axis_wb_tlast,
         m_axis_wb_tready => m_axis_wb_tready,
---        m_axis_nb0_tdata => axis_swrnb0_tdata,
---        m_axis_nb0_tvalid => axis_swrnb0_tvalid,
---        m_axis_nb0_tuser => axis_swrnb0_tuser,
---        m_axis_nb1_tdata => axis_swrnb1_tdata,
---        m_axis_nb1_tvalid => axis_swrnb1_tvalid,
---        m_axis_nb1_tuser => axis_swrnb1_tuser,
+        m_axis_nb0_tdata => axis_swrnb0_tdata,
+        m_axis_nb0_tvalid => axis_swrnb0_tvalid,
+        m_axis_nb0_tuser => axis_swrnb0_tuser,
+        m_axis_nb1_tdata => axis_swrnb1_tdata,
+        m_axis_nb1_tvalid => axis_swrnb1_tvalid,
+        m_axis_nb1_tuser => axis_swrnb1_tuser,
         m_axis_demod_tdata => s_axis_audioL_tdata,
         m_axis_demod_tvalid => s_axis_audio_tvalid,
         cfg_addra => cfg_addr_r(7 downto 0),
@@ -449,35 +481,35 @@ RXA_0: RXA
     m_axis_ser1_tvalid <= axis_wb_tvalid;
 
     
---swr_0 : swr
---    port map ( 
---        s_axis_data0_tdata => axis_swrnb0_tdata,
---        s_axis_data0_tuser => axis_swrnb0_tuser,
---        s_axis_data0_tvalid => axis_swrnb0_tvalid,
---        s_axis_data1_tdata => axis_swrnb1_tdata,
---        s_axis_data1_tuser => axis_swrnb1_tuser,
---        s_axis_data1_tvalid => axis_swrnb1_tvalid,
---        cfg_addra => cfg_addr_r(7 downto 0),
---        cfg_dina => bram_dina,
---		cfg_douta => SWR_cfg_douta,
---        cfg_wr => SWR_wr,                   
---        aresetn => aresetn,                     
---        aclk => aclk
---    );
+swr_0 : swr
+    port map ( 
+        s_axis_data0_tdata => axis_swrnb0_tdata,
+        s_axis_data0_tuser => axis_swrnb0_tuser,
+        s_axis_data0_tvalid => axis_swrnb0_tvalid,
+        s_axis_data1_tdata => axis_swrnb1_tdata,
+        s_axis_data1_tuser => axis_swrnb1_tuser,
+        s_axis_data1_tvalid => axis_swrnb1_tvalid,
+        cfg_addra => cfg_addr_r(7 downto 0),
+        cfg_dina => bram_dina,
+		cfg_douta => SWR_cfg_douta,
+        cfg_wr => SWR_wr,                   
+        aresetn => aresetn,                     
+        aclk => aclk
+    );
     
 TXA_0 : TXA
     port map (
         s_axis_audio_tdata => m_axis_audioR_tdata,
         s_axis_audio_tvalid => m_axis_audio_tvalid,
-        s_adc_data_rx0 => m_axis_adc0_tdata,
-        s_adc_data_rx1 => m_axis_adc1_tdata,
+        s_adc_data_rx0 => axis_adc0_tdata,
+        s_adc_data_rx1 => axis_adc1_tdata,
         DAC_DCI_N => DAC_DCI_N,
         DAC_DCI_P => DAC_DCI_P,
         DAC_DCO_P => DAC_DCO_P,
         DAC_DCO_N => DAC_DCO_N,
         DAC_D_N => DAC_D_N,
         DAC_D_P => DAC_D_P,
-        cfg_addra => cfg_addr_r(8 downto 0),
+        cfg_addra => cfg_addr_r(7 downto 0),
         cfg_dina => bram_dina,
 		cfg_douta => TXA_cfg_douta,
         cfg_wr => TXA_wr,

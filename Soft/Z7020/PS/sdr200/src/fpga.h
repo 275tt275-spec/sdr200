@@ -92,8 +92,6 @@
 #define FPGA_LIN_PHASE_WR           0x02A9
 #define FPGA_LIN_PHASE_K            0x02AA
 
-#define FPGA_SWR_SHIFT               0x0300
-
 /* read */
 // 0x00__  HW_cfg
 #define FPGA_HW_CTRL 		0x0001  /* status bits */
@@ -109,8 +107,9 @@
 #define FPGA_TXA_DAC_ABS 	0x0203  /* dac_tdata_max */
 #define FPGA_TXA_FLOAT_ABS 	0x0204  /* float_out_max */
 // 0x03__   SWR_cfg
-#define FPGA_REG_MAG		0x0300  /* magnitude 16 bit chan A & 16 bit chan B (absolute) */
-#define FPGA_REG_ANGLE		0x0301  /* angle 16 bit chan A & 16 bit chan B (signed) */
+#define FPGA_REG_SWR		0x0300  /* swr 16 bit inc & 16 bit ref (absolute) */
+#define FPGA_REG_MAG		0x0301  /* magnitude 16 bit chan A & 16 bit chan B (absolute) */
+#define FPGA_REG_ANGLE		0x0302  /* angle 16 bit chan A & 16 bit chan B (signed) */
 
 #define FPGA_RXA_GET		0x0100
 
