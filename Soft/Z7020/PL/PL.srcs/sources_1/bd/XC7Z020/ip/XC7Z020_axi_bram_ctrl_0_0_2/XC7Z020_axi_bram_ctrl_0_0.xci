@@ -63,7 +63,7 @@
         "OUTPUTDIR": [ { "value": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_axi_bram_ctrl_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2" } ],
+        "SWVERSION": [ { "value": "2023.2.2" } ],
         "SYNTHESISFLOW": [ { "value": "GLOBAL" } ]
       }
     },
@@ -120,7 +120,7 @@
             "DATA_WIDTH": [ { "value": "32", "value_src": "auto", "value_permission": "bd", "resolve_type": "generated", "format": "long", "usage": "simulation.tlm", "is_ips_inferred": true, "is_static_object": false } ],
             "PROTOCOL": [ { "value": "AXI4", "value_src": "auto", "value_permission": "bd", "resolve_type": "generated", "usage": "simulation.tlm", "is_ips_inferred": true, "is_static_object": false } ],
             "FREQ_HZ": [ { "value": "122880000", "value_src": "constant_prop", "value_permission": "bd", "resolve_type": "generated", "format": "long", "usage": "simulation.tlm", "is_ips_inferred": true, "is_static_object": false } ],
-            "ID_WIDTH": [ { "value": "0", "value_src": "user_prop", "value_permission": "bd", "resolve_type": "generated", "format": "long", "usage": "simulation.tlm", "is_ips_inferred": true, "is_static_object": false } ],
+            "ID_WIDTH": [ { "value": "0", "value_permission": "bd", "resolve_type": "generated", "format": "long", "usage": "simulation.tlm", "is_ips_inferred": true, "is_static_object": false } ],
             "ADDR_WIDTH": [ { "value": "13", "value_src": "auto", "value_permission": "bd", "resolve_type": "generated", "format": "long", "usage": "simulation.tlm", "is_ips_inferred": true, "is_static_object": false } ],
             "AWUSER_WIDTH": [ { "value": "0", "value_src": "constant", "value_permission": "bd", "resolve_type": "generated", "format": "long", "usage": "simulation.tlm", "is_ips_inferred": true, "is_static_object": false } ],
             "ARUSER_WIDTH": [ { "value": "0", "value_src": "constant", "value_permission": "bd", "resolve_type": "generated", "format": "long", "usage": "simulation.tlm", "is_ips_inferred": true, "is_static_object": false } ],

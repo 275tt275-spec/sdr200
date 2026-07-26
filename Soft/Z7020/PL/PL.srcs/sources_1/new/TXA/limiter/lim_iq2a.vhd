@@ -38,6 +38,8 @@ COMPONENT cmpy_16_24
     s_axis_a_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
     s_axis_b_tvalid : IN STD_LOGIC;
     s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    s_axis_ctrl_tvalid : IN STD_LOGIC;
+    s_axis_ctrl_tdata : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
     m_axis_dout_tvalid : OUT STD_LOGIC;
     m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
   );
@@ -69,10 +71,23 @@ end component audio_base_fir;
     -- GAIN_SHIFT = 3 -> срез (28 downto 5) [+18 дБ усиления]
     constant GAIN_SHIFT : integer := 3;     
     signal ch_24 : std_logic_vector(23 downto 0) := (others => '0');
+    signal lfsr_reg : std_logic_vector(15 downto 0) := x"A5A5"; -- Стартовое число (не 0)
+    signal ctrl_tdata : std_logic_vector(7 downto 0) := (others => '0');
 
 begin
 
     multin_tdata <= s_axis_iq_tdata(23 downto 0) & s_axis_iq_tdata(47 downto 24);
+    
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        -- Классический полином LFSR x^16 + x^14 + x^13 + x^11 + 1
+        lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(2) xor lfsr_reg(3) xor lfsr_reg(5)) & lfsr_reg(15 downto 1);
+    end if;
+end process;
+
+    ctrl_tdata(0) <= lfsr_reg(0); -- Подаем случайный бит в нулевой разряд
+    ctrl_tdata(7 downto 1) <= (others => '0');
 
 mult_0 : cmpy_16_24
   PORT MAP (
@@ -81,6 +96,8 @@ mult_0 : cmpy_16_24
     s_axis_a_tdata => multin_tdata,
     s_axis_b_tvalid => '1',
     s_axis_b_tdata => dds_data,
+    s_axis_ctrl_tvalid => '1',
+    s_axis_ctrl_tdata => ctrl_tdata,
     m_axis_dout_tvalid => multout_tvalid,
     m_axis_dout_tdata => multout_tdata
   );

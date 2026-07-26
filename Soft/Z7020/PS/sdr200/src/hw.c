@@ -80,13 +80,19 @@ void hw_Init(void)
 	linear.phase_k = 5;
 	linear.diff = 0;
 	linear.prop = 2000;
-	linear.stab = 200;
+	linear.stab = 500;
 	linear.dc_i = 0;
 	linear.dc_q = 0;
 	linear.gain_i = 32767;
 	linear.gain_q = 32767;
 	linear.phi_sin = 0;
 	linear.phi_cos = 32767;
+
+	limiter.in_gain = 0x37FF;
+	limiter.out_gain = 0x2b00;
+	limiter.limit = 0x0C00;
+	limiter.overshoot = 0x2080;
+	limiter.dds_phase = 0x1D9A;
 
 	SpiConfig = XSpiPs_LookupConfig(SPI_DEVICE_ID);
 	if (NULL == SpiConfig) {
@@ -230,7 +236,9 @@ void hw_Start(void)
 	fpga_LinearSetIQGain(&linear);
 	fpga_LinearSetIQDC(&linear);
 
-	fpga_TXA_ResamplerGain(38698);
+	fpga_LIM_Set(&limiter);
+
+	fpga_TXA_ResamplerGain(28006);
 
 	SendToCore1(SET_TXA_PS_RESTORE_CORR, sizeof(s_eeprom_iqc), eeprom_get_iqc(0));
 
@@ -659,8 +667,9 @@ void hw_SetPTT(int on, e_tx_input in)
 
 		hw_SetTXAPower(e_vars->RFPower);
 		hw_SetTXAFreq(e_vars->vfoA);
-
 		hw_device.TxOn = 1;
+		audio_speaker_volume(0, 0);
+		hw_SetTxMonitor(e_vars->tx_monitor);
 #if 0
 		if((e_vars->mode == TRX_MODE_CW) || (in == TX_TUNE))
 			fpga_TXA_Enable(1, 0);
@@ -706,6 +715,8 @@ void hw_SetPTT(int on, e_tx_input in)
 		hw_device.TxOn = 0;
 		hw_SetRXAFreq(e_vars->vfoA);
 		hw_SetRXAAtt(e_vars->RXAATT);
+		audio_speaker_volume(63, 63);
+		audio_headphone_volume(63, 63);
 
 //		SendToCore1Uint32(SET_TXA_SET_PS_TURNON, 0);
 //		SendToCore1Uint32(SET_TXA_SET_PS_RESET, 1);
@@ -984,5 +995,15 @@ static void prvVrefTask( void *pvParameters )
 		data[2] = (uint8_t)vref;
 
 	 	hw_iic_write(IIC_DAC_SLAVE_ADDR, data, sizeof(data));
+	}
+}
+
+void hw_SetTxMonitor(uint8_t value)
+{
+	if(hw_device.TxOn == 1)
+	{
+		uint8_t data = value * 7;
+		if(data > 63) data = 63;
+		audio_headphone_volume(data, data);
 	}
 }

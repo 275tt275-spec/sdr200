@@ -348,11 +348,13 @@ rssi_0 : cordic_rssi
         m_axis_dout_tdata => m_axis_dout_tdata
     );
     
-BUFG_inst : BUFH
-port map (
-   O => audio_clk,
-   I => aclk
-);
+--BUFG_inst : BUFH
+--port map (
+--   O => audio_clk,
+--   I => aclk
+--);
+
+    audio_clk <= aclk;
 
 clock_0 : clock_converter_4
     PORT MAP (

@@ -46,6 +46,13 @@ end TXA_channel;
 
 architecture Behavioral of TXA_channel is
 
+component ila_0 IS
+    PORT (
+        clk : IN STD_LOGIC;
+        probe0 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
+    );
+END component ila_0;
+
 component floating_f2fix24 is
     port (
         aclk : IN STD_LOGIC;
@@ -145,6 +152,19 @@ component fir_audio_0 IS
         m_ovf : out std_logic_vector(3 downto 0)
     );
     end component linear_dds_iq;
+    
+    component conv16x24 is
+    port (
+        aclk            : in  std_logic;
+        aresetn         : in  std_logic;
+        out_en          : in  std_logic;
+        mult_in_tdata   : in  std_logic_vector(31 downto 0);
+        dds_cfg_tdata   : in  std_logic_vector(31 downto 0);
+        dds_cfg_tvalid  : in std_logic;
+        dds_out_tdata   : out  std_logic_vector(47 downto 0);
+        dac_tdata       : out std_logic_vector(15 downto 0)
+    );
+    end component conv16x24;
 
     component dds16a
         Port (
@@ -156,34 +176,17 @@ component fir_audio_0 IS
         );
     end component dds16a;
 
---    component cmpy_24_24 IS
---    PORT (
---        aclk : IN STD_LOGIC;
---        aresetn : IN STD_LOGIC;
---        s_axis_a_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
---        s_axis_a_tvalid : IN STD_LOGIC;
---        s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
---        s_axis_b_tvalid : IN STD_LOGIC;
---        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0);
---        m_axis_dout_tvalid : OUT STD_LOGIC
---    );
---    end component cmpy_24_24;
-    
-    component cmpy_16x16r IS
-    PORT (
-        aclk : IN STD_LOGIC;
-        aresetn : IN STD_LOGIC;
-        s_axis_a_tvalid : IN STD_LOGIC;
-        s_axis_a_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-        s_axis_b_tvalid : IN STD_LOGIC;
-        s_axis_b_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-        s_axis_ctrl_tvalid : IN STD_LOGIC;
-        s_axis_ctrl_tdata : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-        m_axis_dout_tvalid : OUT STD_LOGIC;
-        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
-    );
-    END component cmpy_16x16r;
- 
+--   component mult16x16 is
+--       port (
+--           aclk            : in  std_logic;
+--           aresetn         : in  std_logic;
+--           txa_on          : in  std_logic;
+--           mult_in_tdata   : in  std_logic_vector(31 downto 0);
+--           dds_in_tdata    : in  std_logic_vector(31 downto 0);
+--           dac_tdata       : out std_logic_vector(15 downto 0)
+--       );
+--   end component mult16x16;
+     
     signal txa_on : std_logic := '0'; 
     signal modulator_select : STD_LOGIC_VECTOR ( 2 downto 0 ) := "001"; 
     signal audio_in_tdata : std_logic_vector(23 downto 0);
@@ -210,7 +213,7 @@ component fir_audio_0 IS
     signal dds_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0);
     signal dds_cfg_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0) := (others => '0');
     signal dds_cfg_tvalid : std_logic := '0';
-    signal mult_in_tdata, mult_out_tdata : std_logic_vector(31 downto 0);
+    signal mult_in_tdata : std_logic_vector(31 downto 0);
     signal dac_tdata : STD_LOGIC_VECTOR (15 downto 0);
     signal lim_proc_cfg_tvalid : STD_LOGIC;
     signal modulator_cfg_tvalid : STD_LOGIC;
@@ -226,21 +229,16 @@ component fir_audio_0 IS
     signal audio_max_mod_s : signed(24 downto 0);
     signal audio_max : signed(24 downto 0) := (others => '0');
     signal audio_max_rst : std_logic := '0';
-    signal lin_din_max : signed(16 downto 0) := (others => '0');
-    signal lin_din_abs : signed(16 downto 0); -- +1 бит для корректного abs
-    signal lin_din_rst : std_logic := '0'; 
-    signal dac_tdata_abs : signed(16 downto 0); -- +1 бит для корректного abs
-    signal dac_tdata_max : signed(16 downto 0) := (others => '0');
-    signal dac_tdata_rst : std_logic := '0'; 
-    
-    signal lfsr_reg : std_logic_vector(15 downto 0) := x"A5A5"; -- Стартовое число (не 0)
-    signal ctrl_tdata : std_logic_vector(7 downto 0) := (others => '0');
 
 begin
 
+debug_0 : ila_0
+    PORT MAP (
+        clk => aclk,
+        probe0 => ovf_out(15 DOWNTO 0)
+    );
+
     cfg_data_out <= std_logic_vector(resize(audio_max, 32)) when s_axis_cfg_tdest = x"01" else
-               std_logic_vector(resize(lin_din_max, 32)) when s_axis_cfg_tdest = x"02" else
-               std_logic_vector(resize(dac_tdata_max, 32)) when s_axis_cfg_tdest = x"03" else
                ovf_out;
 
     audio_in_tvalid <= s_axis_audio_tvalid;
@@ -274,8 +272,6 @@ cmd_process : process (aclk) is
 begin 
    if rising_edge(aclk) then
         dds_cfg_tvalid <= '0'; 
-        lin_din_rst <= '0';
-        dac_tdata_rst <= '0';
         audio_max_rst <= '0';
         ovf_out <= std_logic_vector(resize(unsigned
                 (resampler_over & lim_over & linear_ovf),
@@ -294,8 +290,6 @@ begin
                 gain <= s_axis_cfg_tdata( 17 downto 0 );
             elsif cfg_addr = x"4" then
                 ovf_out <= (others => '0');
-                lin_din_rst <= '1';
-                dac_tdata_rst <= '1';
                 audio_max_rst <= '1';   
             end if; 
         end if;
@@ -385,7 +379,7 @@ linear_0 : linear_dds_iq
         dout_i => linear_out_i,
         dout_q => linear_out_q,
         m_ovf => linear_ovf
-    );  
+    ); 
 
 dds_0 : dds16a
   PORT MAP (
@@ -401,69 +395,27 @@ dds_0 : dds16a
 
 --  mult_in_tdata <= linear_in_q(23 downto 8) & linear_in_i(23 downto 8);
 
---cmply_0 : cmpy_24_24
---   PORT MAP (
---        aclk => aclk,
---        aresetn => aresetn,
---        s_axis_a_tdata => mult_in_tdata,
---        s_axis_a_tvalid => '1',
---        s_axis_b_tdata => dds_tdata,
---        s_axis_b_tvalid => '1',
---        m_axis_dout_tdata => mult_out_tdata,
---        m_axis_dout_tvalid => open
+mux_0 : conv16x24
+    port map (
+        aclk            => aclk,
+        aresetn         => aresetn,
+        out_en          => txa_on,
+        mult_in_tdata   => mult_in_tdata,
+        dds_cfg_tdata   => dds_cfg_tdata,
+        dds_cfg_tvalid  => dds_cfg_tvalid,
+        dds_out_tdata   => open,
+        dac_tdata       => dac_tdata
+    );
+
+--mult_0 : mult16x16
+--    port map (
+--        aclk            => aclk,
+--        aresetn         => aresetn,
+--        txa_on          => txa_on,
+--        mult_in_tdata   => mult_in_tdata,
+--        dds_in_tdata    => dds_tdata,
+--        dac_tdata       => dac_tdata
 --    );
---    
-
-process(aclk)
-begin
-    if rising_edge(aclk) then
-        if txa_on = '1' then
-            -- Классический полином LFSR x^16 + x^14 + x^13 + x^11 + 1
-            lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(2) xor lfsr_reg(3) xor lfsr_reg(5)) & lfsr_reg(15 downto 1);
-        end if;
-    end if;
-end process;
-
-    ctrl_tdata(0) <= lfsr_reg(0); -- Подаем случайный бит в нулевой разряд
-    ctrl_tdata(7 downto 1) <= (others => '0');
-
-cmply_0 : cmpy_16x16r
-   PORT MAP (
-        aclk => aclk,
-        aresetn => aresetn,
-        s_axis_a_tvalid => '1',
-        s_axis_a_tdata  => mult_in_tdata,
-        s_axis_b_tvalid => '1',
-        s_axis_b_tdata => dds_tdata,
-        s_axis_ctrl_tvalid => '1',
-        s_axis_ctrl_tdata => ctrl_tdata,
-        m_axis_dout_tvalid => open,
-        m_axis_dout_tdata => mult_out_tdata
-    );   
-    
-    dac_tdata <= std_logic_vector(signed(mult_out_tdata(31 downto 16)) + signed(mult_out_tdata(15 downto 0))) when txa_on = '1' else (others => '0');   
-
-process(aclk)
-begin
-    if rising_edge(aclk) then
-        -- Шаг 1: Вычисляем абсолютное значение с расширением разрядности
-        -- Это исключает ошибку переполнения для отрицательного максимума
-        lin_din_abs <= abs(resize(signed(linear_din2), 17));
-        dac_tdata_abs <= abs(resize(signed(dac_tdata), 17));
-        -- Шаг 2: Сравнение и накопление максимума (Конвейерный регистр)
-        if lin_din_rst = '1' then
-            lin_din_max <= (others => '0');
-        elsif lin_din_abs > lin_din_max then
-            lin_din_max <= lin_din_abs;
-        end if;
-        
-        if dac_tdata_rst = '1' then
-            dac_tdata_max <= (others => '0');
-        elsif dac_tdata_abs > dac_tdata_max then
-            dac_tdata_max <= dac_tdata_abs;
-        end if;
-    end if;
-end process;
 
     m_daci_tdata <= dac_tdata;  
     m_dacq_tdata <= dac_tdata; 

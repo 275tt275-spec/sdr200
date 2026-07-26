@@ -45,8 +45,8 @@
         "C_NUM_INTR_INPUTS": [ { "value": "3", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_NUM_SW_INTR": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_KIND_OF_INTR": [ { "value": "0xffffffc3", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
-        "C_KIND_OF_EDGE": [ { "value": "0xffffffff", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
-        "C_KIND_OF_LVL": [ { "value": "0xffffffff", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
+        "C_KIND_OF_EDGE": [ { "value": "0xFFFFFFFF", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
+        "C_KIND_OF_LVL": [ { "value": "0xFFFFFFFF", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_ASYNC_INTR": [ { "value": "0xFFFFFFF8", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_NUM_SYNC_FF": [ { "value": "2", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_ADDR_WIDTH": [ { "value": "32", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -85,7 +85,7 @@
         "OUTPUTDIR": [ { "value": "../../../../../../PL.gen/sources_1/bd/XC7Z020/ip/XC7Z020_axi_intc_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2" } ],
+        "SWVERSION": [ { "value": "2023.2.2" } ],
         "SYNTHESISFLOW": [ { "value": "GLOBAL" } ]
       }
     },

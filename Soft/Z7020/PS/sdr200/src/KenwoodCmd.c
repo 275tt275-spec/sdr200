@@ -854,7 +854,9 @@ char* kenwood_RcvCmd(char* in)
         else
         {
         	vars.m_ml = atoi(&in[2]);
- //           m_pModule->SendMessageHardware(MSG_HW_SET_TX_MONITOR, m_ml, 0);
+        	e_vars->tx_monitor = vars.m_ml;
+        	eeprom_vars_changed();
+        	hw_SetTxMonitor(e_vars->tx_monitor);
         }
     }
     else if(memcmp(in, "MR", 2) == 0) /* Reads the Memory channel data. */

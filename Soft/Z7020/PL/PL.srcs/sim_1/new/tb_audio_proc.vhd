@@ -90,22 +90,29 @@ begin
         wait for CLK_PERIOD * 10;
         
         wait until rising_edge(tb_aclk);
-        tb_s_axis_cfg_tdest  <= "100";
-        tb_s_axis_cfg_tdata  <= x"00002000";
+        tb_s_axis_cfg_tdest  <= "100";      -- limit_overshoot
+        tb_s_axis_cfg_tdata  <= x"00002080";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';
+        
+         wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "001";      -- lim_limit
+        tb_s_axis_cfg_tdata  <= x"00000C00";
         tb_s_axis_cfg_tvalid <= '1';        
         wait until rising_edge(tb_aclk);
         tb_s_axis_cfg_tvalid <= '0';
         
         wait until rising_edge(tb_aclk);
-        tb_s_axis_cfg_tdest  <= "000";
+        tb_s_axis_cfg_tdest  <= "000";      -- lim_in_gain
         tb_s_axis_cfg_tdata  <= x"000037FF";
         tb_s_axis_cfg_tvalid <= '1';        
         wait until rising_edge(tb_aclk);
         tb_s_axis_cfg_tvalid <= '0';
         
         wait until rising_edge(tb_aclk);
-        tb_s_axis_cfg_tdest  <= "010";
-        tb_s_axis_cfg_tdata  <= x"00001FFF";
+        tb_s_axis_cfg_tdest  <= "010";      -- lim_out_gain
+        tb_s_axis_cfg_tdata  <= x"00002000";
         tb_s_axis_cfg_tvalid <= '1';        
         wait until rising_edge(tb_aclk);
         tb_s_axis_cfg_tvalid <= '0';
@@ -131,7 +138,7 @@ begin
         variable s_word : std_logic_vector(23 downto 0);
     begin
         -- Укажите имя вашего нового 24-битного файла
-        file_open(infile, "E:\\Projects\\sdr200\\Soft\\Z7020\\PL\\lfm.raw", READ_MODE);
+        file_open(infile, "D:\\Projects\\sdr200\\Soft\\audio_proc.raw", READ_MODE);
         
         tb_s_axis_audio_tvalid <= '0';
         tb_s_axis_audio_tdata  <= (others => '0');
@@ -183,8 +190,8 @@ begin
         variable char_b : character;
     begin
         -- Выходной файл тоже будет весить ровно по 3 байта на сэмпл
-        file_open(outfile, "E:\\Projects\\sdr200\\Soft\\Z7020\\PL\\output_audio24.raw", WRITE_MODE);
-        file_open(out_lim_file, "E:\\Projects\\sdr200\\Soft\\Z7020\\PL\\output_lim_over_8bit.bin", WRITE_MODE);
+        file_open(outfile, "D:\\Projects\\sdr200\\Soft\\output_audio24.raw", WRITE_MODE);
+        file_open(out_lim_file, "D:\\Projects\\sdr200\\Soft\\output_lim_over_8bit.bin", WRITE_MODE);
 
         while not sim_done loop
             wait until rising_edge(tb_aclk);

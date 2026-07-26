@@ -97,9 +97,9 @@ architecture Behavioral of lim_limiter is
     signal dividend_tdata : std_logic_vector(47 downto 0) := (others => '0');  
     signal cordic_in: std_logic_vector(47 downto 0);
     signal cordic_out: std_logic_vector(31 downto 0);
-    signal cordic_tvalid, cordic_tvalid_r : std_logic;
+    signal cordic_tvalid : std_logic;
     signal divin_tvalid : std_logic := '0';  
-    signal divisor : std_logic_vector(15 downto 0) := x"0001";  
+    signal divisor, divisor_reg : std_logic_vector(15 downto 0) := x"0001";  
     signal divout_0, divout_1 : std_logic_vector(23 downto 0); 
     signal divout_valid_0, divout_valid_1 : std_logic;
     signal div_over_0, div_over_1 : std_logic;
@@ -117,7 +117,6 @@ architecture Behavioral of lim_limiter is
     -- Промежуточные сигналы
     signal ch_a_24 : std_logic_vector(23 downto 0) := (others => '0');
     signal ch_b_24 : std_logic_vector(23 downto 0) := (others => '0');
-    
 
 begin
 
@@ -137,23 +136,17 @@ process(aclk)
 begin
 	if rising_edge(aclk) then  
 	   divin_tvalid <= '0';
-	   cordic_tvalid_r <= '0';
 	   if s_axis_data_tvalid = '1' then
 	       dividend_tdata <= s_axis_data_tdata;
 	   end if;
 	   if cordic_tvalid = '1' then
-	       divisor <= std_logic_vector(abs(signed(cordic_out(15 downto 0))));
-	       cordic_tvalid_r <= '1';
-	   end if;  
-       if cordic_tvalid = '1' then
-           if divisor < limit then
-	           divisor <= limit;
-	       end if;    
+	       divisor_reg <= std_logic_vector(abs(signed(cordic_out(15 downto 0))));
 	       divin_tvalid <= '1';
-	   end if;      
+	   end if;       
 	end if;
 end process;
-    
+
+    divisor <= limit when divisor_reg < limit else divisor_reg;    
     
 div_0 : lim_div
     PORT MAP (

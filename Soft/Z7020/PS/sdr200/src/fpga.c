@@ -238,6 +238,9 @@ inline void fpga_TXA_ResamplerGain(uint32_t value)
 void fpga_GetSWR(s_swr* swr)
 {
 	uint32_t value;
+	value = fpga_read(FPGA_REG_SWR);
+	swr->ref = (uint16_t)(value >> 16);
+	swr->inc = (uint16_t)value;
 	value = fpga_read(FPGA_REG_MAG);
 	swr->magB = (uint16_t)(value >> 16);
 	swr->magA = (uint16_t)value;
@@ -259,7 +262,7 @@ void fpga_GetSWR(s_swr* swr)
 	float Z0 = 50.0;
 	float delta_phi = (int)swr->angA - (int)swr->angB;  // FIXME:
 	// 1. Модуль полного сопротивления (|Z| = U / I)
-	swr->mag_Z = swr->magA / swr->magB;
+	swr->mag_Z = (float)swr->magA / (float)swr->magB;
 	// 2. Активная и реактивная составляющие импеданса
 	swr->R = swr->mag_Z * cos(delta_phi);
 	swr->X = swr->mag_Z * sin(delta_phi);
@@ -327,7 +330,7 @@ void fpga_LinearEnable(s_linear* lin, int enable)
     fpga_write(FPGA_LIN_CTRL, lin_ctrl);
 
     if(enable == 1)
-        lin_ctrl = FPGA_LINER_ON;
+        lin_ctrl = FPGA_LINER_ON | FPGA_LIN_PHASE_SLOW;
     else
         lin_ctrl = 0;
 
