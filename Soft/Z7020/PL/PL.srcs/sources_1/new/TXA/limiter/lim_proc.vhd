@@ -29,8 +29,6 @@ entity lim_proc is
     Port ( 
         m_axis_audio_tdata : out STD_LOGIC_VECTOR (23 downto 0);
         m_axis_audio_tvalid : out STD_LOGIC;
-        m_axis_iq_tdata : out STD_LOGIC_VECTOR (47 downto 0);
-        m_axis_iq_tvalid : out STD_LOGIC;
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC; 
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
@@ -116,15 +114,6 @@ architecture Behavioral of lim_proc is
         aclk : in STD_LOGIC
     );
     END COMPONENT lim_overshoot;
-		
---	COMPONENT lim_dsp_24m18 is
---    Port (
---            CLK : in STD_LOGIC;
---            A : in STD_LOGIC_VECTOR ( 23 downto 0 );
---            B : in STD_LOGIC_VECTOR ( 17 downto 0 );
---            P : out STD_LOGIC_VECTOR ( 41 downto 0 )
---        );
---    END COMPONENT lim_dsp_24m18;
     
     COMPONENT lim_iq2a is
     Port ( 
@@ -155,8 +144,9 @@ architecture Behavioral of lim_proc is
     signal limiter_out_tvalid : std_logic;
     signal overshoot_out_tdata : std_logic_vector(47 downto 0);
     signal overshoot_out_tvalid : std_logic;
-    signal mult2in_tdata : std_logic_vector(47 downto 0);
-    signal mult2in_tvalid, mult2in_tvalid_r : std_logic := '0';
+    signal mult2in_tdata : std_logic_vector(23 downto 0);
+    signal mult2out_tdata : std_logic_vector(41 downto 0); 
+    signal mult2out_tvalid, mult2out_tvalid_r : std_logic := '0';
  --   signal audio_out_tdata : std_logic_vector(23 downto 0);
  --   signal audio_out_tvalid : std_logic;
  --   signal audio_out : std_logic_vector(41 downto 0);
@@ -164,7 +154,7 @@ architecture Behavioral of lim_proc is
     signal lim_in_gain : std_logic_vector(17 downto 0) := "00" & x"3FFF";
     signal lim_limit : STD_LOGIC_VECTOR (15 downto 0) := x"0400";
     signal limit_overshoot : STD_LOGIC_VECTOR (15 downto 0) := x"1000";
-    signal lim_out_gain : STD_LOGIC_VECTOR (17 downto 0) := "00" & x"1FFF";
+    signal lim_out_gain : STD_LOGIC_VECTOR (17 downto 0) := "00" & x"4D00"; -- mult 1.2
 --    signal phase_accumulator : std_logic_vector(15 downto 0) := (others => '0');  
     signal phase_step : std_logic_vector(15 downto 0) := x"1D9A"; -- 1850 Hz
     signal phase_step_valid, phase_step_change  : STD_LOGIC := '0';   
@@ -179,10 +169,12 @@ architecture Behavioral of lim_proc is
     signal fir_coeff : integer range 0 to 63 := 0;
     signal fir_delay : integer range 0 to 8191 := 0;
     
+    signal audio_tdata_reg : STD_LOGIC_VECTOR (23 downto 0);
+    signal audio_tvalid_reg : STD_LOGIC;
+    
     signal iq_out_0, iq_out_1 : std_logic_vector(41 downto 0) := (others => '0');
     signal iq_out_tdata : std_logic_vector(47 downto 0);
     signal iq_out_valid : STD_LOGIC := '0';
-    signal lim_en : STD_LOGIC := '1';
 	
 begin
 
@@ -247,8 +239,6 @@ begin
              phase_step_change <= '1';
           elsif s_axis_cfg_tdest = "100" then
              limit_overshoot <= s_axis_cfg_tdata(15 downto 0);
-          elsif s_axis_cfg_tdest = "110" then
-             lim_en <= s_axis_cfg_tdata(0);
           end if;   
 	   end if;    
 	end if;
@@ -273,10 +263,9 @@ fir_in_0: component lim_eq_fir
         s_axis_data_tvalid => s_axis_audio_tvalid
     );
     
-    multin_tdata <= s_axis_audio_tdata when lim_en = '0' else fir1_tdata;
-    multout_tvalid <= s_axis_audio_tvalid when lim_en = '0' else fir1_tvalid;
- 
-    
+    multin_tdata <= fir1_tdata;
+    multout_tvalid <= fir1_tvalid;
+     
 process(aclk)
 begin
 	if rising_edge(aclk) then  
@@ -345,56 +334,39 @@ PORT MAP (
         denom_dbg => denom_dbg,
         aclk => aclk
     );
-    
-    mult2in_tdata <= limiter_tdata when lim_en = '0' else overshoot_out_tdata;
-    mult2in_tvalid <= limiter_tvalid when lim_en = '0' else overshoot_out_tvalid;
-        
-process(aclk)
-begin
-	if rising_edge(aclk) then   
-	   mult2in_tvalid_r <= mult2in_tvalid;
-	   iq_out_valid <= mult2in_tvalid_r;
-	   if mult2in_tvalid = '1' then
-           iq_out_0 <= mult2in_tdata(47 downto 24) * lim_out_gain;
-           iq_out_1 <= mult2in_tdata(23 downto 0) * lim_out_gain;
-       end if;    
-	   if iq_out_0(41 downto 35) = "1111111" or iq_out_0(41 downto 35) = "0000000" then
-	       lim_over(1) <= '0'; 
-	       iq_out_tdata(47 downto 24) <= iq_out_0(35 downto 12);
-	   elsif  iq_out_0(41) = '0' then 
-	       lim_over(1) <= '1'; 
-	       iq_out_tdata(47 downto 24) <= x"7FFFFF";
-	   else
-	       lim_over(1) <= '1'; 
-	       iq_out_tdata(47 downto 24) <= x"800000";
-	   end if;   
-       if iq_out_1(41 downto 35) = "1111111" or iq_out_1(41 downto 35) = "0000000" then
-	       lim_over(1) <= '0'; 
-	       iq_out_tdata(23 downto 0) <= iq_out_1(35 downto 12);
-	   elsif  iq_out_1(41) = '0' then 
-	       lim_over(1) <= '1'; 
-	       iq_out_tdata(23 downto 0) <= x"7FFFFF";
-	   else
-	       lim_over(1) <= '1'; 
-	       iq_out_tdata(23 downto 0) <= x"800000";
-	   end if;  
-	end if;
-end process;
-
-    m_axis_iq_tvalid <= iq_out_valid;
-    m_axis_iq_tdata <= iq_out_tdata;
-    
+       
 iq2a_0 : lim_iq2a
     port map (
-        m_axis_audio_tdata => m_axis_audio_tdata,
-        m_axis_audio_tvalid => m_axis_audio_tvalid,
-        s_axis_iq_tdata => iq_out_tdata,
-        s_axis_iq_tvalid => iq_out_valid,
+        m_axis_audio_tdata => audio_tdata_reg,
+        m_axis_audio_tvalid => audio_tvalid_reg,
+        s_axis_iq_tdata => overshoot_out_tdata,
+        s_axis_iq_tvalid => overshoot_out_tvalid,
         dds_data => dds_tdata,
         dds_tvalid => dds_tvalid,
         over => lim_over(6),
         aclk => aclk
     );
-
+    
+    mult2in_tdata <= audio_tdata_reg;
+    mult2out_tvalid <= audio_tvalid_reg;
+    
+process(aclk)
+begin
+	if rising_edge(aclk) then  
+	   mult2out_tvalid_r <= mult2out_tvalid;
+	   mult2out_tdata <= mult2in_tdata * lim_out_gain;
+	   m_axis_audio_tvalid <= mult2out_tvalid_r;
+	   if mult2out_tdata(41 downto 36) = "111111" or mult2out_tdata(41 downto 36) = "000000" then
+	       lim_over(1) <= '0';
+	       m_axis_audio_tdata <= mult2out_tdata(36 downto 13);
+	   elsif  multout_tdata(41) = '0' then 
+	       lim_over(1) <= '1'; 
+	       m_axis_audio_tdata <= x"7FFFFF";
+	   else
+	       lim_over(1) <= '1'; 
+	       m_axis_audio_tdata <= x"800000";
+	   end if;    
+	end if;
+end process;
     
 end Behavioral;

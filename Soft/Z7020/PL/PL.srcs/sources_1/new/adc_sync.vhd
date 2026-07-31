@@ -6,7 +6,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -28,115 +28,69 @@ end adc_sync;
 
 architecture Behavioral of adc_sync is
 
-    COMPONENT async_fifo_16 IS
-    PORT (
-        wr_rst_busy : OUT STD_LOGIC;
-        rd_rst_busy : OUT STD_LOGIC;
-        m_aclk : IN STD_LOGIC;
-        s_aclk : IN STD_LOGIC;
-        s_aresetn : IN STD_LOGIC;
-        s_axis_tvalid : IN STD_LOGIC;
-        s_axis_tready : OUT STD_LOGIC;
-        s_axis_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-        m_axis_tvalid : OUT STD_LOGIC;
-        m_axis_tready : IN STD_LOGIC;
-        m_axis_tdata : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        axis_prog_empty : OUT STD_LOGIC
-    );
-    END COMPONENT async_fifo_16;
+    -- Сверхкороткие кольцевые буферы на 4 ячейки (синтезируются в LUT RAM)
+    type t_mini_buffer is array (0 to 3) of std_logic_vector(15 downto 0);
+    signal buf0 : t_mini_buffer := (others => (others => '0'));
+    signal buf1 : t_mini_buffer := (others => (others => '0'));
     
-    signal axis_adc0_tdata : std_logic_vector(15 downto 0);
-    signal axis_adc1_tdata : std_logic_vector(15 downto 0);
-
-    -- Сигналы состояния FIFO для автомата выравнивания
-    signal fifo0_prog_empty : std_logic;
-    signal fifo1_prog_empty : std_logic;
-    signal fifo0_empty      : std_logic;
-    signal fifo1_empty      : std_logic;
-    signal fifo0_valid      : std_logic;
-    signal fifo1_valid      : std_logic;
-    signal sync_read_en     : std_logic := '0';
+    -- Указатели записи для каждого домена АЦП
+    signal wr_ptr0 : unsigned(1 downto 0) := "00";
+    signal wr_ptr1 : unsigned(1 downto 0) := "00";
     
-    -- Состояния конечного автомата (FSM)
-    type t_sync_state is (IDLE, WAIT_FOR_DATA, RUN);
-    signal sync_state : t_sync_state := IDLE;
+    -- Общий указатель чтения в домене главного тактового сигнала
+    signal rd_ptr  : unsigned(1 downto 0) := "00";
 
 begin
 
-    fifo0_empty <= not fifo0_valid;
-    fifo1_empty <= not fifo1_valid;
-
--- Автомат выравнивания отсчетов АЦП0 и АЦП1
-p_fifo_sync_align : process(aclk)
-begin
-    if rising_edge(aclk) then
-        if aresetn = '0' then
-            sync_read_en <= '0';
-            sync_state   <= IDLE;
-        else
-            case sync_state is
-                when IDLE =>
-                    sync_read_en <= '0';
-                    sync_state   <= WAIT_FOR_DATA;
-                    
-                when WAIT_FOR_DATA =>
-                    -- Когда ОБА FIFO накопили по 4 отсчета, их prog_empty падают в '0'
-                    if (fifo0_prog_empty = '0') and (fifo1_prog_empty = '0') then
-                        sync_read_en <= '1'; -- Синхронный старт чтения в один и тот же такт
-                        sync_state   <= RUN;
-                    else
-                        sync_read_en <= '0';
-                    end if;
-                    
-                when RUN =>
-                    -- Защита от сбоя: если хотя бы одно FIFO полностью опустеет
-                    if (fifo0_empty = '1') or (fifo1_empty = '1') then
-                        sync_read_en <= '0';
-                        sync_state   <= IDLE; -- Перезапуск и повторное выравнивание
-                    else
-                        sync_read_en <= '1'; -- Непрерывное чтение
-                    end if;
-                    
-                when others =>
-                    sync_state <= IDLE;
-            end case;
+    -------------------------------------------------------------------------
+    -- 1. Запись данных: Канал ADC0 (на своем тактовом сигнале adc0_clk)
+    -------------------------------------------------------------------------
+    p_write_adc0 : process(adc0_clk)
+    begin
+        if rising_edge(adc0_clk) then
+            if aresetn = '0' then
+                wr_ptr0 <= "00";
+            else
+                buf0(to_integer(wr_ptr0)) <= adc0_data;
+                wr_ptr0 <= wr_ptr0 + 1;
+            end if;
         end if;
-    end if;
-end process p_fifo_sync_align;
+    end process p_write_adc0;
 
--- FIFO для канала ADC0 (Синхронное, так как запись и чтение на клоке aclk)
-fifo_adc0_inst : component async_fifo_16  -- Замените на имя вашего IP-компонента
-port map (
-        wr_rst_busy => open,
-        rd_rst_busy => open,
-        m_aclk => aclk,
-        s_aclk => adc0_clk,
-        s_aresetn => aresetn,
-        s_axis_tvalid => '1',
-        s_axis_tready => open,
-        s_axis_tdata => adc0_data,
-        m_axis_tvalid => fifo0_valid,
-        m_axis_tready => sync_read_en,
-        m_axis_tdata => adc0_out,
-        axis_prog_empty => fifo0_prog_empty
-);
-
--- FIFO для канала ADC1 (Асинхронное, CDC переход с клока aclk1 на клок aclk)
-fifo_adc1_inst : component async_fifo_16  -- Замените на имя вашего IP-компонента
-port map (
-        wr_rst_busy => open,
-        rd_rst_busy => open,
-        m_aclk => aclk,
-        s_aclk => adc1_clk,
-        s_aresetn => aresetn,
-        s_axis_tvalid => '1',
-        s_axis_tready => open,
-        s_axis_tdata => adc1_data,
-        m_axis_tvalid => fifo1_valid,
-        m_axis_tready => sync_read_en,
-        m_axis_tdata => adc1_out,
-        axis_prog_empty => fifo1_prog_empty
-);
+    -------------------------------------------------------------------------
+    -- 2. Запись данных: Канал ADC1 (на своем тактовом сигнале adc1_clk)
+    -------------------------------------------------------------------------
+    p_write_adc1 : process(adc1_clk)
+    begin
+        if rising_edge(adc1_clk) then
+            if aresetn = '0' then
+                wr_ptr1 <= "00";
+            else
+                buf1(to_integer(wr_ptr1)) <= adc1_data;
+                wr_ptr1 <= wr_ptr1 + 1;
+            end if;
+        end if;
+    end process p_write_adc1;
+    
+    -------------------------------------------------------------------------
+    -- 3. Синхронное чтение обоих каналов в целевом домене (aclk)
+    -------------------------------------------------------------------------
+    p_read_sync : process(aclk)
+    begin
+        if rising_edge(aclk) then
+            if aresetn = '0' then
+                rd_ptr   <= "00";
+                adc0_out <= (others => '0');
+                adc1_out <= (others => '0');
+            else
+                -- Чтение происходит одновременно из фиксированных со смещением ячеек.
+                -- Задержка от входа до выхода составляет всего 1-2 такта.
+                adc0_out <= buf0(to_integer(rd_ptr));
+                adc1_out <= buf1(to_integer(rd_ptr));
+                rd_ptr   <= rd_ptr + 1;
+            end if;
+        end if;
+    end process p_read_sync;
 
 
 end Behavioral;

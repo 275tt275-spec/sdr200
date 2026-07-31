@@ -33,9 +33,9 @@ static uint32_t 	acc_temperature = 0;
 static uint32_t 	acc_current = 0;
 static uint32_t 	acc_voltage = 0;
 static s_adc_poly	coeff_ImA = {0, 1.6 * (1 << 16), -10 * (1 << 16)};
-static s_adc_poly	coeff_V10mV = {0, 0.883 * (1 << 16), 0 * (1 << 16)};
-static s_adc_poly	coeff_biasPA0 = {0, -2.0 * (1 << 16), 1390 * (1 << 16)};
-static s_adc_poly	coeff_biasPA1 = {0, -2.0 * (1 << 16), 1390 * (1 << 16)};
+static s_adc_poly	coeff_V10mV = {0, 1.029 * (1 << 16), 0 * (1 << 16)};
+static s_adc_poly	coeff_biasPA0 = {0, -2.0 * (1 << 16), 1720 * (1 << 16)};
+static s_adc_poly	coeff_biasPA1 = {0, -2.0 * (1 << 16), 1720 * (1 << 16)};
 
 void adc_start(void)
 {
@@ -69,9 +69,9 @@ static int32_t adc_calculate(int32_t inValue, s_adc_poly* coeff)
 static void adc_measure(void)
 {
 	acc_voltage -= acc_voltage >> ADC_WEIGHT_FACTOR;
-	acc_voltage += inValues.in1;
+	acc_voltage += inValues.in2;
 	acc_temperature -= acc_temperature >> ADC_WEIGHT_FACTOR;
-	acc_temperature += inValues.in2;
+	acc_temperature += inValues.in1;
 	acc_current -= acc_current >> ADC_WEIGHT_FACTOR;
 	acc_current += inValues.in3;
 

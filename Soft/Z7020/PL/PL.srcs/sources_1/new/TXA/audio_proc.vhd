@@ -51,8 +51,6 @@ component lim_proc is
     Port ( 
         m_axis_audio_tdata : out STD_LOGIC_VECTOR (23 downto 0);
         m_axis_audio_tvalid : out STD_LOGIC;
-        m_axis_iq_tdata : out STD_LOGIC_VECTOR (47 downto 0);
-        m_axis_iq_tvalid : out STD_LOGIC;
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC; 
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
@@ -89,8 +87,6 @@ limiter_0 : lim_proc
     PORT MAP (  
         m_axis_audio_tdata => lim_out_tdata,
         m_axis_audio_tvalid => lim_out_tvalid,
-        m_axis_iq_tdata => open,
-        m_axis_iq_tvalid => open,
         s_axis_audio_tdata => s_axis_audio_tdata,
         s_axis_audio_tvalid => s_axis_audio_tvalid,  -- 16 KSamples	
         s_axis_cfg_tdata => s_axis_cfg_tdata,

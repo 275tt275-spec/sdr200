@@ -70,6 +70,7 @@ architecture Behavioral of RXA is
         s_axis_signal_tdata : in STD_LOGIC_VECTOR (15 downto 0);
         dds_value : in STD_LOGIC_VECTOR (31 downto 0);
         dds_valid : STD_LOGIC;
+        ovr : out STD_LOGIC;
         aresetn : in STD_LOGIC;
         aclk : in STD_LOGIC
     );
@@ -261,6 +262,7 @@ wide_0 : RXA_wide
         s_axis_signal_tdata => s_axis_adc0_tdata,
         dds_value => dds_wf,
         dds_valid => dds_wf_valid,
+        ovr => open,
         aresetn => aresetn,
         aclk => aclk
 );

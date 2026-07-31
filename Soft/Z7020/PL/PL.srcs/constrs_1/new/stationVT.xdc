@@ -20,11 +20,11 @@ create_clock -period 8.000 -name RGMII_rxc -waveform {0.000 4.000} [get_ports RG
 create_clock -period 8.000 -name RGMII_txc -waveform {0.000 4.000} [get_ports RGMII_txc]
 create_clock -period 8.138 -name ADC1_CLK -waveform {0.000 4.069} [get_ports ADC1_CLK_clk_p]
 create_clock -period 8.138 -name ADC0_CLK -waveform {0.000 4.069} [get_ports ADC0_CLK_clk_p]
-set_clock_groups -asynchronous -group [get_clocks ADC0_CLK] -group [get_clocks ADC1_CLK]
+set_clock_groups -logically_exclusive -group [get_clocks ADC0_CLK] -group [get_clocks ADC1_CLK]
 set_input_delay -clock [get_clocks ADC0_CLK] -max 2.700 [get_ports {ADC0_OUT_P[*]}]
 set_input_delay -clock [get_clocks ADC0_CLK] -min 1.300 [get_ports {ADC0_OUT_P[*]}]
-set_input_delay -clock ADC1_CLK -max 2.700 [get_ports {ADC1_OUT_P[*]}]
-set_input_delay -clock ADC1_CLK -min 1.300 [get_ports {ADC1_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC1_CLK] -max 2.700 [get_ports {ADC1_OUT_P[*]}]
+set_input_delay -clock [get_clocks ADC1_CLK] -min 1.300 [get_ports {ADC1_OUT_P[*]}]
 # Разрешаем Vivado фиксировать данные на следующем периоде клока
 set_multicycle_path -setup -from [get_ports {ADC0_OUT_P[*]}] 2
 set_multicycle_path -hold  -from [get_ports {ADC0_OUT_P[*]}] 1
