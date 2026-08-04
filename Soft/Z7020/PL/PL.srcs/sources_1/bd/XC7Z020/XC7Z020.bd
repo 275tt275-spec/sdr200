@@ -3902,7 +3902,7 @@
       },
       "SDR_0": {
         "vlnv": "xilinx.com:module_ref:SDR:1.0",
-        "ip_revision": "1784974268",
+        "ip_revision": "1",
         "xci_name": "XC7Z020_SDR_1_0",
         "xci_path": "ip\\XC7Z020_SDR_1_0_1\\XC7Z020_SDR_1_0.xci",
         "inst_hier_path": "SDR_0",

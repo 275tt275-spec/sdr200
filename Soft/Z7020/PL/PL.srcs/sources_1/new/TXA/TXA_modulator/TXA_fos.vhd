@@ -40,7 +40,8 @@ entity TXA_fos is
        m_axis_tvalid : out STD_LOGIC;
        s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
        s_axis_cfg_tdest : in STD_LOGIC_VECTOR (0 downto 0);
-       s_axis_cfg_tvalid : in STD_LOGIC 
+       s_axis_cfg_tvalid : in STD_LOGIC;
+       overflow : out STD_LOGIC
     );
 end TXA_fos;
 
@@ -66,6 +67,18 @@ COMPONENT fir_fos_txa IS
     );
 END COMPONENT  fir_fos_txa;
 
+component filter_gain is
+     Port ( 
+       aclk : in  STD_LOGIC;     
+       s_axis_tdata : in STD_LOGIC_VECTOR (63 downto 0);
+       s_axis_tvalid : in STD_LOGIC;
+       m_axis_tdata : out STD_LOGIC_VECTOR (47 downto 0);
+       m_axis_tvalid : out STD_LOGIC;
+       gain_correct : in STD_LOGIC_VECTOR (2 downto 0);
+       overflow : out STD_LOGIC
+    );
+end component filter_gain;
+
     signal config_tvalid : STD_LOGIC := '0';
     signal config_tready : STD_LOGIC;
     signal config_tdata : STD_LOGIC_VECTOR(7 DOWNTO 0) := (others => '0');
@@ -77,6 +90,7 @@ END COMPONENT  fir_fos_txa;
     signal fir_delay : integer range 0 to 8192 := 0;
     signal gain_correct : STD_LOGIC_VECTOR(2 DOWNTO 0) := "100";
     signal firout_tdata : STD_LOGIC_VECTOR (63 downto 0);
+    signal firout_tvalid : STD_LOGIC;
 
 begin
 
@@ -119,15 +133,6 @@ begin
 		end if;  
 	end if;
 end process;
-
-    m_axis_tdata <= (firout_tdata(61 downto 38) & firout_tdata(29 downto 6)) when gain_correct = "001" else 
-                    (firout_tdata(60 downto 37) & firout_tdata(28 downto 5)) when gain_correct = "010" else 
-                    (firout_tdata(59 downto 36) & firout_tdata(27 downto 4)) when gain_correct = "011" else 
-                    (firout_tdata(58 downto 35) & firout_tdata(26 downto 3)) when gain_correct = "100" else 
-                    (firout_tdata(57 downto 34) & firout_tdata(25 downto 2)) when gain_correct = "101" else 
-                    (firout_tdata(56 downto 33) & firout_tdata(24 downto 1)) when gain_correct = "110" else 
-                    (firout_tdata(55 downto 32) & firout_tdata(23 downto 0)) when gain_correct = "111" else 
-                    (firout_tdata(62 downto 39) & firout_tdata(30 downto 7)) when gain_correct = "000";
                     
 fir_0 : fir_fos_txa
     PORT MAP (
@@ -142,10 +147,21 @@ fir_0 : fir_fos_txa
         s_axis_reload_tready => reload_tready,
         s_axis_reload_tlast => reload_tlast,
         s_axis_reload_tdata => reload_tdata,
-        m_axis_data_tvalid => m_axis_tvalid,
+        m_axis_data_tvalid => firout_tvalid,
         m_axis_data_tdata => firout_tdata,
         event_s_reload_tlast_missing => open,
         event_s_reload_tlast_unexpected => open
+    );
+    
+gain_0 : filter_gain
+     Port map ( 
+       aclk => aclk,   
+       s_axis_tdata => firout_tdata,
+       s_axis_tvalid => firout_tvalid,
+       m_axis_tdata => m_axis_tdata,
+       m_axis_tvalid => m_axis_tvalid,
+       gain_correct => gain_correct,
+       overflow => overflow
     );
 
 end Behavioral;

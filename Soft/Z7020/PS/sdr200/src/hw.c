@@ -793,24 +793,24 @@ void hw_SetTXAMode(e_trx_mode mode)
 
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
-			fos_gain = 6;
+			fos_gain = 7;
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
 			freq_offset = 6041; // 1475 Hz
-			audio_gain = 71000;
+			audio_gain = 32767;
 			break;
 		case TRX_MODE_LSB:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_LSB);
 
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 1;
-			fos_gain = 6;
+			fos_gain = 7;
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
 			freq_offset = 6041; // 1475 Hz
-			audio_gain = 71000;
+			audio_gain = 32767;
 			break;
 		case TRX_MODE_DIGITAL:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_DIGU);
@@ -821,8 +821,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			audio = AUDIO_IN_USB;
 			fpga_LIM_Enable(0);
 			freq_offset = 8602; // 2100 Hz
-//			audio_gain = 131069;
-			audio_gain = 71000;
+			audio_gain = 32767;
 			break;
 		case TRX_MODE_AM:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_AM);
@@ -831,7 +830,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			fos_filter = fos_am;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
-			audio_gain = 50000;
+			audio_gain = 16383;
 			break;
 		case TRX_MODE_CW:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_CWU);
@@ -846,12 +845,12 @@ void hw_SetTXAMode(e_trx_mode mode)
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_USB);
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
-			fos_gain = 6;
+			fos_gain = 7;
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
 			freq_offset = 6041; // 1475 Hz
-			audio_gain = 71000;
+			audio_gain = 32767;
 		}
 
 		audio_set_input(audio);

@@ -26,6 +26,7 @@
 -- 0x0201  ctrl reg
 --         txa on(0)  
 --         txa on hwr(1) 
+--         adc1 inversion (2) 
 --         iq data select(31) 
 -- 0x0202  audio_in select
 -- 0x0203  txa resampler out gain
@@ -56,9 +57,8 @@
 -- 0x0203  dac_tdata_max
 -- 0x0204  float_out_max
 -- 0x03__   SWR
--- 0x0300  swr 16 bit inc & 16 bit ref (absolute)
 -- 0x0301  magnitude 16 bit chan A & 16 bit chan B (absolute)
--- 0x0302  angle 16 bit chan A & 16 bit chan B (signed) 
+-- 0x0300  angle 16 bit chan A & 16 bit chan B (signed) 
 ----------------------------------------------------------------------------------
 
 
@@ -122,24 +122,7 @@ entity SDR is
 end SDR;
 
 architecture Behavioral of SDR is
-    
---   COMPONENT clock_converter_2 is
---       Port (
---           s_axis_aresetn : in STD_LOGIC;
---           m_axis_aresetn : in STD_LOGIC;
---           s_axis_aclken : in STD_LOGIC;
---           m_axis_aclken : in STD_LOGIC;
---           s_axis_aclk : in STD_LOGIC;
---           s_axis_tvalid : in STD_LOGIC;
---           s_axis_tready : out STD_LOGIC;
---           s_axis_tdata : in STD_LOGIC_VECTOR ( 15 downto 0 );
---           m_axis_aclk : in STD_LOGIC;
---           m_axis_tvalid : out STD_LOGIC;
---           m_axis_tready : in STD_LOGIC;
---           m_axis_tdata : out STD_LOGIC_VECTOR ( 15 downto 0 )
---       );
---   END COMPONENT clock_converter_2;
-    
+      
     COMPONENT adc_2ch is
     Port ( 
         ADC0_CLK_N : in STD_LOGIC;
@@ -153,37 +136,11 @@ architecture Behavioral of SDR is
         adc0_out : out std_logic_vector(15 downto 0);
         adc1_out : out std_logic_vector(15 downto 0);
         rst_async : in STD_LOGIC;
+        adc1_inv: in STD_LOGIC;
         aresetn_out : out STD_LOGIC;
         aclk_out : out STD_LOGIC
     );
     end COMPONENT adc_2ch;
-    
---  COMPONENT adc_sync is
---  Port (         
---      adc0_data : in std_logic_vector(15 downto 0);
---      adc0_clk : in STD_LOGIC;
---      adc1_data : in std_logic_vector(15 downto 0);
---      adc1_clk : in STD_LOGIC;
---      adc0_out : out std_logic_vector(15 downto 0);
---      adc1_out : out std_logic_vector(15 downto 0);
---      aresetn : in STD_LOGIC;
---      aclk : in STD_LOGIC
---  );
---  end COMPONENT adc_sync;
---  
---  component adc_input is
---      port (
---          clk_p : in STD_LOGIC;
---          clk_n : in STD_LOGIC;
---          din_p : in STD_LOGIC_VECTOR (15 downto 0);
---          din_n : in STD_LOGIC_VECTOR (15 downto 0);
---          m_axis_data_tdata : out STD_LOGIC_VECTOR (15 downto 0);
---          adc_rand_en : in STD_LOGIC; 
---          adc_max_value : out STD_LOGIC_VECTOR (15 downto 0);
---          adc_max_rst : in STD_LOGIC;
---          adc_clk_out : out STD_LOGIC
---      );
---  end component adc_input;
     
     component RXA is
     Port ( 
@@ -272,11 +229,7 @@ architecture Behavioral of SDR is
     signal aclk1 : std_logic;
     signal aresetn : std_logic;
     signal rst_sig : std_logic := '0'; 
---    signal  rst_r, rst_r1 : std_logic := '0';    
---    signal m_axis_adc0_tdata, m_axis_adc1_tdata : std_logic_vector(15 downto 0);
     signal axis_adc0_tdata, axis_adc1_tdata : std_logic_vector(15 downto 0);
---    signal adc0_max_rst, adc1_max_rst : std_logic := '0';
---    signal adc0_max_value, adc1_max_value : std_logic_vector(15 downto 0);
     signal cfg_douta : std_logic_vector(31 downto 0) := (others => '0');
     signal HW_cfg_douta, RXA_cfg_douta, TXA_cfg_douta, SWR_cfg_douta : std_logic_vector(31 downto 0);
     signal HW_wr, RXA_wr, TXA_wr, SWR_wr : std_logic := '0';
@@ -296,6 +249,7 @@ architecture Behavioral of SDR is
     signal axis_wb_tdata : STD_LOGIC_VECTOR (31 downto 0);
     signal axis_wb_tvalid : STD_LOGIC;
     signal audio_clk : STD_LOGIC;
+    signal adc1_inv : STD_LOGIC  := '1';
 
     ATTRIBUTE X_INTERFACE_INFO : string;
     ATTRIBUTE X_INTERFACE_INFO OF bram_addra: SIGNAL IS "xilinx.com:interface:bram:1.0 BRAM_PORTA ADDR";
@@ -352,7 +306,8 @@ begin
                 elsif cfg_addra(10 downto 8) = "010" then
                     TXA_wr <= '1';  
                     if  cfg_addra(7 downto 0) = x"01" then
-                        TX_ON <= bram_dina(1);      
+                        TX_ON <= bram_dina(1);   
+                        adc1_inv <= bram_dina(2);    
                     end if; 
                 elsif cfg_addra(10 downto 8) = "011" then
                     SWR_wr <= '1';     
@@ -361,74 +316,6 @@ begin
         end if;
    end if;
 end process cmd_process;
-
---p_synchronous_reset : process (aclk, rst_sig) is
---begin
---
-----    if rising_edge(aclk) then 
-----        rst_sig <= '0';
-----        if HW_wr = '1' then
-----            if cfg_addra(7 downto 0) = x"00" then
-----                rst_sig <= '1';
-----            end if;
-----        end if;    
-----    end if;
---
---    if rst_sig = '1' then
---        rst_r <= '1';  
---    elsif rising_edge(aclk) then
---        rst_r <= '0'; 
---    end if;     
---
---   if rising_edge(aclk) then        
---      rst_r1 <= rst_r; 
---      
---      if rst_r /= rst_r1 and rst_r = '1' then
---         aresetn <= '0';
---      else
---         aresetn <= '1'; 
---      end if;
---      
---   end if;
---end process p_synchronous_reset;
-
---adc_input_0: component adc_input
---    port map (
---        clk_p => ADC1_CLK_P,
---        clk_n => ADC1_CLK_N,
---        din_p => ADC1_OUT_P,
---        din_n => ADC1_OUT_N,
---        m_axis_data_tdata => m_axis_adc0_tdata,
---        adc_rand_en => '1',
---        adc_max_value => adc0_max_value,
---        adc_max_rst => adc0_max_rst,
---        adc_clk_out => aclk
---    );
---    
---adc_input_1: component adc_input
---    port map (
---        clk_p => ADC0_CLK_P,
---        clk_n => ADC0_CLK_N,
---        din_p => ADC0_OUT_P,
---        din_n => ADC0_OUT_N,
---        m_axis_data_tdata => m_axis_adc1_tdata,
---        adc_rand_en => '1',
---        adc_max_value => adc1_max_value,
---        adc_max_rst => adc1_max_rst,
---        adc_clk_out => aclk1
---    );  
---    
---adc_sync_0 : adc_sync
---    Port map (         
---        adc0_data => m_axis_adc0_tdata,
---        adc0_clk => aclk,
---        adc1_data => m_axis_adc1_tdata,
---        adc1_clk => aclk1,
---        adc0_out => axis_adc0_tdata,
---        adc1_out => axis_adc1_tdata,
---        aresetn => aresetn,
---        aclk => aclk
---    );
     
 adc_0 : adc_2ch
     Port map( 
@@ -443,6 +330,7 @@ adc_0 : adc_2ch
         adc0_out => axis_adc0_tdata,
         adc1_out => axis_adc1_tdata,
         rst_async => rst_sig,
+        adc1_inv => adc1_inv,
         aresetn_out => aresetn,
         aclk_out => aclk
     );

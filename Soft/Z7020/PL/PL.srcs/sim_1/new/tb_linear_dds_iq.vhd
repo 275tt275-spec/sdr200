@@ -146,8 +146,8 @@ clk_process : process
             -- 1. Генерируем идеальный цифровой сигнал I/Q для передатчика
             rad_dds := 2.0 * 3.14159265 * 5000000.0 * (real(t) / 122880000.0);
             rad_sig := 2.0 * 3.14159265 * 5000.0 * (real(t) / 122880000.0);
-            i_ideal := cos(rad_sig) / 1.0;
-            q_ideal := sin(rad_sig) / 1.0;
+            i_ideal := cos(rad_sig) / 1.5;
+            q_ideal := sin(rad_sig) / 1.5;
 
             -- Переводим в 24-битный формат со знаком (signed) для входа корректора
             din1_i <= conv_std_logic_vector(integer(i_ideal * 8388607.0), 24);

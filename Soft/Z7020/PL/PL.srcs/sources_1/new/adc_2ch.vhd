@@ -24,7 +24,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -44,6 +44,7 @@ entity adc_2ch is
         adc0_out : out std_logic_vector(15 downto 0);
         adc1_out : out std_logic_vector(15 downto 0);
         rst_async : in STD_LOGIC;
+        adc1_inv: in STD_LOGIC;
         aresetn_out : out STD_LOGIC;
         aclk_out : out STD_LOGIC
    );
@@ -83,6 +84,7 @@ architecture Behavioral of adc_2ch is
     signal aresetn : std_logic := '1';
     signal rst_sig : std_logic := '0';
     signal rst_shift : std_logic_vector(3 downto 0) := (others => '1');
+    signal adc1_out_reg : STD_LOGIC_VECTOR (15 downto 0);
 
 begin
 
@@ -119,10 +121,13 @@ adc_sync_0 : adc_sync
         adc1_data => adc_data_in_1,
         adc1_clk => aclk_1,
         adc0_out => adc0_out,
-        adc1_out => adc1_out,
+        adc1_out => adc1_out_reg,
         aresetn => aresetn,
         aclk => aclk_0
     );
+    
+    adc1_out <= adc1_out_reg when adc1_inv = '0' else 
+                std_logic_vector(-signed(adc1_out_reg));
     
 p_synchronous_reset : process (aclk_0, rst_async) is
 begin

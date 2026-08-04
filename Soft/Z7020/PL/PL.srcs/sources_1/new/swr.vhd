@@ -62,35 +62,25 @@ architecture Behavioral of swr is
     END COMPONENT cordic_translate_24;
 
     signal i_data0_in, q_data0_in, i_data1_in, q_data1_in : std_logic_vector(31 downto 0);
---    signal i_add, i_sub, q_add, q_sub : std_logic_vector(31 downto 0);
     signal cordic_in_tdata_ch0, cordic_in_tdata_ch1 : STD_LOGIC_VECTOR(47 DOWNTO 0);
     signal cordic_out_tdata_ch0, cordic_out_tdata_ch1 : STD_LOGIC_VECTOR(47 DOWNTO 0);
     signal cordic_out_tvalid_ch0, cordic_out_tvalid_ch1 : STD_LOGIC;
     signal cordic_in_valid : std_logic_vector(1 downto 0) := (others => '0');
     signal cordic_in_tvalid : STD_LOGIC := '0';
-    signal cordic_in_tdata_0, cordic_in_tdata_1 : STD_LOGIC_VECTOR(47 DOWNTO 0);
-    signal cordic_out_tdata_0, cordic_out_tdata_1 : STD_LOGIC_VECTOR(47 DOWNTO 0);
-    signal cordic_out_tvalid_0, cordic_out_tvalid_1 : STD_LOGIC;
-    signal out_valid : STD_LOGIC_VECTOR(3 DOWNTO 0) := (others => '0');
+    signal out_valid : STD_LOGIC_VECTOR(1 DOWNTO 0) := (others => '0');
     signal chan_tvalid : STD_LOGIC := '0';
     signal axis_magnitude_tdata : STD_LOGIC_VECTOR (31 downto 0);  -- 16 bit chan A & 16 bit chan B (absolute)
     signal axis_angle_tdata : STD_LOGIC_VECTOR (31 downto 0);      -- 16 bit chan A & 16 bit chan B (signed) 
     signal axis_swr_tdata : STD_LOGIC_VECTOR (31 downto 0);        -- 16 bit inc & 16 bit ref (absolute)
     
-    -- Промежуточные сигналы для безопасной арифметики
-    signal i_add_ext, i_sub_ext : std_logic_vector(32 downto 0);
-    signal q_add_ext, q_sub_ext : std_logic_vector(32 downto 0);
-    
     -- Добавьте промежуточные сигналы в секцию signal (для защелкивания данных)
     signal mag_ch0_reg, mag_ch1_reg : std_logic_vector(15 downto 0);
     signal ang_ch0_reg, ang_ch1_reg : std_logic_vector(15 downto 0);
-    signal swr_inc_reg, swr_ref_reg : std_logic_vector(15 downto 0);
 
 begin
 
     cfg_douta <= axis_magnitude_tdata when cfg_addra = x"01" else 
-              axis_angle_tdata when cfg_addra = x"02" else 
-              axis_swr_tdata;
+              axis_angle_tdata;
 
     cordic_in_tdata_ch0 <= i_data0_in(31) & i_data0_in(31 downto 9) & q_data0_in(31) & q_data0_in(31 downto 9);
     cordic_in_tdata_ch1 <= i_data1_in(31) & i_data1_in(31 downto 9) & q_data1_in(31) & q_data1_in(31 downto 9);
@@ -112,22 +102,6 @@ cordic_1 : cordic_translate_24
         m_axis_dout_tvalid => cordic_out_tvalid_ch1,
         m_axis_dout_tdata => cordic_out_tdata_ch1
     );
-
---   i_add <= i_data0_in + i_data1_in;
---   i_sub <= i_data0_in - i_data1_in;
---   q_add <= q_data0_in + q_data1_in;
---   q_sub <= q_data0_in - q_data1_in;
-
- --   cordic_in_tdata_0 <= i_add(31) & i_add(31 downto 9) & q_add(31) & q_add(31 downto 9);
- --   cordic_in_tdata_1 <= i_sub(31) & i_sub(31 downto 9) & q_sub(31) & q_sub(31 downto 9);
-    
-    -- Сложение и вычитание с расширением знака (защита от переполнения)
-    i_add_ext <= std_logic_vector(signed(i_data0_in(31) & i_data0_in) + signed(i_data1_in(31) & i_data1_in));
-    i_sub_ext <= std_logic_vector(signed(i_data0_in(31) & i_data0_in) - signed(i_data1_in(31) & i_data1_in));
-    q_add_ext <= std_logic_vector(signed(q_data0_in(31) & q_data0_in) + signed(q_data1_in(31) & q_data1_in));
-    q_sub_ext <= std_logic_vector(signed(q_data0_in(31) & q_data0_in) - signed(q_data1_in(31) & q_data1_in));
-    cordic_in_tdata_0 <= i_add_ext(31) & i_add_ext(31 downto 9) & q_add_ext(31) & q_add_ext(31 downto 9);
-    cordic_in_tdata_1 <= i_sub_ext(31) & i_sub_ext(31 downto 9) & q_sub_ext(31) & q_sub_ext(31 downto 9);
     
 process(aclk)
 begin
@@ -157,24 +131,6 @@ begin
 		end if; 
 	end if;
 end process;
-
-cordic_2 : cordic_translate_24
-    PORT MAP (
-        aclk => aclk,
-        s_axis_cartesian_tvalid => cordic_in_tvalid,
-        s_axis_cartesian_tdata => cordic_in_tdata_0,
-        m_axis_dout_tvalid => cordic_out_tvalid_0,
-        m_axis_dout_tdata => cordic_out_tdata_0
-    );
-    
-cordic_3 : cordic_translate_24
-    PORT MAP (
-        aclk => aclk,
-        s_axis_cartesian_tvalid => cordic_in_tvalid,
-        s_axis_cartesian_tdata => cordic_in_tdata_1,
-        m_axis_dout_tvalid => cordic_out_tvalid_1,
-        m_axis_dout_tdata => cordic_out_tdata_1
-    );
     
 -- Процесс сбора и синхронной выдачи
 process(aclk)
@@ -197,25 +153,14 @@ begin
                 ang_ch1_reg <= cordic_out_tdata_ch1(46 downto 31);
             end if;
 
-            if cordic_out_tvalid_0 = '1' then
-                out_valid(2) <= '1';
-                swr_inc_reg <= cordic_out_tdata_0(22 downto 7);
-            end if;
-
-            if cordic_out_tvalid_1 = '1' then
-                out_valid(3) <= '1';
-                swr_ref_reg <= cordic_out_tdata_1(22 downto 7);
-            end if;
-
             -- 2. СИНХРОННОЕ ОБНОВЛЕНИЕ: только когда ВСЕ 4 блока ответили
-            if out_valid = "1111" then
-                out_valid <= "0000";
+            if out_valid = "11" then
+                out_valid <= "00";
                 chan_tvalid <= '1'; -- Импульс готовности всего пакета данных
                 
                 -- Теперь в выходных шинах данные только из одного временного среза
                 axis_magnitude_tdata <= mag_ch0_reg & mag_ch1_reg;
                 axis_angle_tdata     <= ang_ch0_reg & ang_ch1_reg;
-                axis_swr_tdata       <= swr_inc_reg & swr_ref_reg;
             else
                 chan_tvalid <= '0';
             end if;

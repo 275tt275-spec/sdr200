@@ -117,7 +117,7 @@ component fir_audio_0 IS
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (3 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
         tx_on : in STD_LOGIC;
-        audio_max_abs : out STD_LOGIC_VECTOR (24 downto 0);
+        ovr : out STD_LOGIC_VECTOR (2 downto 0);
         aclk : in STD_LOGIC
     );
     end component TXA_modulator;
@@ -175,17 +175,6 @@ component fir_audio_0 IS
             m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
         );
     end component dds16a;
-
---   component mult16x16 is
---       port (
---           aclk            : in  std_logic;
---           aresetn         : in  std_logic;
---           txa_on          : in  std_logic;
---           mult_in_tdata   : in  std_logic_vector(31 downto 0);
---           dds_in_tdata    : in  std_logic_vector(31 downto 0);
---           dac_tdata       : out std_logic_vector(15 downto 0)
---       );
---   end component mult16x16;
      
     signal txa_on : std_logic := '0'; 
     signal modulator_select : STD_LOGIC_VECTOR ( 2 downto 0 ) := "001"; 
@@ -225,10 +214,8 @@ component fir_audio_0 IS
     signal resampler_over : std_logic;
     signal linear_ovf : std_logic_vector(3 downto 0);
     signal ovf_out : std_logic_vector(31 downto 0) := (others => '0');
-    signal audio_max_mod : std_logic_vector(24 downto 0);
-    signal audio_max_mod_s : signed(24 downto 0);
-    signal audio_max : signed(24 downto 0) := (others => '0');
-    signal audio_max_rst : std_logic := '0';
+    signal ovr_mod : std_logic_vector(2 downto 0);
+    signal overflow_reg : std_logic_vector(31 downto 0) := (others => '0');
 
 begin
 
@@ -238,8 +225,7 @@ debug_0 : ila_0
         probe0 => ovf_out(15 DOWNTO 0)
     );
 
-    cfg_data_out <= std_logic_vector(resize(audio_max, 32)) when s_axis_cfg_tdest = x"01" else
-               ovf_out;
+    cfg_data_out <= overflow_reg;
 
     audio_in_tvalid <= s_axis_audio_tvalid;
     audio_in_tdata <= s_axis_audio_tdata;
@@ -269,30 +255,35 @@ audio_0 : fir_audio_0
    cfg_addr <= s_axis_cfg_tdest(3 downto 0);
 
 cmd_process : process (aclk) is
+    -- Временный вектор для удобства сборки флагов переполнения
+    variable current_overflows : std_logic_vector(overflow_reg'range);
 begin 
    if rising_edge(aclk) then
         dds_cfg_tvalid <= '0'; 
-        audio_max_rst <= '0';
-        ovf_out <= std_logic_vector(resize(unsigned
-                (resampler_over & lim_over & linear_ovf),
-                 ovf_out'length));
---        config_tvalid <= '0';
-        if cfg_wr = '1' then   
-            if cfg_addr = x"0" then
-                dds_cfg_tdata <= s_axis_cfg_tdata;
-                dds_cfg_tvalid <= '1';  
-            elsif cfg_addr = x"1" then
-                txa_on <= s_axis_cfg_tdata(0);
---           elsif cfg_addr = x"2" then
---               config_tdata <= s_axis_cfg_tdata(7 DOWNTO 0);
---               config_tvalid <= '1';
-            elsif cfg_addr = x"3" then
-                gain <= s_axis_cfg_tdata( 17 downto 0 );
-            elsif cfg_addr = x"4" then
-                ovf_out <= (others => '0');
-                audio_max_rst <= '1';   
-            end if; 
-        end if;
+        -- 1. Формируем вектор текущих переполнений (выравниваем по длине)
+        current_overflows := std_logic_vector(resize(unsigned
+                (ovr_mod & resampler_over & lim_over & linear_ovf),
+                 overflow_reg'length));
+        ovf_out <= current_overflows;
+        if aresetn = '0' then 
+            txa_on <= '0';
+            overflow_reg <= (others => '0');
+        else         
+            -- 2. Защелкиваем: если пришла '1', она останется в регистре
+            overflow_reg <= overflow_reg or current_overflows;          
+            if cfg_wr = '1' then   
+                if cfg_addr = x"0" then
+                    dds_cfg_tdata <= s_axis_cfg_tdata;
+                    dds_cfg_tvalid <= '1';  
+                elsif cfg_addr = x"1" then
+                    txa_on <= s_axis_cfg_tdata(0);
+                elsif cfg_addr = x"3" then
+                    gain <= s_axis_cfg_tdata( 17 downto 0 );
+                elsif cfg_addr = x"4" then
+                    overflow_reg <= (others => '0');
+                end if; 
+            end if;
+        end if;    
    end if;
 end process cmd_process;
 
@@ -308,8 +299,6 @@ audio_proc_0 : audio_proc
         lim_over => lim_over,
         aclk => aclk
     );
-
---   ovf <= ext(lim_over & resampler_over & linear_ovf, 32);
  
    modulator_in_tdata <= speech_out_tdata;
    modulator_in_tvalid <= speech_out_tvalid;
@@ -327,22 +316,9 @@ modulator_0 : TXA_modulator
         s_axis_cfg_tdest => s_axis_cfg_tdest(3 downto 0),
         s_axis_cfg_tvalid => modulator_cfg_tvalid,
         tx_on => txa_on,
-        audio_max_abs => audio_max_mod,
+        ovr => ovr_mod,
         aclk => aclk
     );
-    
-    audio_max_mod_s <= signed(audio_max_mod);
-    
-process(aclk)
-begin
-    if rising_edge(aclk) then
-        if audio_max_rst = '1' then
-            audio_max <= (others => '0');
-        elsif audio_max_mod_s > audio_max then
-            audio_max <= audio_max_mod_s;
-        end if;
-    end if;
-end process;
 
     resampler_in_tvalid <= modulator_out_tvalid;
     resampler_in_tdata <= modulator_out_tdata;
@@ -361,8 +337,7 @@ resampler_0 : TXA_resampler
     
     linear_in_q <= iq_tdata(47 downto 24);
     linear_in_i <= iq_tdata(23 downto 0);   
-    fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) - resize(signed(s_adc_data_rx1), 17)); -- Сигналы в противофазе
---    fb_forward <= s_adc_data_rx0 - s_adc_data_rx1; 
+    fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) + resize(signed(s_adc_data_rx1), 17));
     linear_din2 <= fb_forward(16 downto 1); -- проверить там раньше было 14 бит  
            
 linear_0 : linear_dds_iq
@@ -406,16 +381,6 @@ mux_0 : conv16x24
         dds_out_tdata   => open,
         dac_tdata       => dac_tdata
     );
-
---mult_0 : mult16x16
---    port map (
---        aclk            => aclk,
---        aresetn         => aresetn,
---        txa_on          => txa_on,
---        mult_in_tdata   => mult_in_tdata,
---        dds_in_tdata    => dds_tdata,
---        dac_tdata       => dac_tdata
---    );
 
     m_daci_tdata <= dac_tdata;  
     m_dacq_tdata <= dac_tdata; 
