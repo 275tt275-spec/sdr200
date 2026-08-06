@@ -102,7 +102,7 @@ component lim_translate_cordic
     );
     end component lim_div;
     
-    signal delay_out_0, delay_out_1 : std_logic_vector(47 downto 0) := (others => '0');        
+    signal delay_out_0, delay_out_1, audio_sync : std_logic_vector(47 downto 0) := (others => '0');        
     signal cordic_in: std_logic_vector(47 downto 0);
     signal cordic_out: std_logic_vector(31 downto 0);
     signal cordic_tvalid : std_logic;
@@ -217,7 +217,8 @@ begin
             else
                 denom <= corr1 + limit;
             end if;
-           delay_tvalid <= '1';
+            audio_sync <= delay_out_1;
+            delay_tvalid <= '1';
        end if;                         
 	end if;
 end process;
@@ -268,7 +269,7 @@ div_0 : lim_div
         s_axis_divisor_tdata => denom,
 --        s_axis_dividend_tvalid => cordic_tvalid,
         s_axis_dividend_tvalid => delay_tvalid,
-        s_axis_dividend_tdata => delay_out_1(47 downto 24),
+        s_axis_dividend_tdata => audio_sync(47 downto 24),
         m_axis_dout_tvalid => divout_valid_0,
         m_axis_dout_tdata => divout_0,
         out_over => div_over_0,
@@ -281,7 +282,7 @@ div_1 : lim_div
         s_axis_divisor_tdata => denom,
 --        s_axis_dividend_tvalid => cordic_tvalid,
         s_axis_dividend_tvalid => delay_tvalid,
-        s_axis_dividend_tdata => delay_out_1(23 downto 0),
+        s_axis_dividend_tdata => audio_sync(23 downto 0),
         m_axis_dout_tvalid => divout_valid_1,
         m_axis_dout_tdata => divout_1,
         out_over => div_over_1,

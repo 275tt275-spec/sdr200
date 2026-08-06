@@ -92,8 +92,7 @@ architecture Behavioral of RXA_demod is
     signal cordic_in_tdata : std_logic_vector(63 downto 0) := (others => '0');
     signal cordic_in_tvalid : std_logic := '0';
     signal dds_data : std_logic_vector(47 DOWNTO 0);
-    signal config_tvalid : std_logic := '0';
-    signal config_tdata : std_logic_vector(15 DOWNTO 0) := x"1799";
+    signal dds_valid : std_logic := '0';
     signal j3e_in_tdata : std_logic_vector(63 downto 0) := (others => '0');
     signal a3e_out_tdata : std_logic_vector(63 downto 0);
     signal a3e_out_tvalid : std_logic;
@@ -109,6 +108,9 @@ architecture Behavioral of RXA_demod is
     signal a3e_raw_data   : signed(31 downto 0) := (others => '0');
     signal dc_est         : signed(37 downto 0) := (others => '0'); -- ”меньшено с 48 до 38 бит
     signal a3e_clean_data : signed(31 downto 0) := (others => '0');
+    signal dds_config_tdata_reg : STD_LOGIC_VECTOR(15 DOWNTO 0) := x"1799";
+    signal dds_config_tvalid_reg : STD_LOGIC := '0';
+    signal dds_config_tvalid : STD_LOGIC := '0';
 
 
 begin
@@ -137,14 +139,16 @@ begin
 		end if;  
 	end if;
 end process;
+
+    dds_config_tvalid <= dds_config_tvalid_reg when cordic_in_tvalid = '1' else '0';
     
 dds_0 : dds_16_24
     PORT MAP (
         aclk => aclk,
         aclken => cordic_in_tvalid,
-        s_axis_config_tvalid => config_tvalid,
-        s_axis_config_tdata => config_tdata,
-        m_axis_data_tvalid => open,
+        s_axis_config_tvalid => dds_config_tvalid,
+        s_axis_config_tdata => dds_config_tdata_reg,
+        m_axis_data_tvalid => dds_valid,
         m_axis_data_tdata => dds_data
     );    
     
@@ -153,7 +157,7 @@ cmply_0 : cmpy_32_24
         aclk => aclk,
         s_axis_a_tvalid => cordic_in_tvalid,
         s_axis_a_tdata => j3e_in_tdata,
-        s_axis_b_tvalid => '1',
+        s_axis_b_tvalid => dds_valid,
         s_axis_b_tdata => dds_data,
         m_axis_dout_tvalid => j3e_out_tvalid,
         m_axis_dout_tdata => j3e_out_tdata
@@ -207,16 +211,15 @@ begin
           else   -- j3e
 	           demod_out_data <= j3e_out_tdata(31 downto 0) + j3e_out_tdata(63 downto 32);  
 	           demod_out_en <= j3e_out_tvalid;     
-          end if;      
-		
-		if demod_out_en = '1' then
-		    config_tvalid <= '0';
-		end if;    
-		
-		if dds_config_16_valid = '1' then
-		    config_tdata <= dds_config_16_data;
-		    config_tvalid <= '1';
-		end if;
+          end if;  
+          
+       if dds_config_16_valid = '1' then
+           dds_config_tvalid_reg  <= '1'; 
+           dds_config_tdata_reg <= dds_config_16_data;
+        end if;
+        if cordic_in_tvalid = '1' and dds_config_tvalid_reg = '1' then
+            dds_config_tvalid_reg <= '0';
+        end if;    
 
 	end if;
 end process;

@@ -89,6 +89,14 @@ begin
         tb_s_axis_cfg_tdest  <= (others => '0');
         wait for CLK_PERIOD * 10;
         
+        -- Подача команды dds 
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"00001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';
+        
         wait until rising_edge(tb_aclk);
         tb_s_axis_cfg_tdest  <= "100";      -- limit_overshoot
         tb_s_axis_cfg_tdata  <= x"00002020";
@@ -123,7 +131,172 @@ begin
         tb_s_axis_cfg_tdata  <= x"00000001";
         tb_s_axis_cfg_tvalid <= '1';        
         wait until rising_edge(tb_aclk);
-        tb_s_axis_cfg_tvalid <= '0';            
+        tb_s_axis_cfg_tvalid <= '0';          
+        
+        for i in 1 to 20000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;  
+        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"10001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;
+        
+            wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"20001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;
+        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"30001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;
+        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"40001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;
+        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"50001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;
+        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"60001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;
+
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"70001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;
+        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"80001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop;
+
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"90001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';    
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop; 
+
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"A0001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop; 
+
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"B0001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';  
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop; 
+
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"C0001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop; 
+
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"D0001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop; 
+
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"E0001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0';   
+        
+        for i in 1 to 10000 loop
+            wait until rising_edge(tb_aclk);
+        end loop; 
+
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tdest  <= "011";
+        tb_s_axis_cfg_tdata  <= x"F0001799";
+        tb_s_axis_cfg_tvalid <= '1';        
+        wait until rising_edge(tb_aclk);
+        tb_s_axis_cfg_tvalid <= '0'; 
         
         tb_s_axis_cfg_tdata  <= (others => '0');
         tb_s_axis_cfg_tdest  <= (others => '0');
@@ -138,7 +311,7 @@ begin
         variable s_word : std_logic_vector(23 downto 0);
     begin
         -- Укажите имя вашего нового 24-битного файла
-        file_open(infile, "E:\\Projects\\sdr200\\Soft\\Z7020\\PL\\meandr24.raw", READ_MODE);
+        file_open(infile, "E:\\Projects\\sdr200\\Soft\\Z7020\\PL\\tone2.raw", READ_MODE);
         
         tb_s_axis_audio_tvalid <= '0';
         tb_s_axis_audio_tdata  <= (others => '0');
@@ -149,6 +322,7 @@ begin
         end loop;
 
         while not endfile(infile) loop
+        
             -- Побайтовое чтение 24-битного слова (3 байта, Little Endian)
             for i in 0 to 2 loop
                 if not endfile(infile) then

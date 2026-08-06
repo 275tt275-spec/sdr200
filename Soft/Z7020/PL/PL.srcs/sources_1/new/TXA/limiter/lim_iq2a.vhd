@@ -22,14 +22,25 @@ entity lim_iq2a is
         m_axis_audio_tvalid : out STD_LOGIC;
         s_axis_iq_tdata : in STD_LOGIC_VECTOR (47 downto 0);
         s_axis_iq_tvalid : in STD_LOGIC; 
-        dds_data : in STD_LOGIC_VECTOR (31 downto 0);
-        dds_tvalid : in STD_LOGIC;
+        dds_cfg_data : in STD_LOGIC_VECTOR (31 downto 0);
+        dds_cfg_tvalid : in STD_LOGIC;
         over : out STD_LOGIC;
         aclk : in STD_LOGIC
     );
 end lim_iq2a;
 
 architecture Behavioral of lim_iq2a is
+
+COMPONENT dds_16_16_ph IS
+  PORT (
+    aclk : IN STD_LOGIC;
+    aclken : IN STD_LOGIC;
+    s_axis_config_tvalid : IN STD_LOGIC;
+    s_axis_config_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    m_axis_data_tvalid : OUT STD_LOGIC;
+    m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+  );
+END COMPONENT dds_16_16_ph;
 
 COMPONENT cmpy_16_24
   PORT (
@@ -56,6 +67,11 @@ component audio_base_fir is
     );
 end component audio_base_fir;
 
+    signal dds_tvalid : STD_LOGIC;
+    signal dds_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0);
+    signal dds_config_tdata_reg : STD_LOGIC_VECTOR(31 DOWNTO 0);
+    signal dds_config_tvalid_reg : STD_LOGIC := '0';
+    signal dds_config_tvalid : STD_LOGIC := '0';
     signal multin_tdata : STD_LOGIC_VECTOR(47 DOWNTO 0);
     signal multout_tdata : STD_LOGIC_VECTOR(47 DOWNTO 0);
     signal multout_tvalid : std_logic;	
@@ -71,6 +87,7 @@ end component audio_base_fir;
     -- GAIN_SHIFT = 3 -> срез (28 downto 5) [+18 дБ усиления]
     constant GAIN_SHIFT : integer := 3;     
     signal ch_24 : std_logic_vector(23 downto 0) := (others => '0');
+    signal ch_24_valid : std_logic;
     signal lfsr_reg : std_logic_vector(15 downto 0) := x"A5A5"; -- Стартовое число (не 0)
     signal ctrl_tdata : std_logic_vector(7 downto 0) := (others => '0');
 
@@ -81,6 +98,13 @@ begin
 process(aclk)
 begin
     if rising_edge(aclk) then
+        if dds_cfg_tvalid = '1' then
+           dds_config_tvalid_reg  <= '1'; 
+           dds_config_tdata_reg <= dds_cfg_data;
+        end if;
+        if s_axis_iq_tvalid = '1' and dds_config_tvalid_reg = '1' then
+            dds_config_tvalid_reg <= '0';
+        end if;    
         -- Классический полином LFSR x^16 + x^14 + x^13 + x^11 + 1
         lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(2) xor lfsr_reg(3) xor lfsr_reg(5)) & lfsr_reg(15 downto 1);
     end if;
@@ -88,14 +112,25 @@ end process;
 
     ctrl_tdata(0) <= lfsr_reg(0); -- Подаем случайный бит в нулевой разряд
     ctrl_tdata(7 downto 1) <= (others => '0');
+    dds_config_tvalid <= dds_config_tvalid_reg when s_axis_iq_tvalid = '1' else '0';
+    
+dds_0 : dds_16_16_ph
+  PORT MAP (
+    aclk => aclk,
+    aclken => s_axis_iq_tvalid,
+    s_axis_config_tvalid => dds_config_tvalid,
+    s_axis_config_tdata => dds_config_tdata_reg,
+    m_axis_data_tvalid => dds_tvalid,
+    m_axis_data_tdata => dds_tdata
+  );
 
 mult_0 : cmpy_16_24
   PORT MAP (
     aclk => aclk,
     s_axis_a_tvalid => s_axis_iq_tvalid,
     s_axis_a_tdata => multin_tdata,
-    s_axis_b_tvalid => '1',
-    s_axis_b_tdata => dds_data,
+    s_axis_b_tvalid => dds_tvalid,
+    s_axis_b_tdata => dds_tdata,
     s_axis_ctrl_tvalid => '1',
     s_axis_ctrl_tdata => ctrl_tdata,
     m_axis_dout_tvalid => multout_tvalid,
@@ -128,9 +163,9 @@ begin
         -- По умолчанию сбрасываем валидность шины Stream
         m_axis_audio_tvalid_reg <= '0';
         over <= '0';
-
+        
         if fir_out_tvalid = '1' then
-            m_axis_audio_tvalid_reg <= '1';
+            ch_24_valid <= '1';
             val := fir_out_tdata;           
             sign := val(31);
             overflow := false;
@@ -149,8 +184,11 @@ begin
             else
                 ch_24 <= val((31 - GAIN_SHIFT) downto (8 - GAIN_SHIFT));
             end if;
+        else
+           ch_24_valid <= '0';     
         end if;
         m_axis_audio_tdata <= ch_24;
+        m_axis_audio_tvalid_reg <= ch_24_valid;
     end if;
 end process;
     

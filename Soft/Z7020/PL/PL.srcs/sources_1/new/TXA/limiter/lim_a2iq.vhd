@@ -25,8 +25,8 @@ entity lim_a2iq is
         m_axis_iq_tvalid : out STD_LOGIC;
         s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
         s_axis_audio_tvalid : in STD_LOGIC; 
-        dds_data : in STD_LOGIC_VECTOR (31 downto 0);
-        dds_tvalid : in STD_LOGIC;
+        dds_cfg_data : in STD_LOGIC_VECTOR (31 downto 0);
+        dds_cfg_tvalid : in STD_LOGIC;
         fir_reload_tdata : STD_LOGIC_VECTOR(23 DOWNTO 0);
         fir_reload_tvalid : STD_LOGIC;
         fir_reload_tlast : STD_LOGIC;
@@ -36,6 +36,17 @@ entity lim_a2iq is
 end lim_a2iq;
 
 architecture Behavioral of lim_a2iq is
+
+COMPONENT dds_16_16_ph IS
+  PORT (
+    aclk : IN STD_LOGIC;
+    aclken : IN STD_LOGIC;
+    s_axis_config_tvalid : IN STD_LOGIC;
+    s_axis_config_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    m_axis_data_tvalid : OUT STD_LOGIC;
+    m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+  );
+END COMPONENT dds_16_16_ph;
 
 COMPONENT cmpy_16_24
   PORT (
@@ -71,6 +82,11 @@ COMPONENT lim_lpf_fir IS
     );
 END COMPONENT  lim_lpf_fir;
 
+    signal dds_config_tdata_reg : STD_LOGIC_VECTOR(31 DOWNTO 0);
+    signal dds_config_tvalid_reg : STD_LOGIC := '0';
+    signal dds_config_tvalid : STD_LOGIC := '0';
+    signal dds_tvalid : STD_LOGIC;
+    signal dds_tdata : STD_LOGIC_VECTOR(31 DOWNTO 0);
     signal mult_in_data : std_logic_vector(47 downto 0);
     signal firin_tdata : STD_LOGIC_VECTOR(47 DOWNTO 0);
     signal firin_tvalid : std_logic;
@@ -85,6 +101,13 @@ begin
 process(aclk)
 begin
     if rising_edge(aclk) then
+        if dds_cfg_tvalid = '1' then
+           dds_config_tvalid_reg  <= '1'; 
+           dds_config_tdata_reg <= dds_cfg_data;
+        end if;
+        if s_axis_audio_tvalid = '1' and dds_config_tvalid_reg = '1' then
+            dds_config_tvalid_reg <= '0';
+        end if;
         -- Классический полином LFSR x^16 + x^14 + x^13 + x^11 + 1
         lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(2) xor lfsr_reg(3) xor lfsr_reg(5)) & lfsr_reg(15 downto 1);
     end if;
@@ -92,14 +115,25 @@ end process;
 
     ctrl_tdata(0) <= lfsr_reg(0); -- Подаем случайный бит в нулевой разряд
     ctrl_tdata(7 downto 1) <= (others => '0');
+    dds_config_tvalid <= dds_config_tvalid_reg when s_axis_audio_tvalid = '1' else '0';
+    
+dds_0 : dds_16_16_ph
+  PORT MAP (
+    aclk => aclk,
+    aclken => s_axis_audio_tvalid,
+    s_axis_config_tvalid => dds_config_tvalid,
+    s_axis_config_tdata => dds_config_tdata_reg,
+    m_axis_data_tvalid => dds_tvalid,
+    m_axis_data_tdata => dds_tdata
+  );
 
 mult_0 : cmpy_16_24
   PORT MAP (
     aclk => aclk,
     s_axis_a_tvalid => s_axis_audio_tvalid,
     s_axis_a_tdata => mult_in_data,
-    s_axis_b_tvalid => '1',
-    s_axis_b_tdata => dds_data,
+    s_axis_b_tvalid => dds_tvalid,
+    s_axis_b_tdata => dds_tdata,
     s_axis_ctrl_tvalid => '1',
     s_axis_ctrl_tdata => ctrl_tdata,
     m_axis_dout_tvalid => firin_tvalid,
