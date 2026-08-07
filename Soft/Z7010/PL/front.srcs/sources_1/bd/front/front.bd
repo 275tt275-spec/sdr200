@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x1A6944A91D33537D",
+      "boundary_crc": "0x1CDF82D57BA30D9C",
       "device": "xc7z010clg400-1",
       "gen_directory": "../../../../front.gen/sources_1/bd/front",
       "name": "front",
@@ -26,7 +26,8 @@
           "auto_pc": ""
         }
       },
-      "system_gpio_0": ""
+      "system_gpio_0": "",
+      "lcd_dctrl_en_0": ""
     },
     "interface_ports": {
       "DDR": {
@@ -292,6 +293,12 @@
       },
       "btn_band8": {
         "direction": "IO"
+      },
+      "lcd_en": {
+        "direction": "O"
+      },
+      "lcd_dctrl": {
+        "direction": "O"
       }
     },
     "components": {
@@ -2237,6 +2244,40 @@
             "direction": "IO"
           }
         }
+      },
+      "lcd_dctrl_en_0": {
+        "vlnv": "xilinx.com:module_ref:lcd_dctrl_en:1.0",
+        "ip_revision": "1",
+        "xci_name": "front_lcd_dctrl_en_0_0",
+        "xci_path": "ip\\front_lcd_dctrl_en_0_0\\front_lcd_dctrl_en_0_0.xci",
+        "inst_hier_path": "lcd_dctrl_en_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "lcd_dctrl_en",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "clk": {
+            "type": "clk",
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "100000000",
+                "value_src": "user_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "front_processing_system7_0_0_FCLK_CLK0",
+                "value_src": "default_prop"
+              }
+            }
+          },
+          "lcd_en": {
+            "direction": "O"
+          },
+          "lcd_dctrl": {
+            "direction": "O"
+          }
+        }
       }
     },
     "interface_nets": {
@@ -2446,6 +2487,18 @@
           "vga_v_sync"
         ]
       },
+      "lcd_dctrl_en_0_lcd_dctrl": {
+        "ports": [
+          "lcd_dctrl_en_0/lcd_dctrl",
+          "lcd_dctrl"
+        ]
+      },
+      "lcd_dctrl_en_0_lcd_en": {
+        "ports": [
+          "lcd_dctrl_en_0/lcd_en",
+          "lcd_en"
+        ]
+      },
       "processing_system7_0_FCLK_CLK0": {
         "ports": [
           "processing_system7_0/FCLK_CLK0",
@@ -2454,7 +2507,8 @@
           "ps7_0_axi_periph/ACLK",
           "ps7_0_axi_periph/S00_ACLK",
           "ps7_0_axi_periph/M00_ACLK",
-          "Zedboard_AXI_VGA_0/s_axi_aclk"
+          "Zedboard_AXI_VGA_0/s_axi_aclk",
+          "lcd_dctrl_en_0/clk"
         ]
       },
       "processing_system7_0_FCLK_CLK1": {

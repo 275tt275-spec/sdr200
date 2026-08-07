@@ -35,6 +35,8 @@ set_property -dict {PACKAGE_PIN U19 IOSTANDARD LVCMOS33} [get_ports vga_dclk]
 set_property -dict {PACKAGE_PIN U20 IOSTANDARD LVCMOS33} [get_ports vga_dithb]
 set_property -dict {PACKAGE_PIN V20 IOSTANDARD LVCMOS33} [get_ports vga_rst]
 set_property -dict {PACKAGE_PIN W20 IOSTANDARD LVCMOS33} [get_ports vga_lr]
+set_property -dict {PACKAGE_PIN P15 IOSTANDARD LVCMOS33} [get_ports lcd_en]
+set_property -dict {PACKAGE_PIN P18 IOSTANDARD LVCMOS33} [get_ports lcd_dctrl]
 
 set_property -dict {PACKAGE_PIN K14 IOSTANDARD LVCMOS25} [get_ports btn_lsb]
 set_property -dict {PACKAGE_PIN L16 IOSTANDARD LVCMOS25} [get_ports btn_usb]
