@@ -448,30 +448,30 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BAND6_EN_Pin|BAND5_EN_Pin|TX_FAIL_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, BAND6_EN_Pin|TX_FAIL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, BAND4_EN_Pin|BAND3_EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, BAND2_EN_Pin|BAND3_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, BAND2_EN_Pin|BAND1_EN_Pin|BAND0_EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, BAND0_EN_Pin|BAND1_EN_Pin|BAND4_EN_Pin|BAND5_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : BAND6_EN_Pin BAND5_EN_Pin TX_FAIL_Pin */
-  GPIO_InitStruct.Pin = BAND6_EN_Pin|BAND5_EN_Pin|TX_FAIL_Pin;
+  GPIO_InitStruct.Pin = BAND6_EN_Pin|TX_FAIL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BAND4_EN_Pin BAND3_EN_Pin */
-  GPIO_InitStruct.Pin = BAND4_EN_Pin|BAND3_EN_Pin;
+  GPIO_InitStruct.Pin = BAND2_EN_Pin|BAND3_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BAND2_EN_Pin BAND1_EN_Pin BAND0_EN_Pin */
-  GPIO_InitStruct.Pin = BAND2_EN_Pin|BAND1_EN_Pin|BAND0_EN_Pin;
+  GPIO_InitStruct.Pin = BAND0_EN_Pin|BAND1_EN_Pin|BAND4_EN_Pin|BAND5_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

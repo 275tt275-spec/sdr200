@@ -89,7 +89,8 @@ void hw_Init(void)
 	linear.phi_cos = 32767;
 
 	limiter.in_gain = 0x37FF;
-	limiter.out_gain = 0x2b00;
+//	limiter.out_gain = 0x2b00;
+	limiter.out_gain = 0x4D00;
 	limiter.limit = 0x0C00;
 	limiter.overshoot = 0x2080;
 	limiter.dds_phase = 0x1D9A;
@@ -238,7 +239,7 @@ void hw_Start(void)
 
 	fpga_LIM_Set(&limiter);
 
-	fpga_TXA_ResamplerGain(28006);
+	fpga_TXA_ResamplerGain(65535);
 
 	SendToCore1(SET_TXA_PS_RESTORE_CORR, sizeof(s_eeprom_iqc), eeprom_get_iqc(0));
 
@@ -885,6 +886,50 @@ void hw_SetATU(uint8_t dir, uint8_t maskL, uint8_t maskC)
 inline void hw_GetSWR(s_swr* swr)
 {
 	fpga_GetSWR(swr);
+
+	// Защита от деления на ноль при отсутствии тока (обрыв антенны)
+	if(swr->magB < 50)
+	{
+		swr->mag_Z = 9999.0;
+		swr->R = 9999.0;
+		swr->X = 0.0;
+		swr->gamma = 1.0;
+		swr->swr = 99.9;
+		swr->is_inductive = 0;
+	}
+
+	float Z0 = 50.0;
+	float angleA = (float)(int16_t)swr->angA * 180 / 16384;
+	float angleB = (float)(int16_t)swr->angB * 180 / 16384;
+	float delta_phi = angleB - angleA;
+	delta_phi = delta_phi * M_PI / 180; // в радианы
+
+	// 1. Модуль полного сопротивления (|Z| = U / I)
+	swr->mag_Z = Z0 * (float)swr->magA / (float)swr->magB;
+	// 2. Активная и реактивная составляющие импеданса
+	swr->R = swr->mag_Z * cosf(delta_phi);
+	swr->X = swr->mag_Z * sinf(delta_phi);
+	// Определение характера нагрузки по знаку сдвига фаз
+	if (delta_phi >= 0.0) {
+		swr->is_inductive = 1;  // Ток отстает (индуктивность)
+	} else {
+		swr->is_inductive = 0; // Ток опережает (емкость)
+	}
+	// 3. Расчет модуля коэффициента отражения |Gamma|
+	// Формула: |Gamma| = sqrt( ((R-Z0)^2 + X^2) / ((R+Z0)^2 + X^2) )
+	float num = ((swr->R - Z0) * (swr->R - Z0)) + (swr->X * swr->X);
+	float den = ((swr->R + Z0) * (swr->R + Z0)) + (swr->X * swr->X);
+	if (den > 0.0) {
+		swr->gamma = sqrt(num / den);
+	} else {
+		swr->gamma = 1.0;
+	}
+	// Защита от численной погрешности (чтобы не получить деление на ноль при расчете SWR)
+	if (swr->gamma > 0.999) {
+		swr->gamma = 0.999;
+	}
+	// 4. Расчет КСВ (SWR = (1 + |Gamma|) / (1 - |Gamma|))
+	swr->swr = (1.0 + swr->gamma) / (1.0 - swr->gamma);
 }
 
 inline void hw_GetMaxValues(s_max_values* data)

@@ -64,25 +64,25 @@ void gpio_band(uint8_t band)
 
 	switch (band) {
 	case 0:
-	  HAL_GPIO_WritePin(BAND0_EN_GPIO_Port, BAND0_EN_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(BAND6_EN_GPIO_Port, BAND6_EN_Pin, GPIO_PIN_SET);
 	  break;
 	case 1:
-	  HAL_GPIO_WritePin(BAND1_EN_GPIO_Port, BAND1_EN_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(BAND5_EN_GPIO_Port, BAND5_EN_Pin, GPIO_PIN_SET);
 	  break;
 	case 2:
-	  HAL_GPIO_WritePin(BAND2_EN_GPIO_Port, BAND2_EN_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(BAND4_EN_GPIO_Port, BAND4_EN_Pin, GPIO_PIN_SET);
 	  break;
 	case 3:
 	  HAL_GPIO_WritePin(BAND3_EN_GPIO_Port, BAND3_EN_Pin, GPIO_PIN_SET);
 	  break;
 	case 4:
-	  HAL_GPIO_WritePin(BAND4_EN_GPIO_Port, BAND4_EN_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(BAND2_EN_GPIO_Port, BAND2_EN_Pin, GPIO_PIN_SET);
 	  break;
 	case 5:
-	  HAL_GPIO_WritePin(BAND5_EN_GPIO_Port, BAND5_EN_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(BAND1_EN_GPIO_Port, BAND1_EN_Pin, GPIO_PIN_SET);
 	  break;
 	case 6:
-	  HAL_GPIO_WritePin(BAND6_EN_GPIO_Port, BAND6_EN_Pin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(BAND0_EN_GPIO_Port, BAND0_EN_Pin, GPIO_PIN_SET);
 	  break;
 	}
 }

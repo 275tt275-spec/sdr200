@@ -1,4 +1,6 @@
 #include "xparameters.h"
+#include "xuartps_hw.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -8,5 +10,5 @@ char inbyte(void);
 #endif 
 
 char inbyte(void) {
-    return (0);
+	 return XUartPs_RecvByte(STDIN_BASEADDRESS);
 }

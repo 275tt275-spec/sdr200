@@ -16,12 +16,16 @@
 
 typedef struct tag_swr
 {
-	int inc;
-	int ref;
 	int magA;
 	int magB;
 	int angA;
 	int angB;
+	float R;          // Активное сопротивление, Ом
+	float X;          // Реактивное сопротивление, Ом
+	float mag_Z;      // Модуль импеданса, Ом
+	float gamma;      // Модуль коэффициента отражения
+	float swr;        // Коэффициент стоячей волны (SWR)
+	int is_inductive; // true - индуктивный характер, false - емкостный
 } s_swr;
 
 // Диалоговое окно CSwrDlg

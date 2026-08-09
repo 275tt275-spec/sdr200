@@ -27,7 +27,7 @@ static char 	out_buffer[32];
 
 static void cmd_parse(char* msg, size_t len);
 static void cmd_rx_data(const char* data, uint32_t len);
-static const char strStart[] = "PB0;";
+static const char strStart[] = "PB1;";
 
 void cmd_start(void)
 {

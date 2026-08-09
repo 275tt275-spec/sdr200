@@ -42,7 +42,7 @@
         "OUTPUTDIR": [ { "value": "../../../../../../front.gen/sources_1/bd/front/ip/front_Zedboard_AXI_VGA_0_1" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.2" } ],
+        "SWVERSION": [ { "value": "2023.2.2" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },

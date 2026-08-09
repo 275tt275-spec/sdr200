@@ -16,6 +16,90 @@ char log_msg[256];
 const char* szSwrFileName = "TXAswr.ini";
 const  std::complex<float> Zi(0.0, 1.0);
 
+enum class CapPosition {
+	TX_SIDE,
+	ANT_SIDE,
+	UNMATCHABLE
+};
+
+struct StrictATUResult {
+	CapPosition cap_pos;
+	float c_pf;
+	float l_nh;
+	float estimated_swr;
+};
+
+StrictATUResult calculate_strict_l_network(std::complex<float> Zin, float r_0, float freq_hz)
+{
+	const float PI = 3.14159265f;
+	StrictATUResult res = { CapPosition::UNMATCHABLE, 0.0f, 0.0f, 999.0f };
+	float omega = 2.0f * PI * freq_hz;
+
+	float R = Zin.real();
+	float X = Zin.imag();
+
+	// Защита от нулевого сопротивления
+	if (R <= 0.0f) return res;
+
+	// === ТЕСТ ДЛЯ СХЕМЫ ANT_SIDE (Конденсатор параллельно антенне, катушка последовательно к TX) ===
+	// Находим проводимость антенны: Y = G + jB
+	float denom = R * R + X * X;
+	float G_ant = R / denom;
+	float B_ant = -X / denom; // знак минус, так как Y = 1/(R+jX) = R/den - jX/den
+
+	// Чтобы схема ANT_SIDE работала, должно выполняться: G_ant < 1.0 / r_0
+	if (G_ant < (1.0f / r_0)) {
+		// Требуемая полная проводимость параллельной части, чтобы получить активные 50 Ом
+		float B_total = std::sqrt((1.0f / r_0 - G_ant) * G_ant);
+
+		// Нам нужно получить +B_total (для согласования требуется знак, зависящий от направления)
+		// Проверяем оба корня уравнения (+B_total и -B_total)
+		float B_c_opt1 = B_total - B_ant;
+		float B_c_opt2 = -B_total - B_ant;
+
+		// Конденсатор имеет положительную проводимость (B_c = omega * C > 0)
+		float B_c = -1.0f;
+		float sign_fixed = 1.0f;
+
+		if (B_c_opt1 > 0.0f) { B_c = B_c_opt1; sign_fixed = 1.0f; }
+		else if (B_c_opt2 > 0.0f) { B_c = B_c_opt2; sign_fixed = -1.0f; }
+
+		if (B_c > 0.0f) {
+			// Находим реактивное сопротивление последовательной катушки
+			float X_l = sign_fixed * std::sqrt(r_0 / G_ant - r_0 * r_0);
+
+			// Нам нужна именно катушка (X_l >= 0)
+			if (X_l >= 0.0f) {
+				res.cap_pos = CapPosition::ANT_SIDE;
+				res.c_pf = (B_c / omega) * 1e12f;
+				res.l_nh = (X_l / omega) * 1e9f;
+				res.estimated_swr = 1.0f;
+				return res;
+			}
+		}
+	}
+
+	// === ТЕСТ ДЛЯ СХЕМЫ TX_SIDE (Конденсатор параллельно TX, катушка последовательно к антенне) ===
+	// Для этой схемы необходимо, чтобы R < r_0
+	if (R < r_0) {
+		float sqrt_term = std::sqrt((r_0 - R) / R);
+		float X_c = r_0 / sqrt_term; // Реактивное сопротивление конденсатора (величина)
+		float X_l_total = R * sqrt_term;
+		float X_l_needed = X_l_total - X; // Катушка должна компенсировать и реактивность антенны
+
+		if (X_l_needed >= 0.0f) {
+			res.cap_pos = CapPosition::TX_SIDE;
+			res.c_pf = (1.0f / (omega * X_c)) * 1e12f;
+			res.l_nh = (X_l_needed / omega) * 1e9f;
+			res.estimated_swr = 1.0f;
+			return res;
+		}
+	}
+
+	return res; // Если ни одна схема строго на L и C_на_землю не подошла
+}
+
+
 static std::complex<float> ZhpLsd(float freq, std::complex<float> Zin, int L, int C)
 {
 	float omega = (float)(2.0 * M_PI * freq);
@@ -236,39 +320,10 @@ void CSwrDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 		CString str, strT;
 		int maxValue;
-		snprintf(send_rxa, 64, "SW;");
-		com_send_read(send_rxa, rcv_rxa, 33);
-		sscanf(rcv_rxa, "SW%05d%05d%05d%05d%05d%05d;",
-			&m_swr.inc, &m_swr.ref, &m_swr.magA, &m_swr.magB, &m_swr.angA, &m_swr.angB);
 
-		float Z = (float)50.0 * (float)m_swr.magB / (float)m_swr.magA;
-		float angle = (float)m_swr.angA - (float)m_swr.angB;
-		angle = angle * 180 / 16384;
-		angle = angle + 180;
-		if (angle > 360)
-			angle = angle - 360;
-		if (angle > 180)
-			angle = angle - 360;
-		float rad = (float)(angle * M_PI * 2 / 360);
-		std::complex<float> m_Z(Z * cos(rad), Z * sin(rad));
+		GetSwr();
 
-		str.Format(L"%S\r\n", rcv_rxa);
-		strT.Format(L"VAL: %d, %d\r\n", m_swr.inc, m_swr.ref);
-		str += strT;
-		strT.Format(L"MAG: %d, %d\r\n", m_swr.magA, m_swr.magB);
-		str += strT;
-		strT.Format(L"ANG: %d, %d, %.0f\r\n", m_swr.angA, m_swr.angB, angle);
-		str += strT;
-
-		float fswr = fabs(((float)m_swr.inc + (float)m_swr.ref) / ((float)m_swr.inc - (float)m_swr.ref));
-		strT.Format(L"SWR: %.2f\n", fswr);
-		str += strT;
-
-		std::complex<float>Y = 1.0f / m_Z;
-		strT.Format(L"Z = %.1f%+.1fi, Y = %.6f%+.6fi\n", m_Z.real(), m_Z.imag(), Y.real(), Y.imag());
-		str += strT;
-
-		SetDlgItemText(IDC_REMARK, str);
+//		SetDlgItemText(IDC_REMARK, str);
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
@@ -307,11 +362,81 @@ void CSwrDlg::SetATU(void)
 
 void CSwrDlg::GetSwr(void)
 {
+	CString str, strT;
+
 	snprintf(send_rxa, 64, "SW;");
 	com_send_read(send_rxa, rcv_rxa, 33);
-	sscanf(rcv_rxa, "SW%05d%05d%05d%05d%05d%05d;",
-		&m_swr.inc, &m_swr.ref, &m_swr.magA, &m_swr.magB, &m_swr.angA, &m_swr.angB);
-	m_fswr = fabs(((float)m_swr.inc + (float)m_swr.ref) / ((float)m_swr.inc - (float)m_swr.ref));
+	sscanf(rcv_rxa, "SW%05d%05d%05d%05d;",
+		&m_swr.magA, &m_swr.magB, &m_swr.angA, &m_swr.angB);
+
+
+	// Защита от деления на ноль при отсутствии тока (обрыв антенны)
+	if (m_swr.magB < 50)
+	{
+		m_swr.mag_Z = 9999.0;
+		m_swr.R = 9999.0;
+		m_swr.X = 0.0;
+		m_swr.gamma = 1.0;
+		m_swr.swr = 99.9;
+		m_swr.is_inductive = 0;
+	}
+
+	strT.Format(L"A = %d, B = %d, aA = %d, aB = %d\n",
+		m_swr.magA, m_swr.magB, m_swr.angA, m_swr.angB);
+	str += strT;
+
+	float Z0 = 50.0;
+	float angleA = (float)(int16_t)m_swr.angA * 180 / 16384;
+	float angleB = (float)(int16_t)m_swr.angB * 180 / 16384;
+	float delta_phi = angleB - angleA;  // FIXME:
+
+	strT.Format(L"A = %.2f, B = %.2f, delta_phi = %.2f\n",
+		angleA, angleB, delta_phi);
+	str += strT;
+
+	delta_phi = delta_phi * M_PI / 180; // в радианы
+	// 1. Модуль полного сопротивления (|Z| = U / I)
+	m_swr.mag_Z = Z0 * (float)m_swr.magA / (float)m_swr.magB;
+	// 2. Активная и реактивная составляющие импеданса
+	m_swr.R = m_swr.mag_Z * cosf(delta_phi);
+	m_swr.X = m_swr.mag_Z * sinf(delta_phi);
+	strT.Format(L"|Z| = %.2f, Z = %.2f%+.3fi\n", 
+		m_swr.mag_Z, m_swr.R, m_swr.X);
+	str += strT;
+
+	// Определение характера нагрузки по знаку сдвига фаз
+	if (delta_phi >= 0.0) {
+		m_swr.is_inductive = 1;  // Ток отстает (индуктивность)
+	}
+	else {
+		m_swr.is_inductive = 0; // Ток опережает (емкость)
+	}
+	// 3. Расчет модуля коэффициента отражения |Gamma|
+	// Формула: |Gamma| = sqrt( ((R-Z0)^2 + X^2) / ((R+Z0)^2 + X^2) )
+	float num = ((m_swr.R - Z0) * (m_swr.R - Z0)) + (m_swr.X * m_swr.X);
+	float den = ((m_swr.R + Z0) * (m_swr.R + Z0)) + (m_swr.X * m_swr.X);
+	if (den > 0.0) {
+		m_swr.gamma = sqrt(num / den);
+	}
+	else {
+		m_swr.gamma = 1.0;
+	}
+	// Защита от численной погрешности (чтобы не получить деление на ноль при расчете SWR)
+	if (m_swr.gamma > 0.999) {
+		m_swr.gamma = 0.999;
+	}
+	// 4. Расчет КСВ (SWR = (1 + |Gamma|) / (1 - |Gamma|))
+	m_swr.swr = (1.0 + m_swr.gamma) / (1.0 - m_swr.gamma);
+
+	strT.Format(L"Z = %.2f%+.3fi, SWR = %.2f\n",
+		m_swr.R, m_swr.X, m_swr.swr);
+	str += strT;
+
+	m_fswr = m_swr.swr;
+	m_Z.real(m_swr.R);
+	m_Z.imag(m_swr.X);
+
+	SetDlgItemText(IDC_REMARK, str);
 }
 
 void CSwrDlg::BestSwr(void)
@@ -328,6 +453,9 @@ void CSwrDlg::BestSwr(void)
 
 void CSwrDlg::GetComplex(void)
 {
+	GetSwr();
+
+#if 0
 	snprintf(send_rxa, 64, "SW;");
 	com_send_read(send_rxa, rcv_rxa, 33);
 	sscanf(rcv_rxa, "SW%05d%05d%05d%05d%05d%05d;",
@@ -344,13 +472,14 @@ void CSwrDlg::GetComplex(void)
 		angle = angle - 360;
 	float rad = (float)(angle * M_PI * 2 / 360);
 	m_Z = std::complex<float>(Z * cos(rad), Z * sin(rad));
+#endif
 }
 
 void CSwrDlg::SetGetValue(void)
 {
 	SetATU();
 	Sleep(40);
-	GetComplex();
+//	GetComplex();
 	GetSwr();
 	BestSwr();
 }
@@ -594,19 +723,28 @@ void CSwrDlg::CoarseTune(void)
 void CSwrDlg::SharpTune(void)
 {
 	int mem_I = m_ind, mem_C = m_cap;
-	int startI = -2, startC = -2;
-	int stopI = 2, stopC = 2;
+	int startI = -3, startC = -3;
+	int stopI = 3, stopC = 3;
 
-	if (m_ind == 0) startI = 0;
-	else if (m_ind == ATU_MAX_IND) stopI = 0;
+	if((m_ind + startI) > 0)
+		startI = m_ind + startI;
+	else
+		startI = 0;
 
-	if (m_cap == 0) startC = 0;
-	else if (m_cap == ATU_MAX_CAP) stopC = 0;
+	if ((m_cap + startC) > 0)
+		startC = m_cap + startC;
+	else
+		startC = 0;
 
-	startI = m_ind + startI;
-	stopI = m_ind + stopI;
-	startC = m_cap + startC;
-	stopC = m_cap + stopC;
+	if ((m_ind + stopI) < ATU_MAX_IND)
+		stopI = m_ind + stopI;
+	else
+		stopI = ATU_MAX_IND;
+
+	if ((m_cap + stopI) < ATU_MAX_CAP)
+		stopC = m_cap + stopC;
+	else
+		stopC = ATU_MAX_CAP;
 
 	my_printf("CATU::SharpTune: ind: %d %d, cap %d %d\n", startI, stopI, startC, stopC);
 
@@ -641,7 +779,39 @@ void CSwrDlg::tune(uint32_t freq)
 	m_BestSWR = 1000.0f;
 	m_byp = 1;
 
+	SetATU();
+	Sleep(40);
+	GetSwr();
+
+	StrictATUResult atu = calculate_strict_l_network(m_Z, 50.0, m_Freq);
+	my_printf("atu: lc = %d, c = %d pF, l = %d nH, swr = %.2f\n",
+		(int)atu.cap_pos, (int)atu.c_pf, (int)atu.l_nh, atu.estimated_swr);
+
+//	m_cap = (((int)atu.c_pf + 20) + 5) / 10;
+//	m_ind = (((int)atu.l_nh - 50) + 25) / 50;
+
+
+	if (atu.cap_pos == CapPosition::TX_SIDE)
+	{
+		m_lc = 0;
+		m_cap = (int)(atu.c_pf * 0.0688 + 7.0542);
+	}
+	else if (atu.cap_pos == CapPosition::ANT_SIDE)
+	{
+		m_lc = 1;
+		m_cap = (int)(atu.c_pf * 0.071 - 1.9637);
+	}
+	else
+		return;
+
+	
+	m_ind = (int)(atu.l_nh * (atu.l_nh * 0.000003 + 0.0078) + 0.4047);
+
+	m_byp = 0;
 	SetGetValue();
+	my_printf("ATU:sw:%d, ind:%d, cap:%d, swr:%.2f\n", m_BestLC, m_BestInd, m_BestCap, m_BestSWR);
+
+#if 0
 #if 0
 	std::complex<float> Zcorr = ZhpLsd(m_Freq, m_Z, ATU_CORR_INDUCTOR, ATU_CORR_CAPACITOR);
 	my_printf("tune:Zcorr = %.2f%+.2fi\n", Zcorr.real(), Zcorr.imag());
@@ -671,7 +841,7 @@ void CSwrDlg::tune(uint32_t freq)
 
 	CoarseTune();
 	my_printf("ATU:BEST values sw:%d, ind:%d, cap:%d, swr:%.2f\n", m_BestLC, m_BestInd, m_BestCap, m_BestSWR);
-
+#endif
 	SharpTune();
 
 	if (m_BestSWR > 1.30)

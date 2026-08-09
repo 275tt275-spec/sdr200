@@ -53,45 +53,30 @@ component ila_0 IS
     );
 END component ila_0;
 
-component floating_f2fix24 is
-    port (
-        aclk : IN STD_LOGIC;
-        s_axis_a_tvalid : IN STD_LOGIC;
-        s_axis_a_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-        s_axis_a_tuser : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-        m_axis_result_tvalid : OUT STD_LOGIC;
-        m_axis_result_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0);
-        m_axis_result_tuser : OUT STD_LOGIC_VECTOR(0 DOWNTO 0)
+component ila_1 IS
+    PORT (
+        clk : IN STD_LOGIC;
+        probe0 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+        probe1 : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
+        probe2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        probe3 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe4 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
     );
-    end component floating_f2fix24;
-
-component axis_data_fifo_48 is
-    port (
-        s_axis_aresetn : IN STD_LOGIC;
-        s_axis_aclk : IN STD_LOGIC;
-        s_axis_tvalid : IN STD_LOGIC;
-        s_axis_tready : OUT STD_LOGIC;
-        s_axis_tdata : IN STD_LOGIC_VECTOR(47 DOWNTO 0);
-        m_axis_tvalid : OUT STD_LOGIC;
-        m_axis_tready : IN STD_LOGIC;
-        m_axis_tdata  : OUT STD_LOGIC_VECTOR(47 DOWNTO 0);
-        prog_empty : OUT STD_LOGIC
+END component ila_1;
+    
+    component audio_input is
+     Port ( 
+       aclk : in  STD_LOGIC;     
+       s_axis_tdata : in STD_LOGIC_VECTOR (23 downto 0);
+       s_axis_tvalid : in STD_LOGIC;
+       m_axis_tdata : out STD_LOGIC_VECTOR (23 downto 0);
+       m_axis_tvalid : out STD_LOGIC;
+       s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
+       s_axis_cfg_tdest : in STD_LOGIC_VECTOR (0 downto 0);
+       s_axis_cfg_tvalid : in STD_LOGIC;
+       overflow : out STD_LOGIC
     );
-    end component axis_data_fifo_48;
-
-component fir_audio_0 IS
-    port (
-        aclk : IN STD_LOGIC;
-        s_axis_data_tvalid : IN STD_LOGIC;
-        s_axis_data_tready : OUT STD_LOGIC;
-        s_axis_data_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
---        s_axis_config_tvalid : IN STD_LOGIC;
---        s_axis_config_tready : OUT STD_LOGIC;
---        s_axis_config_tdata : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-        m_axis_data_tvalid : OUT STD_LOGIC;
-        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0)
-    );
-    end component fir_audio_0;
+    end component audio_input;
     
     component audio_proc is
     Port ( 
@@ -178,8 +163,6 @@ component fir_audio_0 IS
      
     signal txa_on : std_logic := '0'; 
     signal modulator_select : STD_LOGIC_VECTOR ( 2 downto 0 ) := "001"; 
-    signal audio_in_tdata : std_logic_vector(23 downto 0);
-    signal audio_in_tvalid : std_logic;
     signal audio_out_tdata : std_logic_vector(23 downto 0);
     signal audio_out_tvalid : std_logic;
     signal speech_in_tdata : std_logic_vector(23 downto 0);
@@ -226,21 +209,18 @@ debug_0 : ila_0
     );
 
     cfg_data_out <= overflow_reg;
-
-    audio_in_tvalid <= s_axis_audio_tvalid;
-    audio_in_tdata <= s_axis_audio_tdata;
-
-audio_0 : fir_audio_0
-    PORT MAP (
-        aclk => aclk,
-        s_axis_data_tvalid => audio_in_tvalid,
-        s_axis_data_tready => open,
-        s_axis_data_tdata => audio_in_tdata,
---        s_axis_config_tvalid => config_tvalid,
---        s_axis_config_tready => open,
---        s_axis_config_tdata => config_tdata,
-        m_axis_data_tvalid => audio_out_tvalid,
-        m_axis_data_tdata => audio_out_tdata
+    
+audio_0 : audio_input
+     Port map ( 
+       aclk => aclk,   
+       s_axis_tdata => s_axis_audio_tdata,
+       s_axis_tvalid => s_axis_audio_tvalid,
+       m_axis_tdata => audio_out_tdata,
+       m_axis_tvalid => audio_out_tvalid,
+       s_axis_cfg_tdata => s_axis_cfg_tdata,
+       s_axis_cfg_tdest => s_axis_cfg_tdest(0 downto 0),
+       s_axis_cfg_tvalid => '0',
+       overflow => open
     );
     
     speech_in_tdata <= audio_out_tdata;
@@ -385,5 +365,14 @@ mux_0 : conv16x24
     m_daci_tdata <= dac_tdata;  
     m_dacq_tdata <= dac_tdata; 
 
+debug_1 :  ila_1 
+    PORT MAP (
+        clk => aclk,
+        probe0 => resampler_in_tdata,
+        probe1 => iq_tdata,
+        probe2 => mult_in_tdata,
+        probe3 => dac_tdata,
+        probe4(0) => resampler_in_tvalid
+    );
 
 end Behavioral;
