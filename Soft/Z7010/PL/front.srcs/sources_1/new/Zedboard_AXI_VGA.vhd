@@ -5,6 +5,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+library xpm;
+use xpm.vcomponents.all;
 
 entity Zedboard_AXI_VGA is
     port (
@@ -265,9 +267,14 @@ begin
     h_sync <= h_sync_r when hspol = '1' else not h_sync_r;
     v_sync <= v_sync_r when vspol = '1' else not v_sync_r;
     
-    r <= rgb_data(23 downto 16) when (v_cnt < vlines and h_cnt < hpixels) else (others => '0');
-    g <= rgb_data(15 downto 8)  when (v_cnt < vlines and h_cnt < hpixels) else (others => '0');
-    b <= rgb_data(7 downto 0)   when (v_cnt < vlines and h_cnt < hpixels) else (others => '0');
+--    r <= rgb_data(23 downto 16) when (v_cnt < vlines and h_cnt < hpixels) else (others => '0');
+--    g <= rgb_data(15 downto 8)  when (v_cnt < vlines and h_cnt < hpixels) else (others => '0');
+--    b <= rgb_data(7 downto 0)   when (v_cnt < vlines and h_cnt < hpixels) else (others => '0');
+    
+    r <= rgb_data(23 downto 16) when (vgamem_rd_en = '1') else (others => '0');
+    g <= rgb_data(15 downto 8) when (vgamem_rd_en = '1') else (others => '0');
+    b <= rgb_data(7 downto 0) when (vgamem_rd_en = '1') else (others => '0');
+
 
     -- Распаковка управляющих регистров
     thpixels <= unsigned(h_cntrl1(11 downto 0));
@@ -288,7 +295,8 @@ begin
     px_nco_cntrl(35 downto 32) <= msbs_px_nco(3 downto 0);
     px_nco_cntrl(31 downto 0)  <= lsbs_px_nco;
     
-    vgamem_rd_en <= '1' when (h_cnt < hpixels and v_cnt < vlines and fifo_ready = '1') else '0';
+--    vgamem_rd_en <= '1' when (h_cnt < hpixels and v_cnt < vlines and fifo_ready = '1') else '0';
+    vgamem_rd_en <= '1' when (h_cnt < hpixels and v_cnt < vlines and fifo_ready = '1' and dma_ready = '1' and rst_ready = '1') else '0';
     dma_ready    <= total_pixels(31);
     dma_rst      <= total_pixels(30);
     rst_ready    <= not (rst_busy_wr or rst_busy_rd);
@@ -299,8 +307,8 @@ begin
 
     -- DMA Data
     dma_data <= m_axi_rdata;
- --   dclk     <= px_clk;
-    lcd_dclk <= not px_nco_phase(35);
+    lcd_dclk     <= px_clk;
+ --   lcd_dclk <= px_nco_phase(35);
     lcd_de <= vgamem_rd_en;
 
     -- VGA Processing

@@ -408,7 +408,7 @@ void startup_gui_create(void)
 void gui_thread(void *p) {
 
 	// Initialise VGA Hardware
-	struct vga_prams* params = set_vga_prams( VGA_1024X600_60HZ );
+	struct vga_prams* params = set_vga_prams( VGA_800X480_60HZ );
 	/* initialize LVGL framework */
 	lv_init();
 #if 0

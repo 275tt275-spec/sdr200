@@ -25,6 +25,7 @@
 #define VGA_1440X900_85HZ_CVTS	7
 #define VGA_1440X900_120HZ_CVTR	8
 #define VGA_1024X600_60HZ		9
+#define VGA_800X480_60HZ		10
 
 #define VGA_DDR_DMA_BASE		0x0F000000		// This is the DDR address the DMA hardware fetches VGA pixel data from (32MB is reserved)
 #define VGA_DDR_DMA_SIZE		0x2000000		// Size of above buffer
@@ -74,6 +75,7 @@ struct vga_creg_map {
 	volatile uint32_t	vga_fbuf_addr;
 	volatile uint32_t	total_pixels;
 	volatile uint32_t	irq_reg;
+	volatile uint32_t   brightness;
 
 };
 

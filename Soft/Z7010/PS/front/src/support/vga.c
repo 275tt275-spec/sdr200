@@ -28,8 +28,9 @@ struct vga_prams vga_table[] = {
   {1600,    1440, 32,  		 48, 	 80,  	SYNC_NEG, 942, 		900, 	6,  	 3,  	 33,	 SYNC_POS, 136750000},	// 1440 x 900 @ 75 Hz CVT Standard
   {1600,    1440, 32,  		 48, 	 80,  	SYNC_NEG, 948, 		900, 	6,  	 3,  	 39,	 SYNC_POS, 157000000},	// 1440 x 900 @ 85 Hz CVT Standard
   {1600,    1440, 32,		 48, 	 80,  	SYNC_NEG, 953, 		900, 	6,  	 3,  	 44,	 SYNC_POS, 182750000},	// 1440 x 900 @ 120 Hz CVT Reduced Blanking
-//  {1340, 	1024, 40, 	     140, 	 136, 	SYNC_NEG, 635, 		600, 	3, 		 12, 	 20, 	 SYNC_NEG, 51200000},  // 1024 x 600 @ 60 Hz (7" RGB Display)
-  {1184,    1024, 32,        48,     80,    SYNC_NEG, 624,      600,    6,       3,      15,     SYNC_POS, 44250000 },  // 1024 x 600 @ 60 Hz (7" RGB Display)
+  {1340, 	1024, 40, 	     140, 	 136, 	SYNC_NEG, 635, 		600, 	3, 		 12, 	 20, 	 SYNC_NEG, 51200000},  // 1024 x 600 @ 60 Hz (7" RGB Display)
+  //  {1184,    1024, 32,        48,     80,    SYNC_NEG, 624,      600,    6,       3,      15,     SYNC_POS, 44250000 },  // 1024 x 600 @ 60 Hz (7" RGB Display)
+  {1056,    800,  30,        40,     186,   SYNC_POS, 525,      480,    3,       13,     29,     SYNC_POS, 33330000 }, // * 800 x 480 @ 60 Hz (HL070MI / AT070TN92)
 };
 
 void vga_irq_handler( void *p ) {
@@ -63,6 +64,8 @@ struct vga_prams* set_vga_prams( uint8_t table_idx ) {
 	vga->px_nco_msbs = ((nco_val & 0xFF00000000) >> 32);
 	vga->vga_fbuf_addr = VGA_DDR_DMA_BASE;
 	vga->total_pixels = (vga_data->h_px * vga_data->v_ln) | DMA_FIFO_RST;
+
+	vga->brightness = 50;  //
 	/*
 	 * Connect the interrupt handler that will be called when an
 	 * interrupt occurs for the device.

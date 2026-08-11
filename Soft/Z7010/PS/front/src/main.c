@@ -57,15 +57,15 @@ int main( void )
 	XGpioPs_SetOutputEnablePin(&Gpio, VGA_LR_GPIO, 1);
 	XGpioPs_SetOutputEnablePin(&Gpio, LCD_EN_GPIO, 1);
 
-	XGpioPs_WritePin(&Gpio, LCD_EN_GPIO, 0);
+	XGpioPs_WritePin(&Gpio, LCD_EN_GPIO, 1);
 	XGpioPs_WritePin(&Gpio, VGA_LR_GPIO, 1);
 	XGpioPs_WritePin(&Gpio, VGA_UD_GPIO, 1);
-	XGpioPs_WritePin(&Gpio, VGA_MODE_GPIO, 0);
+	XGpioPs_WritePin(&Gpio, VGA_MODE_GPIO, 1);
 	XGpioPs_WritePin(&Gpio, VGA_DITHB_GPIO, 0);
 	XGpioPs_WritePin(&Gpio, VGA_RST_GPIO, 0);
 	usleep(5000);
 	XGpioPs_WritePin(&Gpio, VGA_RST_GPIO, 1);
-	XGpioPs_WritePin(&Gpio, LCD_EN_GPIO, 1);
+//	XGpioPs_WritePin(&Gpio, LCD_EN_GPIO, 1);
 
 	xTaskCreate( 	gui_thread, 					/* The function that implements the task. */
 					( const char * ) "GUI Scheduler", 		/* Text name for the task, provided to assist debugging only. */
