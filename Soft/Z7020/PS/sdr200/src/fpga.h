@@ -41,6 +41,7 @@
 #define FPGA_TXA_CTRL 		0x0201  /* ctrl reg */
 #define FPGA_TXA_CTRL_ON 	( 1 << 0 ) /* txa on(0) */
 #define FPGA_TXA_CTRL_HW 	( 1 << 1 ) /* txa hw on(1) */
+#define FPGA_TXA_CTRL_ADC1 	( 1 << 2 ) /* adc1 inversion*/
 #define FPGA_TXA_CTRL_IQ 	( 1 << 31 ) /* iq data select(31)  */
 #define FPGA_TXA_RESAMPLER_G	0x0203  /* txa resampler out gain */
 #define FPGA_TXA_RESET_MAX	0x0204  /* reset max values */
@@ -107,9 +108,9 @@
 #define FPGA_TXA_DAC_ABS 	0x0203  /* dac_tdata_max */
 #define FPGA_TXA_FLOAT_ABS 	0x0204  /* float_out_max */
 // 0x03__   SWR_cfg
-#define FPGA_REG_SWR		0x0300  /* swr 16 bit inc & 16 bit ref (absolute) */
+//#define FPGA_REG_SWR		0x0300  /* swr 16 bit inc & 16 bit ref (absolute) */
 #define FPGA_REG_MAG		0x0301  /* magnitude 16 bit chan A & 16 bit chan B (absolute) */
-#define FPGA_REG_ANGLE		0x0302  /* angle 16 bit chan A & 16 bit chan B (signed) */
+#define FPGA_REG_ANGLE		0x0300  /* angle 16 bit chan A & 16 bit chan B (signed) */
 
 #define FPGA_RXA_GET		0x0100
 
@@ -139,8 +140,6 @@ typedef struct tag_agc
 
 typedef struct tag_swr
 {
-	uint16_t inc;
-	uint16_t ref;
 	uint16_t magA;
 	uint16_t magB;
 	uint16_t angA;

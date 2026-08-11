@@ -3,7 +3,6 @@
 	<name>front</name>
 	<comment>Created by Vitis v2023.2</comment>
 	<projects>
-		<project>front_ps</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

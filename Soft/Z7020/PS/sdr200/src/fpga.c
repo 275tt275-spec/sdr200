@@ -165,6 +165,28 @@ inline uint32_t fpga_RXA_GetRSSI(void)
 
 void fpga_TXA_Enable(int enable, int iqCan)
 {
+#if 1
+	if(enable == 1)
+	{
+		if(iqCan == 1)
+		{
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_ADC1);
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW | FPGA_TXA_CTRL_IQ | FPGA_TXA_CTRL_ADC1);
+		}
+		else
+		{
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_ADC1);
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW | FPGA_TXA_CTRL_ADC1);
+		}
+	}
+	else
+	{
+		if(iqCan == 1)
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_IQ | FPGA_TXA_CTRL_ADC1);
+		else
+			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ADC1);
+	}
+#else
 	if(enable == 1)
 	{
 		if(iqCan == 1)
@@ -185,6 +207,7 @@ void fpga_TXA_Enable(int enable, int iqCan)
 		else
 			fpga_write(FPGA_TXA_CTRL, 0);
 	}
+#endif
 }
 
 inline void fpga_TXA_DDS(uint32_t value)
@@ -238,55 +261,12 @@ inline void fpga_TXA_ResamplerGain(uint32_t value)
 void fpga_GetSWR(s_swr* swr)
 {
 	uint32_t value;
-	value = fpga_read(FPGA_REG_SWR);
-	swr->ref = (uint16_t)(value >> 16);
-	swr->inc = (uint16_t)value;
 	value = fpga_read(FPGA_REG_MAG);
-	swr->magB = (uint16_t)(value >> 16);
-	swr->magA = (uint16_t)value;
+	swr->magA = (uint16_t)(value >> 16);
+	swr->magB = (uint16_t)value;
 	value = fpga_read(FPGA_REG_ANGLE);
-	swr->angB = (uint16_t)(value >> 16);
-	swr->angA = (uint16_t)value;
-
-	// Защита от деления на ноль при отсутствии тока (обрыв антенны)
-	if(swr->magB < 50)
-	{
-		swr->mag_Z = 9999.0;
-		swr->R = 9999.0;
-		swr->X = 0.0;
-		swr->gamma = 1.0;
-		swr->swr = 99.9;
-		swr->is_inductive = 0;
-	}
-
-	float Z0 = 50.0;
-	float delta_phi = (int)swr->angA - (int)swr->angB;  // FIXME:
-	// 1. Модуль полного сопротивления (|Z| = U / I)
-	swr->mag_Z = (float)swr->magA / (float)swr->magB;
-	// 2. Активная и реактивная составляющие импеданса
-	swr->R = swr->mag_Z * cos(delta_phi);
-	swr->X = swr->mag_Z * sin(delta_phi);
-	// Определение характера нагрузки по знаку сдвига фаз
-	if (delta_phi >= 0.0) {
-		swr->is_inductive = 1;  // Ток отстает (индуктивность)
-	} else {
-		swr->is_inductive = 0; // Ток опережает (емкость)
-	}
-	// 3. Расчет модуля коэффициента отражения |Gamma|
-	// Формула: |Gamma| = sqrt( ((R-Z0)^2 + X^2) / ((R+Z0)^2 + X^2) )
-	float num = ((swr->R - Z0) * (swr->R - Z0)) + (swr->X * swr->X);
-	float den = ((swr->R + Z0) * (swr->R + Z0)) + (swr->X * swr->X);
-	if (den > 0.0) {
-		swr->gamma = sqrt(num / den);
-	} else {
-		swr->gamma = 1.0;
-	}
-	// Защита от численной погрешности (чтобы не получить деление на ноль при расчете SWR)
-	if (swr->gamma > 0.999) {
-		swr->gamma = 0.999;
-	}
-	// 4. Расчет КСВ (SWR = (1 + |Gamma|) / (1 - |Gamma|))
-	swr->swr = (1.0 + swr->gamma) / (1.0 - swr->gamma);
+	swr->angA = (uint16_t)(value >> 16);
+	swr->angB = (uint16_t)value;
 }
 
 void fpga_LIM_Enable(int enable)
@@ -330,7 +310,7 @@ void fpga_LinearEnable(s_linear* lin, int enable)
     fpga_write(FPGA_LIN_CTRL, lin_ctrl);
 
     if(enable == 1)
-        lin_ctrl = FPGA_LINER_ON | FPGA_LIN_PHASE_SLOW;
+        lin_ctrl = FPGA_LINER_ON |FPGA_LINER_AGC;
     else
         lin_ctrl = 0;
 

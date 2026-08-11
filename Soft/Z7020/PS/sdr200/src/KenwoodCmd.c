@@ -1172,8 +1172,8 @@ char* kenwood_RcvCmd(char* in)
         {
         	s_swr swr;
         	hw_GetSWR(&swr);
-            sprintf(m_out, "SW%05d%05d%05d%05d%05d%05d;",
-            		swr.inc, swr.ref, swr.magA, swr.magB, swr.angA, swr.angB);
+            sprintf(m_out, "SW%05d%05d%05d%05d;",
+            		swr.magA, swr.magB, swr.angA, swr.angB);
         }
     }
     else if(memcmp(in, "SY", 2) == 0) /* Get corrections */

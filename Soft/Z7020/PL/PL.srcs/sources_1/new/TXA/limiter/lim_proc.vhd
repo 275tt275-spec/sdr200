@@ -41,14 +41,6 @@ end lim_proc;
 
 architecture Behavioral of lim_proc is
 
-    component ila_1 IS
-    PORT (
-        clk : IN STD_LOGIC;
-        probe0 : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
-        probe1 : IN STD_LOGIC_VECTOR(0 DOWNTO 0)
-    );
-    end component ila_1;
-
     component lim_eq_fir is
     port (
         aclk : in STD_LOGIC;
@@ -328,13 +320,6 @@ iq2a_0 : lim_iq2a
         dds_cfg_tvalid => dds_cfg_tvalid,
         over => lim_over(6),
         aclk => aclk
-    );
-    
-debug_0 : ila_1
-    PORT MAP(
-        clk => aclk,
-        probe0 => audio_tdata_reg,
-        probe1(0) => audio_tvalid_reg
     );
     
     mult2in_tdata <= audio_tdata_reg;

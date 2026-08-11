@@ -41,6 +41,86 @@ static int m_BestBypass = 0;
 static int m_Bypass = 1;
 static s_swr swr;
 
+enum CapPosition {
+	TX_SIDE,
+	ANT_SIDE,
+	UNMATCHABLE
+};
+
+struct StrictATUResult {
+	enum CapPosition cap_pos;
+	float c_pf;
+	float l_nh;
+	float estimated_swr;
+};
+
+struct StrictATUResult calculate_strict_l_network(float R, float X, float r_0, float freq_hz)
+{
+	const float PI = 3.14159265f;
+	struct StrictATUResult res = { UNMATCHABLE, 0.0f, 0.0f, 999.0f };
+	float omega = 2.0f * PI * freq_hz;
+
+	// Защита от нулевого сопротивления
+	if (R <= 0.0f) return res;
+
+	// === ТЕСТ ДЛЯ СХЕМЫ ANT_SIDE (Конденсатор параллельно антенне, катушка последовательно к TX) ===
+	// Находим проводимость антенны: Y = G + jB
+	float denom = R * R + X * X;
+	float G_ant = R / denom;
+	float B_ant = -X / denom; // знак минус, так как Y = 1/(R+jX) = R/den - jX/den
+
+	// Чтобы схема ANT_SIDE работала, должно выполняться: G_ant < 1.0 / r_0
+	if (G_ant < (1.0f / r_0)) {
+		// Требуемая полная проводимость параллельной части, чтобы получить активные 50 Ом
+		float B_total = sqrtf((1.0f / r_0 - G_ant) * G_ant);
+
+		// Нам нужно получить +B_total (для согласования требуется знак, зависящий от направления)
+		// Проверяем оба корня уравнения (+B_total и -B_total)
+		float B_c_opt1 = B_total - B_ant;
+		float B_c_opt2 = -B_total - B_ant;
+
+		// Конденсатор имеет положительную проводимость (B_c = omega * C > 0)
+		float B_c = -1.0f;
+		float sign_fixed = 1.0f;
+
+		if (B_c_opt1 > 0.0f) { B_c = B_c_opt1; sign_fixed = 1.0f; }
+		else if (B_c_opt2 > 0.0f) { B_c = B_c_opt2; sign_fixed = -1.0f; }
+
+		if (B_c > 0.0f) {
+			// Находим реактивное сопротивление последовательной катушки
+			float X_l = sign_fixed * sqrtf(r_0 / G_ant - r_0 * r_0);
+
+			// Нам нужна именно катушка (X_l >= 0)
+			if (X_l >= 0.0f) {
+				res.cap_pos = ANT_SIDE;
+				res.c_pf = (B_c / omega) * 1e12f;
+				res.l_nh = (X_l / omega) * 1e9f;
+				res.estimated_swr = 1.0f;
+				return res;
+			}
+		}
+	}
+
+	// === ТЕСТ ДЛЯ СХЕМЫ TX_SIDE (Конденсатор параллельно TX, катушка последовательно к антенне) ===
+	// Для этой схемы необходимо, чтобы R < r_0
+	if (R < r_0) {
+		float sqrt_term = sqrtf((r_0 - R) / R);
+		float X_c = r_0 / sqrt_term; // Реактивное сопротивление конденсатора (величина)
+		float X_l_total = R * sqrt_term;
+		float X_l_needed = X_l_total - X; // Катушка должна компенсировать и реактивность антенны
+
+		if (X_l_needed >= 0.0f) {
+			res.cap_pos = TX_SIDE;
+			res.c_pf = (1.0f / (omega * X_c)) * 1e12f;
+			res.l_nh = (X_l_needed / omega) * 1e9f;
+			res.estimated_swr = 1.0f;
+			return res;
+		}
+	}
+
+	return res; // Если ни одна схема строго на L и C_на_землю не подошла
+}
+
 static float complex ZhpLsd(float freq, float complex Zin, int L, int C)
 {
 	float omega = 2.0*M_PI*freq;
@@ -60,7 +140,8 @@ static void atu_SetATU(void)
 static void atu_GetSwr(void)
 {
 	hw_GetSWR(&swr);
-	m_fswr = fabs(((float)swr.inc + (float)swr.ref) / ((float)swr.inc - (float)swr.ref));
+	m_fswr = swr.swr;
+	m_Z = swr.R + swr.X * I;
 }
 
 static void atu_BestSwr(void)
@@ -75,25 +156,9 @@ static void atu_BestSwr(void)
     }
 }
 
-static void atu_GetComplex(void)
-{
-	hw_GetSWR(&swr);
-	float Z = (float)50.0 * (float)swr.magB / (float)swr.magA;
-	float angle = (float)swr.angA - (float)swr.angB;
-	angle = angle * 180 / 16384;
-	angle = angle + 180;
-	if (angle > 360)
-		angle = angle - 360;
-	if (angle > 180)
-		angle = angle - 360;
-	float rad = (float)(angle * M_PI * 2 / 360);
-    m_Z = Z * cos(rad) + Z * sin(rad) * I;
-}
-
 static void atu_SetGetValue(void)
 {
 	atu_SetATU();
-	atu_GetComplex();
 	atu_GetSwr();
 	atu_BestSwr();
 }
@@ -107,7 +172,7 @@ static int atu_CoarseInd(void)
     float best_Y = 1.0;
     float Y_offset;
 
-    atu_GetComplex();
+    atu_GetSwr();
 //    Zcorr = 50.0 * ((m_Z + I * 50.0 * m_Omega) / (50.0 + I * m_Z * m_Omega));
     Zcorr = ZhpLsd(m_Freq, m_Z, ATU_CORR_INDUCTOR, ATU_CORR_CAPACITOR);
 
@@ -152,7 +217,7 @@ static int atu_CoarseCap(void)
     float best_Z = 1000.0;
     float Z_offset;
 
-    atu_GetComplex();
+    atu_GetSwr();
 //    Zcorr = 50.0 * ((m_Z + I * 50.0 * m_Omega) / (50.0 + I * m_Z * m_Omega));
     Zcorr = ZhpLsd(m_Freq, m_Z, ATU_CORR_INDUCTOR, ATU_CORR_CAPACITOR);
 
@@ -334,20 +399,29 @@ static void atu_CoarseTune(void)
 
 static void atu_SharpTune(void)
 {
-    int mem_I = m_ind, mem_C = m_cap;
-    int startI = -1, startC = -1;
-    int stopI = 1, stopC = 1;
+	int mem_I = m_ind, mem_C = m_cap;
+	int startI = -3, startC = -3;
+	int stopI = 3, stopC = 3;
 
-    if(m_ind == 0) startI = 0;
-    else if(m_ind == ATU_MAX_IND) stopI = 0;
+	if((m_ind + startI) > 0)
+		startI = m_ind + startI;
+	else
+		startI = 0;
 
-    if(m_cap == 0) startC = 0;
-    else if(m_cap == ATU_MAX_CAP) stopC = 0;
+	if ((m_cap + startC) > 0)
+		startC = m_cap + startC;
+	else
+		startC = 0;
 
-    startI = m_ind + startI;
-    stopI = m_ind + stopI;
-    startC = m_cap + startC;
-    stopC = m_cap + stopC;
+	if ((m_ind + stopI) < ATU_MAX_IND)
+		stopI = m_ind + stopI;
+	else
+		stopI = ATU_MAX_IND;
+
+	if ((m_cap + stopI) < ATU_MAX_CAP)
+		stopC = m_cap + stopC;
+	else
+		stopC = ATU_MAX_CAP;
 
 //    printf("atu_SharpTune: ind: %d %d, cap %d %d\n", startI, stopI, startC, stopC);
 
@@ -382,39 +456,28 @@ void atu_tune(uint32_t freq)
 	m_BestSWR = 1000.0f;
 	m_Bypass = 1;
 
-	atu_SetGetValue();
+	atu_SetATU();
+	atu_GetSwr();
 
-//    float complex Zcorr = 50.0 * ((m_Z + I * 50.0 * m_Omega) / (50.0 + I * m_Z * m_Omega));
-//    printf("Zcorr = %.2f%+.2fi\n", creal(Zcorr), cimag(Zcorr));
-
-    float complex Y = 1 / m_Z;
-//    printf("Y = %.6f%+.6fi\n", creal(Y), cimag(Y));
-
-    if(creal(m_Z) >= 50.0)
-        m_SW = 1;
-    else if(creal(Y) >= 0.02)
-        m_SW = 0;
-    else
-        m_SW = (cimag(m_Z) < 0) ? 0 : 1;
-
-//    printf("m_SW = %d\n", m_SW);
-	m_BestSW = m_SW;
-	m_Bypass = 0;
-
-	atu_CoarseTune();
-//	printf("ATU:BEST values sw:%d, ind:%d, cap:%d, swr:%.2f\n", m_BestSW, m_BestInd, m_BestCap, m_BestSWR);
-
-	atu_SharpTune();
-
-	if(m_BestSWR > 1.30)
+	struct StrictATUResult atu = calculate_strict_l_network(creal(m_Z), cimag(m_Z), 50.0, freq);
+	if (atu.cap_pos == TX_SIDE)
 	{
-//		printf("ATU:m_BestSWR > 1.30, sw:%d, ind:%d, cap:%d, swr:%.2f\n", m_BestSW, m_BestInd, m_BestCap, m_BestSWR);
-		m_SW = (m_SW == 1) ? 0: 1;
-		atu_CoarseTune();
-//		printf("ATU:BEST values sw:%d, ind:%d, cap:%d, swr:%.2f\n", m_BestSW, m_BestInd, m_BestCap, m_BestSWR);
-
-		atu_SharpTune();
+		m_SW = 0;
+		m_cap = (int)(atu.c_pf * 0.0688 + 7.0542);
 	}
+	else if (atu.cap_pos == ANT_SIDE)
+	{
+		m_SW = 1;
+		m_cap = (int)(atu.c_pf * 0.071 - 1.9637);
+	}
+	else
+		return;
+
+	m_ind = (int)(atu.l_nh * (atu.l_nh * 0.000003 + 0.0078) + 0.4047);
+
+	m_Bypass = 0;
+	atu_SetGetValue();
+	atu_SharpTune();
 
 	if(m_cap == 0)
 	{
@@ -431,11 +494,6 @@ void atu_tune(uint32_t freq)
 		m_Bypass = m_BestBypass;
 		atu_SetATU();
 	}
-
-//    float complex Zout = ZhpLsu(2000000, m_Z, 3500, 2050);
-//    printf("Zcu = %.1f%+.1fi\n", creal(Zout), cimag(Zout));
-//    Zout = ZhpLsd(2000000, m_Z, 3500, 2050);
-//    printf("Zcd = %.1f%+.1fi\n", creal(Zout), cimag(Zout));
 
 	atu_GetSwr();
 //	printf("ATU: tune sw:%d, ind:%d, cap:%d, swr:%.2f\n", m_SW, m_ind, m_cap, m_swr);

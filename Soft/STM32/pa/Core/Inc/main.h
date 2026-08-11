@@ -57,19 +57,19 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define BAND6_EN_Pin GPIO_PIN_6
+#define BAND6_EN_Pin GPIO_PIN_7
 #define BAND6_EN_GPIO_Port GPIOA
-#define BAND5_EN_Pin GPIO_PIN_7
-#define BAND5_EN_GPIO_Port GPIOA
-#define BAND4_EN_Pin GPIO_PIN_4
-#define BAND4_EN_GPIO_Port GPIOC
-#define BAND3_EN_Pin GPIO_PIN_5
+#define BAND5_EN_Pin GPIO_PIN_10
+#define BAND5_EN_GPIO_Port GPIOB
+#define BAND4_EN_Pin GPIO_PIN_2
+#define BAND4_EN_GPIO_Port GPIOB
+#define BAND3_EN_Pin GPIO_PIN_4
 #define BAND3_EN_GPIO_Port GPIOC
-#define BAND2_EN_Pin GPIO_PIN_0
-#define BAND2_EN_GPIO_Port GPIOB
-#define BAND1_EN_Pin GPIO_PIN_2
+#define BAND2_EN_Pin GPIO_PIN_5
+#define BAND2_EN_GPIO_Port GPIOC
+#define BAND1_EN_Pin GPIO_PIN_0
 #define BAND1_EN_GPIO_Port GPIOB
-#define BAND0_EN_Pin GPIO_PIN_10
+#define BAND0_EN_Pin GPIO_PIN_1
 #define BAND0_EN_GPIO_Port GPIOB
 #define TX_FAIL_Pin GPIO_PIN_15
 #define TX_FAIL_GPIO_Port GPIOA
