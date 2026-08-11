@@ -23,7 +23,7 @@
 
 /* PJBES Defines */
 #define LV_HOR_RES_MAX			(1024)
-#define LV_VER_RES_MAX			(768)
+#define LV_VER_RES_MAX			(600)
 #define LV_VGA_DDR_DMA_BASE		0x0F000000		// This is the DDR address the DMA hardware fetches VGA pixel data from (16MB is reserved)
 #define LV_VDB_ADR          	LV_VGA_DDR_DMA_BASE
 #define LV_VDB2_ADR         	(LV_VGA_DDR_DMA_BASE + (((LV_HOR_RES_MAX * LV_VER_RES_MAX)*LV_COLOR_DEPTH)>>3))
@@ -31,8 +31,11 @@
 typedef struct tag_gui_globals
 {
 	lv_disp_t				*disp;				/* Descriptor for display */
+	lv_obj_t				* main_screen;
 	lv_style_t		 		style_sb;			/* A style for all our scroll bars*/
 	lv_obj_t				*log_ta;			/* The text area on the log tab */
+    int screenWidth;
+    int screenHeight;
 	volatile uint32_t		dma_src;
 	volatile uint8_t		buf_switched : 1;
 	volatile uint8_t		gui_ready : 1;

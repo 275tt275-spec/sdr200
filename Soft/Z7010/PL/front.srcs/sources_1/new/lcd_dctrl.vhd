@@ -34,7 +34,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity lcd_dctrl_en is
      Port ( 
         clk : in STD_LOGIC;
-        lcd_en : out STD_LOGIC; 
+        s_brightness : in std_logic_vector(7 downto 0);
         lcd_dctrl : out STD_LOGIC
      );
 end lcd_dctrl_en;
@@ -60,9 +60,7 @@ architecture Behavioral of lcd_dctrl_en is
     
 begin
 
-    -- ѕосто€нно держим LCD включенным (или прив€жите к вашей внутренней логике)
-    lcd_en <= '1'; 
-
+    brightness <= unsigned(s_brightness);
     -- ¬ычисление порога скважности (€ркость * шагов_на_уровень)
     -- ”множение на константу оптимизируетс€ синтезатором в сдвиги и сложени€
     duty_cycle_limit <= to_integer(brightness) * 1953;

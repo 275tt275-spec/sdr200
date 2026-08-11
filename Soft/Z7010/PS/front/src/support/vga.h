@@ -16,14 +16,15 @@
 #include "lvgl.h"
 
 #define VGA_640X480				0
-#define VGA_800x600_72HZ			1
-#define VGA_1024X768_60HZ			2
-#define VGA_1024X768_70HZ			3
+#define VGA_800x600_72HZ		1
+#define VGA_1024X768_60HZ		2
+#define VGA_1024X768_70HZ		3
 #define VGA_1440X900_60HZ_CVTS	4
 #define VGA_1440X900_60HZ_CVTR	5
 #define VGA_1440X900_75HZ_CVTS	6
 #define VGA_1440X900_85HZ_CVTS	7
 #define VGA_1440X900_120HZ_CVTR	8
+#define VGA_1024X600_60HZ		9
 
 #define VGA_DDR_DMA_BASE		0x0F000000		// This is the DDR address the DMA hardware fetches VGA pixel data from (32MB is reserved)
 #define VGA_DDR_DMA_SIZE		0x2000000		// Size of above buffer

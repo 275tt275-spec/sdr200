@@ -36,7 +36,6 @@ entity system_gpio is
         gpio_o : in STD_LOGIC_VECTOR ( 19 downto 0 );
         gpio_i : out STD_LOGIC_VECTOR ( 19 downto 0 );
         gpio_t : in STD_LOGIC_VECTOR ( 19 downto 0 ); 
-        vga_de : inout STD_LOGIC;
         vga_mode : inout STD_LOGIC;
         vga_ud : inout STD_LOGIC;
         vga_dithb : inout STD_LOGIC;
@@ -55,7 +54,8 @@ entity system_gpio is
         btn_band5 : inout STD_LOGIC;
         btn_band6 : inout STD_LOGIC;
         btn_band7 : inout STD_LOGIC;
-        btn_band8 : inout STD_LOGIC
+        btn_band8 : inout STD_LOGIC;
+        lcd_en : inout STD_LOGIC
     );
 end system_gpio;
 
@@ -68,14 +68,14 @@ architecture Behavioral of system_gpio is
 
 begin
 
-i_vga_de : IOBUF
+i_lcd_en : IOBUF
     generic map (
        DRIVE => 4,
        IOSTANDARD => "LVCMOS33",
        SLEW => "SLOW")
     port map (
        O => gpio_i(0),     
-       IO => vga_de,  
+       IO => lcd_en,  
        I => gpio_o(0),   
        T => gpio_t(0)  
     );
@@ -307,5 +307,6 @@ i_btn_band8 : IOBUF
        I => gpio_o(19),   
        T => gpio_t(19)  
     );
+    
      
 end Behavioral;

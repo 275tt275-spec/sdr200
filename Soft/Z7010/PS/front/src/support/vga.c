@@ -27,7 +27,9 @@ struct vga_prams vga_table[] = {
   {1600,    1440, 32,  		 48, 	 80,  	SYNC_NEG, 926, 		900, 	6,  	 3,  	 17,	 SYNC_POS, 88750000 },	// *1440 x 900 @ 60 Hz CVT Reduced Blanking
   {1600,    1440, 32,  		 48, 	 80,  	SYNC_NEG, 942, 		900, 	6,  	 3,  	 33,	 SYNC_POS, 136750000},	// 1440 x 900 @ 75 Hz CVT Standard
   {1600,    1440, 32,  		 48, 	 80,  	SYNC_NEG, 948, 		900, 	6,  	 3,  	 39,	 SYNC_POS, 157000000},	// 1440 x 900 @ 85 Hz CVT Standard
-  {1600,    1440, 32,		 48, 	 80,  	SYNC_NEG, 953, 		900, 	6,  	 3,  	 44,	 SYNC_POS, 182750000}	// 1440 x 900 @ 120 Hz CVT Reduced Blanking
+  {1600,    1440, 32,		 48, 	 80,  	SYNC_NEG, 953, 		900, 	6,  	 3,  	 44,	 SYNC_POS, 182750000},	// 1440 x 900 @ 120 Hz CVT Reduced Blanking
+//  {1340, 	1024, 40, 	     140, 	 136, 	SYNC_NEG, 635, 		600, 	3, 		 12, 	 20, 	 SYNC_NEG, 51200000},  // 1024 x 600 @ 60 Hz (7" RGB Display)
+  {1184,    1024, 32,        48,     80,    SYNC_NEG, 624,      600,    6,       3,      15,     SYNC_POS, 44250000 },  // 1024 x 600 @ 60 Hz (7" RGB Display)
 };
 
 void vga_irq_handler( void *p ) {

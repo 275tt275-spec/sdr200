@@ -408,7 +408,7 @@ void startup_gui_create(void)
 void gui_thread(void *p) {
 
 	// Initialise VGA Hardware
-	struct vga_prams* params = set_vga_prams( VGA_1024X768_60HZ );
+	struct vga_prams* params = set_vga_prams( VGA_1024X600_60HZ );
 	/* initialize LVGL framework */
 	lv_init();
 #if 0
@@ -428,6 +428,17 @@ void gui_thread(void *p) {
 	lv_disp_set_bg_opa(NULL, LV_OPA_TRANSP);
 #else
 	gui.disp = lv_display_create(params->h_px, params->v_ln);
+	lv_display_set_default(gui.disp);
+    gui.main_screen = lv_display_get_screen_active(gui.disp);
+    gui.screenWidth = lv_display_get_horizontal_resolution(gui.disp);
+    gui.screenHeight = lv_display_get_vertical_resolution(gui.disp);
+
+    lv_obj_clean(gui.main_screen);
+    lv_obj_remove_style_all(gui.main_screen);
+    lv_obj_set_style_bg_opa(gui.main_screen, LV_OPA_COVER, 0);
+    lv_obj_set_style_text_color(gui.main_screen, lv_color_white(), 0);
+    lv_obj_set_style_bg_color(gui.main_screen, lv_color_black(), 0);
+
 	lv_display_set_color_format(gui.disp, LV_COLOR_FORMAT_RGB888);
 //	lv_display_set_buffers(gui.disp, (void*)LV_VDB_ADR, (void*)LV_VDB2_ADR, (LV_HOR_RES_MAX * LV_VER_RES_MAX), LV_DISPLAY_RENDER_MODE_PARTIAL);
 	lv_display_set_buffers(gui.disp, (void*)LV_VDB_ADR, (void*)LV_VDB2_ADR,

@@ -12,7 +12,9 @@ entity Zedboard_AXI_VGA is
         vga_clk     : in  std_logic;
         h_sync      : out std_logic;
         v_sync      : out std_logic;
-        dclk        : out std_logic;
+        lcd_dclk    : out std_logic;
+        lcd_de      : out std_logic;
+        lcd_dctrl   : out std_logic;
         r           : out std_logic_vector(7 downto 0);
         g           : out std_logic_vector(7 downto 0);
         b           : out std_logic_vector(7 downto 0);
@@ -131,6 +133,7 @@ architecture rtl of Zedboard_AXI_VGA is
     signal dma_tcnt      : unsigned(24 downto 0);
     signal irq_en        : std_logic;
     signal fifo_wr_en    : std_logic;  -- Промежуточный сигнал для wr_en
+    signal brightness    : std_logic_vector(7 downto 0) := x"20";
 
     -- Компонент AXI Control Interface
     component axi_vga_ctrl is
@@ -233,8 +236,23 @@ architecture rtl of Zedboard_AXI_VGA is
             I : in  std_logic
         );
     end component;
+    
+    component lcd_dctrl_en is
+     Port ( 
+        clk : in STD_LOGIC;
+        s_brightness : in std_logic_vector(7 downto 0);
+        lcd_dctrl : out STD_LOGIC
+     );
+    end component lcd_dctrl_en;
 
 begin
+
+    brightness_0 : lcd_dctrl_en
+     Port map ( 
+        clk => s_axi_aclk,
+        s_brightness => brightness,
+        lcd_dctrl => lcd_dctrl
+     );
 
     -- Присваиваем внутренние сигналы выходным портам
     m_axi_rready <= m_axi_rready_int;
@@ -274,13 +292,16 @@ begin
     dma_ready    <= total_pixels(31);
     dma_rst      <= total_pixels(30);
     rst_ready    <= not (rst_busy_wr or rst_busy_rd);
-    dma_tcnt     <= shift_left(resize(unsigned(total_pixels(22 downto 0)), 25), 2) - 128;
+--    dma_tcnt     <= shift_left(resize(unsigned(total_pixels(22 downto 0)), 25), 2) - 128;
+    dma_tcnt <= shift_left(resize(unsigned(total_pixels(22 downto 0)), 25), 2);
     irq_en       <= irq_reg(0);
     frm_cpt_irq  <= irq;
 
     -- DMA Data
     dma_data <= m_axi_rdata;
-    dclk     <= px_clk;
+ --   dclk     <= px_clk;
+    lcd_dclk <= not px_nco_phase(35);
+    lcd_de <= vgamem_rd_en;
 
     -- VGA Processing
     process(px_clk)
@@ -337,6 +358,7 @@ begin
                     when "0000000110" => ddr_fbuf_addr <= up_wdata;
                     when "0000000111" => total_pixels <= up_wdata;
                     when "0000001000" => irq_reg <= up_wdata;
+                    when "0000001001" => brightness <= up_wdata(7 downto 0);
                     when others => null;
                 end case;
             end if;
@@ -539,3 +561,4 @@ begin
         end if;
     end process;
 end architecture rtl;
+

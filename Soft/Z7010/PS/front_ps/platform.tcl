@@ -68,3 +68,10 @@ bsp write
 platform clean
 platform clean
 platform generate
+platform generate
+platform active {front_ps}
+bsp reload
+platform generate -domains 
+platform config -updatehw {E:/Projects/sdr200/Soft/Z7010/PL/front_wrapper.xsa}
+platform clean
+platform generate
