@@ -24,10 +24,10 @@
 /* PJBES Defines */
 #define LV_HOR_RES_MAX			(1024)
 #define LV_VER_RES_MAX			(600)
-#define LV_VGA_DDR_DMA_BASE		0x0F000000		// This is the DDR address the DMA hardware fetches VGA pixel data from (16MB is reserved)
+#define LV_VGA_DDR_DMA_BASE		VGA_DDR_DMA_BASE		// This is the DDR address the DMA hardware fetches VGA pixel data from (16MB is reserved)
 #define LV_VDB_ADR          	LV_VGA_DDR_DMA_BASE
 #define LV_VDB2_ADR         	(LV_VGA_DDR_DMA_BASE + (((LV_HOR_RES_MAX * LV_VER_RES_MAX)*LV_COLOR_DEPTH)>>3))
-
+#if 0
 typedef struct tag_gui_globals
 {
 	lv_disp_t				*disp;				/* Descriptor for display */
@@ -41,18 +41,33 @@ typedef struct tag_gui_globals
 	volatile uint8_t		gui_ready : 1;
 	volatile uint8_t		colour_changed : 2;
 } s_gui_globals;
+#endif
+typedef struct tag_gui {
+	volatile uint32_t		dma_src;
+    lv_display_t* 			display;
+    lv_obj_t* 				main_screen;
+    int 					screenWidth;
+    int 					screenHeight;
+    uint32_t 				vfoA;
+    uint32_t 				vfoB;
+    int 					active_vfo;
+    int 					waterfallgain;
+    int 					isTx;
+    float 					TXApwr;
+    float 					TXAswr;
+    float 					RXArssi;
+	volatile uint8_t		buf_switched : 1;
+	volatile uint8_t		gui_ready : 1;
+	volatile uint8_t		colour_changed : 2;
+} s_gui;
+
+extern s_gui gui_dev;
 
 void gui_thread(void *p);
-void startup_gui_create(void);
-void main_gui_create(void);
-void setup_keyboard( void );
-void kb_ta_action( lv_event_t *event );
-void log_create( lv_obj_t * parent );
-void update_gui_log( void );
-uint8_t update_all_cfg( void );
-void sys_scrupdate( void );
-void config_create( lv_obj_t *parent );
-void setup_scrl_bar( lv_obj_t *obj, lv_part_t part, uint8_t size );
-void sysinfo_create( lv_obj_t * parent );
+void gui_start(lv_display_t* display);
+void gui_tick(void);
+
+void gui_set_vfo(int vfo, uint32_t value);
+void gui_set_rssi(float value);
 
 #endif /* INCLUDE_GUI_H_ */

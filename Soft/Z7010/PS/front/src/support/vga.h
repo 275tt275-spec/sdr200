@@ -36,13 +36,13 @@
 // Horizontal Defines
 #define TOTH_PIX_M				0x00000FFF
 #define SET_THP(x)				x-1
-#define H_PIX_M				0x00FFF000
+#define H_PIX_M				    0x00FFF000
 #define SET_HP(x)				(x << 12)
 #define H_SYNC_M				0xFF000000
 #define SET_HS(x)				(x << 24)
 #define H_FPOR_M				0x00000FFF
 #define H_BPOR_M				0x00FFF000
-#define H_POL_M				0x80000000
+#define H_POL_M				    0x80000000
 // Vertical Defines
 #define TOTV_LINES_M			0x00000FFF
 #define SET_TVL(x)				x-1
@@ -52,9 +52,9 @@
 #define SET_VS(x)				(x << 24)
 #define V_FPOR_M				0x00000FFF
 #define V_BPOR_M				0x00FFF000
-#define V_POL_M				0x80000000
+#define V_POL_M				    0x80000000
 
-#define DMA_FRAME_READY		0x80000000	// Top bit of total pixel register to tell hardware the frame buffer is valid
+#define DMA_FRAME_READY		    0x80000000	// Top bit of total pixel register to tell hardware the frame buffer is valid
 #define DMA_FIFO_RST			0x40000000	// Next bit down is DMA FIFO reset signal
 
 #define SET_HFP(x)				x-1
@@ -101,6 +101,7 @@ extern struct vga_prams 	*vga_data;
 
 //VGA Controller related functions
 struct vga_prams* set_vga_prams( uint8_t table_idx );
+void vga_start_interrupt(void);
 void vga_disp_flush(lv_display_t * disp_drv, const lv_area_t * area, uint8_t * px_map);
 void vga_disp_flush_hard(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_color_t * color_p);
 void vga_disp_map(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_color_t * color_p);

@@ -5,451 +5,218 @@
  *      Author: VictorT
  */
 
+#include <gui_parts.h>
+#include <gui_parts.h>
 #include <time.h>
 #include <stdio.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "gui.h"
 #include "vga.h"
 #include "lvgl.h"
+
+#include "gui_vfo.h"
+#include "gui_left_bar.h"
+#include "gui_spectrum.h"
+#include "gui_waterfall.h"
+#include "gui_meter.h"
 
 /* Pointers to configuration data and shared memory */
 // extern config_datp_t		conf_p;
 // extern shared_memp_t 		shmem_p;
 // extern cpu0_globals_t		*cpu0_globals;
 
-s_gui_globals	gui;
+#define VFO_HEIGHT  (gui_dev.screenHeight / 5)
+#define VFO_X  112
+#define VFO_Y  150
+#define LBAR_W  5
+#define LBAR_H  150
+#define SPECTRUM_X  VFO_X
+#define SPECTRUM_Y  (150 + VFO_HEIGHT + 2)
+#define SPECTRUM_W  (gui_dev.screenWidth - SPECTRUM_X)
+#define SPECTRUM_H  200
 
-static lv_obj_t				*main_tabview = NULL;
-static lv_obj_t 			*lab_loc_current_time;
-static lv_obj_t 			*lab_utc_current_time;
-static lv_obj_t				*lab_gui_load;
-static lv_obj_t				*ta_startup = NULL;
+const lv_font_t* font_large = &lv_font_montserrat_48;
+const lv_font_t* font_normal = &lv_font_montserrat_20;
 
-#define NO_MSG_SLOTS		10	/* Number of pop up message positions on screen */
-#define MSG_B_SIZEX		1014												// Width of pop up message box
-#define MSG_B_SIZEY		40													// Height of pop up message box
-#define MSG_STARTPOS_Y	(LV_VER_RES_MAX - NO_MSG_SLOTS * MSG_B_SIZEY) / 2	// Y Position for first pop up message on screen
-#define MSG_ANIM_TIME		1000												// Number of ms to move a pop up message on/off screen
-#define MSG_HOLD_TIME		5000												// Number of mS to show a pop up message
+static lv_obj_t* ltr_freqH = NULL;
+static char strFreq[16];
 
-static void anim_x_cb(void * var, lv_coord_t v) {
+s_gui gui_dev;
+static lv_display_t* 		display;
 
-    lv_obj_set_x(var, v);
-}
+lv_indev_t* encoder_indev_t = 0;
+lv_group_t* button_group = 0;
+lv_obj_t* bar_view;
+lv_obj_t* tabview_mid;
+int tunerHeight = 100;
+int barHeight = 80;	// 90;
+const int bottomHeight = 40;
+const int topHeight = 35;
+int tabHeight;
+int screenfontthresshold_2 = 1024;
+int screenfontthresshold_1 = 800;
+const int buttonHeight = 100;
+lv_obj_t* tab[8];
+lv_obj_t* tab_buttons;
 
-static void show_sys_message( char* msg ) {
-
-#if 0
-
-	static uint8_t				msg_pos = 0, first_call = pdTRUE;
-	static lv_obj_t				*mbox[NO_MSG_SLOTS];
-	static lv_style_t			mbox_style;
-	static lv_anim_t 			a1[NO_MSG_SLOTS];
-
-	if( first_call ) {
-		lv_style_init(&mbox_style);
-		lv_style_set_radius(&mbox_style, 3);
-		lv_style_set_opa(&mbox_style, LV_OPA_60);
-		lv_style_set_border_width(&mbox_style, 2);
-		lv_style_set_border_color(&mbox_style, conf_p->gui_colour);
-		lv_style_set_text_align(&mbox_style, LV_TEXT_ALIGN_CENTER);
-		for( uint8_t i = 0; i < NO_MSG_SLOTS; i++ ) {
-
-			mbox[i] = lv_textarea_create(lv_scr_act());
-			lv_textarea_set_one_line(mbox[i], pdTRUE);
-			lv_obj_add_style(mbox[i], &mbox_style, LV_PART_MAIN);
-			lv_obj_set_width( mbox[i], MSG_B_SIZEX);
-			lv_obj_set_pos(mbox[i], LV_HOR_RES_MAX, (MSG_STARTPOS_Y + (MSG_B_SIZEY * i)) );
-			lv_anim_init(&a1[i]);
-			lv_anim_set_var(&a1[i], mbox[i]);
-			lv_anim_set_values(&a1[i], LV_HOR_RES_MAX, (LV_HOR_RES_MAX - MSG_B_SIZEX - 10));
-			lv_anim_set_time(&a1[i], 2*MSG_ANIM_TIME);
-			lv_anim_set_playback_time(&a1[i], MSG_ANIM_TIME);
-			lv_anim_set_playback_delay(&a1[i], MSG_HOLD_TIME);
-			lv_anim_set_exec_cb(&a1[i], anim_x_cb);
-			lv_anim_set_path_cb(&a1[i], lv_anim_path_ease_in_out);
-		}
-		first_call = pdFALSE;
-	}
-	lv_textarea_set_text(mbox[msg_pos], msg);
-	lv_obj_move_foreground( mbox[msg_pos] );
-	lv_style_set_border_color(&mbox_style, conf_p->gui_colour);	// we do this every time...
-	lv_anim_start(&a1[msg_pos]);
-	if( ++msg_pos == NO_MSG_SLOTS ) msg_pos = 0;
-#endif
-}
-
-static void kb_drag_handler(lv_event_t * e) {
-
-    lv_obj_t * obj = lv_event_get_target(e);
-
-    lv_indev_t * indev = lv_indev_get_act();
-    if(indev == NULL)  return;
-
-    lv_point_t vect;
-    lv_indev_get_vect(indev, &vect);
-
-    lv_coord_t x = lv_obj_get_x(obj) + ((vect.x) * 5);
-    lv_coord_t y = lv_obj_get_y(obj) + ((vect.y) * 5);
-    lv_obj_set_pos(obj, x, y);
-    lv_obj_invalidate(obj);
-}
-
-static void kb_cb_gen( lv_event_t *event ) {
-#if 0
-	lv_event_code_t 	code = lv_event_get_code(event);
-	sysmsg_q_t			msg = { 0, pdFALSE, NULL };
-
-	switch( code ) {
-
-			case LV_EVENT_CANCEL:
-				lv_obj_add_flag( cpu0_globals->gui.kb_dat.kb_container, LV_OBJ_FLAG_HIDDEN );
-				break;
-
-			case LV_EVENT_READY:
-				lv_obj_update_layout(cpu0_globals->gui.kb_dat.kb_container);
-				lv_obj_set_pos(cpu0_globals->gui.kb_dat.kb_container,
-					((LV_HOR_RES_MAX - 30) - lv_obj_get_width(cpu0_globals->gui.kb_dat.kb_container)),
-					((LV_VER_RES_MAX - 40) - lv_obj_get_height(cpu0_globals->gui.kb_dat.kb_container)) );
-				if( update_all_cfg() ) {	// If anything has changed update configuration file
-				    msg.id = UPDATE_GUI_SYS_SCR;
-				    q_gui_msg( &msg );
-					lv_obj_add_flag( cpu0_globals->gui.kb_dat.kb_container, LV_OBJ_FLAG_HIDDEN );
-				}
-				break;
-
-			default:
-				lv_keyboard_def_event_cb(event);
-				break;
-	}
-#endif
-}
-
-void setup_keyboard( void ) {
-#if 0
-	static uint8_t			first_call = pdTRUE;
-
-	if( first_call ) {
-		cpu0_globals->gui.kb_dat.kb_container = lv_obj_create(lv_layer_top());
-		lv_obj_set_size(cpu0_globals->gui.kb_dat.kb_container, 560, 260 );
-	    cpu0_globals->gui.kb_dat.kb = lv_keyboard_create(cpu0_globals->gui.kb_dat.kb_container);
-		lv_obj_set_size(cpu0_globals->gui.kb_dat.kb, 500, 200 );
-		lv_obj_update_layout(cpu0_globals->gui.kb_dat.kb);
-		lv_obj_center(cpu0_globals->gui.kb_dat.kb);
-		lv_obj_set_pos(cpu0_globals->gui.kb_dat.kb_container, ((LV_HOR_RES_MAX - 30) - lv_obj_get_width(cpu0_globals->gui.kb_dat.kb_container)),
-				((LV_VER_RES_MAX - 40) - lv_obj_get_height(cpu0_globals->gui.kb_dat.kb_container)) );
-		lv_obj_set_style_border_width (cpu0_globals->gui.kb_dat.kb, 1, LV_PART_ITEMS );
-		lv_obj_add_event_cb(cpu0_globals->gui.kb_dat.kb_container, kb_drag_handler, LV_EVENT_PRESSING, NULL);
-	    lv_obj_add_event_cb(cpu0_globals->gui.kb_dat.kb, kb_cb_gen, LV_EVENT_CANCEL, NULL);
-	    lv_obj_add_event_cb(cpu0_globals->gui.kb_dat.kb, kb_cb_gen, LV_EVENT_READY, NULL);
-	    lv_obj_add_flag(cpu0_globals->gui.kb_dat.kb_container, LV_OBJ_FLAG_HIDDEN);
-		first_call = pdFALSE;
-
-	}
-	lv_obj_set_style_border_color(cpu0_globals->gui.kb_dat.kb,	conf_p->gui_colour, LV_PART_ITEMS );
-#endif
-}
-
-void kb_ta_action( lv_event_t *event ) {
-
-#if 0
-	lv_event_code_t 	code = lv_event_get_code(event);
-	lv_obj_t			*ta = lv_event_get_target(event);
-	uint32_t			kb_type;
-
-	if( code == LV_EVENT_CLICKED ) {
-		lv_group_focus_obj(ta);
-		lv_keyboard_set_textarea(cpu0_globals->gui.kb_dat.kb, ta);
-		kb_type = (uint32_t)lv_obj_get_user_data(ta);
-		switch( kb_type ) {
-
-			case UDAT_TA_NUM:
-				lv_keyboard_set_mode(cpu0_globals->gui.kb_dat.kb, LV_KEYBOARD_MODE_NUMBER);
-				lv_obj_set_size(cpu0_globals->gui.kb_dat.kb_container, 290, 240 );
-				lv_obj_set_size(cpu0_globals->gui.kb_dat.kb, 250, 200 );
-				break;
-
-			case UDAT_TA_ALPHA:
-				lv_keyboard_set_mode(cpu0_globals->gui.kb_dat.kb, LV_KEYBOARD_MODE_TEXT_LOWER);
-				lv_obj_set_size(cpu0_globals->gui.kb_dat.kb_container, 540, 240 );
-				lv_obj_set_size(cpu0_globals->gui.kb_dat.kb, 500, 200 );
-				break;
-
-			case UDAT_TA_ALPHA_UPPER:
-				lv_keyboard_set_mode(cpu0_globals->gui.kb_dat.kb, LV_KEYBOARD_MODE_TEXT_UPPER);
-				lv_obj_set_size(cpu0_globals->gui.kb_dat.kb_container, 540, 240 );
-				lv_obj_set_size(cpu0_globals->gui.kb_dat.kb, 500, 200 );
-				break;
-
-			default:
-				lv_keyboard_set_mode(cpu0_globals->gui.kb_dat.kb, LV_KEYBOARD_MODE_TEXT_LOWER);
-				lv_obj_set_size(cpu0_globals->gui.kb_dat.kb_container, 540, 240 );
-				lv_obj_set_size(cpu0_globals->gui.kb_dat.kb, 500, 200 );
-				break;
-		}
-		lv_obj_update_layout(cpu0_globals->gui.kb_dat.kb);
-		lv_obj_center(cpu0_globals->gui.kb_dat.kb);
-		lv_obj_update_layout(cpu0_globals->gui.kb_dat.kb_container);
-		lv_obj_set_pos(cpu0_globals->gui.kb_dat.kb_container, ((LV_HOR_RES_MAX - 30) - lv_obj_get_width(cpu0_globals->gui.kb_dat.kb_container)),
-				((LV_VER_RES_MAX - 40) - lv_obj_get_height(cpu0_globals->gui.kb_dat.kb_container)) );
-		lv_obj_clear_flag(cpu0_globals->gui.kb_dat.kb_container, LV_OBJ_FLAG_HIDDEN);
-	}
-#endif
-}
-
-void update_scrl_bar_style( void ) {
-#if 0
-//	return; // TODO: Look in to this!
-	lv_style_set_bg_grad_color(&cpu0_globals->gui.style_sb, conf_p->gui_colour );
-#endif
-}
-
-
-void setup_scrl_bar( lv_obj_t *obj, lv_part_t part, uint8_t size ) {
-#if 0
-	static uint8_t		first_call = pdTRUE;
-
-	if( first_call ) {
-		lv_style_init(&cpu0_globals->gui.style_sb);
-		lv_style_set_radius(&cpu0_globals->gui.style_sb, LV_RADIUS_CIRCLE);
-		lv_style_set_bg_opa(&cpu0_globals->gui.style_sb, LV_OPA_60);
-		lv_style_set_bg_grad_color(&cpu0_globals->gui.style_sb, conf_p->gui_colour);
-		lv_style_set_bg_grad_dir(&cpu0_globals->gui.style_sb, LV_GRAD_DIR_VER);
-		lv_style_set_border_width(&cpu0_globals->gui.style_sb, 0);
-		lv_style_set_pad_bottom(&cpu0_globals->gui.style_sb, 3);
-		lv_style_set_pad_right(&cpu0_globals->gui.style_sb, 3);
-		first_call = pdFALSE;
-	}
-    lv_obj_add_style(obj, &cpu0_globals->gui.style_sb, part);
-    lv_obj_set_style_width(obj, size, part);
-#endif
-}
-
-static void update_gui_theme( uint8_t scrl_bar ) {
-#if 0
-	lv_theme_t * th = lv_theme_default_init(cpu0_globals->gui.disp, conf_p->gui_colour, lv_palette_main(LV_PALETTE_PURPLE),
-			conf_p->gui_theme, LV_FONT_DEFAULT);
-	lv_disp_set_theme(cpu0_globals->gui.disp, th);
-	setup_keyboard();
-	if( scrl_bar ) update_scrl_bar_style();
-	lv_obj_invalidate(lv_scr_act());
-#endif
-}
+char str_band[] = "80M";
+char str_mode[] = "USB";
+double ifrate = 0.256e6;
 
 
 static void process_gui_msg_q( lv_timer_t *timer ) {
-#if 0
-	char				*pmsg = NULL;
-	sysmsg_q_t			msg;
-	sysmsg_t			*db_entry;
 
-	if( ( xQueueReceive( cpu0_globals->gui.msg_q, &msg, 0 ) ) ) {
-		if( msg.id < LOG_DB_END ){
-			if( (db_entry = get_log_msg_by_id( msg.id ) ) == NULL ) return;
-			if( msg.extra_data != NULL ) {
-				pmsg = strstr( msg.extra_data," - " ); // This strips the date off the front of messages so we don't print it on screen
-				if( pmsg != NULL ) {
-					pmsg += 3;
-				} else pmsg = msg.extra_data;
-			}
-			if( ta_startup != NULL && db_entry->category == log_cat_startup ) {
-				if( pmsg) {
-					lv_textarea_add_text( ta_startup, pmsg );	// All startup messages are defined first so they are sent to pseudo console
-					lv_textarea_add_text( ta_startup, "\n" );
-				}
-			} else show_sys_message( pmsg );
-			if( msg.free_ext ) vPortFree( msg.extra_data );
-		} else {
-			switch( msg.id ) {
-
-				case LOAD_MAIN_GUI:
-					if( ta_startup ) lv_obj_del( ta_startup );
-					ta_startup = NULL;
-					main_gui_create();
-					break;
-
-				case UPDATE_GUI_LOG:
-					update_gui_log();
-					break;
-
-				case UPDATE_GUI_THEME:
-					update_gui_theme( pdTRUE );
-					break;
-
-				case UPDATE_GUI_SYS_SCR:
-					sys_scrupdate();
-					break;
-
-				case GUI_HIDE_MOUSE_CURSOR:
-					if( cpu0_globals->gui.mse_dat.cursor_obj ) lv_obj_add_flag(cpu0_globals->gui.mse_dat.cursor_obj, LV_OBJ_FLAG_HIDDEN);
-					break;
-
-				case GUI_SHOW_MOUSE_CURSOR:
-					if( cpu0_globals->gui.mse_dat.cursor_obj ) lv_obj_clear_flag(cpu0_globals->gui.mse_dat.cursor_obj, LV_OBJ_FLAG_HIDDEN);
-					break;
-
-				default:
-					break;
-			}
-			lv_obj_invalidate(lv_scr_act());
-		}
-	}
-#endif
-}
-static void update_time( lv_timer_t *timer ) {
-#if 0
-	static char		u_buf[36] = "UTC: ", s_buf[80];  // Text Buffers
-	static char		l_buf[36] = "LOC: ";  // Text Buffer
-	static time_t		time_last_l = 0;
-	static time_t		time_last_u = 0;
-	static int			tz_l = 0;
-	time_t				time_now;
-
-	/* Update Local Time Display */
-	if( tz_l != conf_p->tz_idx ) {
-		tz_l = conf_p->tz_idx;
-		time_last_l = 0;
-		time_last_u = 0;
-	}
-
-	/* Update Local Time Display */
-	time_now = get_zone_time( conf_p->tz_idx, l_buf + 5 );	// Append time to our text buffer
-	if( time_now > time_last_l ) {
-		lv_label_set_text(lab_loc_current_time, l_buf);
-		lv_obj_align(lab_loc_current_time, LV_ALIGN_TOP_RIGHT, -320, 4);  /*Align to the top*/
-	}
-	/* Update UTC Time Display */
-	time_now = get_zone_time( 0, u_buf + 5 );	// Append time to our text buffer
-	if( time_now > time_last_u ) {
-		lv_label_set_text(lab_utc_current_time, u_buf);
-		lv_obj_align(lab_utc_current_time, LV_ALIGN_TOP_RIGHT, -4, 4);  /*Align to top right*/
-	}
-	sprintf( s_buf, "CPU0:%03d%%|CPU1:%03d%%|GUI:%03d%%", GetCPUUsage(0), GetCPUUsage(1), (100 - lv_timer_get_idle()) );
-	lv_label_set_text(lab_gui_load, s_buf);
-	lv_obj_align(lab_gui_load, LV_ALIGN_TOP_LEFT, 4, 4);  /*Align to top left*/
-	// Hide the keyboard on tab change
-	if( main_tabview && cpu0_globals->gui.kb_dat.kb_container ) {
-		switch( lv_tabview_get_tab_act(main_tabview) ) {
-
-			case 2:
-				lv_obj_add_flag(cpu0_globals->gui.kb_dat.kb_container, LV_OBJ_FLAG_HIDDEN);
-				break;
-
-			default:
-				break;
-
-		}
-	}
-#endif
 }
 
-void main_gui_create(void) {
-
-	lv_obj_t			*tab1, *tab2, *tab3, *tab4;
-
-	main_tabview = lv_tabview_create(lv_screen_active());
-	lv_obj_set_style_pad_top(main_tabview, 24, LV_PART_MAIN);
-	lv_obj_set_size(main_tabview, lv_pct(100), lv_pct(100));
-	lv_obj_align(main_tabview, LV_ALIGN_BOTTOM_LEFT, 0, 0);  /*Align to the Bottom*/
-	lv_obj_set_style_border_width (main_tabview, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-	lv_obj_set_style_border_color (main_tabview, lv_palette_main(LV_PALETTE_BLUE_GREY), LV_PART_MAIN | LV_STATE_DEFAULT);
-	lv_obj_set_style_border_width (main_tabview, 1, LV_PART_ITEMS);
-	lv_obj_set_style_border_color (main_tabview, lv_palette_main(LV_PALETTE_BLUE_GREY), LV_PART_ITEMS);
-
-	lab_utc_current_time = lv_label_create(lv_scr_act());
-	lv_obj_set_style_text_font (lab_utc_current_time, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
-	lab_gui_load = lv_label_create(lv_scr_act());
-	lv_obj_set_style_text_font (lab_gui_load, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
-	lab_loc_current_time = lv_label_create(lv_scr_act());
-	lv_obj_set_style_text_font (lab_loc_current_time, &lv_font_montserrat_12, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-//	setup_keyboard();
-//	mouse_init();
-
-	tab1 = lv_tabview_add_tab(main_tabview, "Configuration");
-	tab2 = lv_tabview_add_tab(main_tabview, "Demo Widgets");
-	tab3 = lv_tabview_add_tab(main_tabview, "System Info");
-	tab4 = lv_tabview_add_tab(main_tabview, "Log");
-#if 0
-	config_create(tab1);
-	lv_demo_widgets(tab2);
-	sysinfo_create(tab3);
-	log_create(tab4);
-	update_gui_theme( pdTRUE );
-    lv_obj_invalidate(lv_scr_act());
-	cpu0_globals->gui.gui_ready = pdTRUE;
-	shmem_p->cpu_1_flags |= CPU1_PROCEED;		// Allow CPU1 to start
-	xil_printf( "CPU1 Flags: 0x%06X\r\n", shmem_p->cpu_1_flags );
-	update_time( NULL );
-#endif
-    lv_timer_create((lv_timer_cb_t)update_time, 250, NULL );  // Update the screen every 0.25 seconds
-}
-
-void startup_gui_create(void)
+void gui_thread(void *p)
 {
-    lv_obj_t * scr = lv_screen_active();
-    lv_obj_clean(scr);
-    lv_obj_remove_style_all(scr);
-    lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(scr, lv_color_black(), 0);
-    lv_obj_set_style_bg_color(scr, lv_color_white(), 0);
-
-    ta_startup = lv_textarea_create(lv_screen_active());
-    lv_obj_set_size(ta_startup, lv_obj_get_width(lv_scr_act()) - 20, lv_obj_get_height(lv_scr_act()) - 20);
-    lv_textarea_set_text(ta_startup, "SDR200 Welcome");
-    lv_obj_align(ta_startup, LV_ALIGN_CENTER, 0, 0);
-	lv_obj_set_style_bg_opa (ta_startup, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
-	lv_obj_set_style_border_width(ta_startup, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-	lv_obj_invalidate(lv_screen_active());
-}
-
-void gui_thread(void *p) {
-
 	// Initialise VGA Hardware
-	struct vga_prams* params = set_vga_prams( VGA_800X480_60HZ );
+	struct vga_prams* params = set_vga_prams( VGA_1024X600_60HZ );
+	vga_start_interrupt();
+
 	/* initialize LVGL framework */
 	lv_init();
-#if 0
-	lv_theme_default_init(cpu0_globals->gui.disp, conf_p->gui_colour, lv_palette_main(LV_PALETTE_PURPLE),
-			conf_p->gui_theme, LV_FONT_DEFAULT);
 
-	lv_disp_drv_init((lv_display_t*)&cpu0_globals->gui.disp_drv);
-	lv_disp_draw_buf_init(&cpu0_globals->gui.disp_buf, (void*)LV_VDB_ADR, (void*)LV_VDB2_ADR,
-			(LV_HOR_RES_MAX*LV_VER_RES_MAX));
-	cpu0_globals->gui.disp_drv.flush_cb = vga_disp_flush;
-	cpu0_globals->gui.disp_drv.hor_res = LV_HOR_RES_MAX;                 /*Set the horizontal resolution in pixels*/
-	cpu0_globals->gui.disp_drv.ver_res = LV_VER_RES_MAX;                 /*Set the vertical resolution in pixels*/
-	cpu0_globals->gui.disp_drv.draw_buf = &cpu0_globals->gui.disp_buf;
-	cpu0_globals->gui.disp_drv.full_refresh = pdFALSE;
-	cpu0_globals->gui.disp_drv.direct_mode = pdTRUE;
-	cpu0_globals->gui.disp = lv_disp_drv_register((lv_disp_drv_t*)&cpu0_globals->gui.disp_drv);
-	lv_disp_set_bg_opa(NULL, LV_OPA_TRANSP);
-#else
-	gui.disp = lv_display_create(params->h_px, params->v_ln);
-	lv_display_set_default(gui.disp);
-    gui.main_screen = lv_display_get_screen_active(gui.disp);
-    gui.screenWidth = lv_display_get_horizontal_resolution(gui.disp);
-    gui.screenHeight = lv_display_get_vertical_resolution(gui.disp);
+	display = lv_display_create(params->h_px, params->v_ln);
+	lv_display_set_buffers(display, (void*)LV_VDB_ADR, (void*)LV_VDB2_ADR,
+				LV_HOR_RES_MAX * LV_VER_RES_MAX * lv_color_format_get_size(lv_display_get_color_format(display)),
+				LV_DISPLAY_RENDER_MODE_DIRECT);
+	lv_display_set_flush_cb(display, vga_disp_flush);
 
-    lv_obj_clean(gui.main_screen);
-    lv_obj_remove_style_all(gui.main_screen);
-    lv_obj_set_style_bg_opa(gui.main_screen, LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(gui.main_screen, lv_color_white(), 0);
-    lv_obj_set_style_bg_color(gui.main_screen, lv_color_black(), 0);
-
-	lv_display_set_color_format(gui.disp, LV_COLOR_FORMAT_RGB888);
-//	lv_display_set_buffers(gui.disp, (void*)LV_VDB_ADR, (void*)LV_VDB2_ADR, (LV_HOR_RES_MAX * LV_VER_RES_MAX), LV_DISPLAY_RENDER_MODE_PARTIAL);
-	lv_display_set_buffers(gui.disp, (void*)LV_VDB_ADR, (void*)LV_VDB2_ADR,
-			LV_HOR_RES_MAX * LV_VER_RES_MAX * lv_color_format_get_size(lv_display_get_color_format(gui.disp)),
-			LV_DISPLAY_RENDER_MODE_DIRECT);
-	lv_display_set_flush_cb(gui.disp, vga_disp_flush);
-#endif
-	startup_gui_create();
+	gui_start(display);
 	lv_timer_create((lv_timer_cb_t)process_gui_msg_q, 20, NULL);	// Check for GUI thread messages every 20ms
+
 	while(1) {
 		lv_task_handler();
 		vTaskDelay(pdMS_TO_TICKS(4));
 	}
+}
+
+void gui_start(lv_display_t* display)
+{
+    gui_dev.display = display;
+    lv_display_set_default(gui_dev.display);
+    gui_dev.main_screen = lv_display_get_screen_active(gui_dev.display);
+    gui_dev.screenWidth = lv_display_get_horizontal_resolution(gui_dev.display);
+    gui_dev.screenHeight = lv_display_get_vertical_resolution(gui_dev.display);
+    gui_dev.active_vfo = 0;
+    gui_dev.waterfallgain = 1;
+    gui_dev.isTx = 0;
+#if 0
+    if (screenWidth < 1200)
+    {
+        tunerHeight = (screenHeight * 22) / 100;
+        barHeight = (screenHeight * 22) / 100;
+    }
+    else
+    {
+        tunerHeight = (screenHeight * 18) / 100;
+        barHeight = (screenHeight * 18) / 100;
+    }
+#endif
+    tabHeight = gui_dev.screenHeight - topHeight - tunerHeight - barHeight;
+
+    lv_obj_clean(gui_dev.main_screen);
+    lv_obj_remove_style_all(gui_dev.main_screen);
+    lv_obj_set_style_bg_opa(gui_dev.main_screen, LV_OPA_COVER, 0);
+    lv_obj_set_style_text_color(gui_dev.main_screen, lv_color_white(), 0);
+    lv_obj_set_style_bg_color(gui_dev.main_screen, lv_color_black(), 0);
+
+    button_group = lv_group_create();
+    lv_indev_set_group(encoder_indev_t, button_group);
+
+    lv_theme_t* th;
+    if (gui_dev.screenWidth > 1440)
+    {
+        th = lv_theme_default_init(gui_dev.display, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_CYAN), LV_THEME_DEFAULT_DARK, &lv_font_montserrat_18);
+    }
+    else if (gui_dev.screenWidth > 1280)
+    {
+        th = lv_theme_default_init(gui_dev.display, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_CYAN), LV_THEME_DEFAULT_DARK, &lv_font_montserrat_16);
+    }
+    else
+    {
+        th = lv_theme_default_init(gui_dev.display, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_CYAN), LV_THEME_DEFAULT_DARK, &lv_font_montserrat_14);
+    }
+
+    screenfontthresshold_2 = 1024;
+    screenfontthresshold_1 = 800;
+
+    lv_disp_set_theme(NULL, th);
+
+    static lv_style_t background_style;
+    lv_style_init(&background_style);
+    lv_style_set_radius(&background_style, 0);
+    lv_style_set_bg_color(&background_style, lv_palette_main(LV_PALETTE_RED));
+#if 0
+    lv_obj_t* obj1;
+    bar_view = lv_obj_create(lv_scr_act());
+    lv_obj_set_style_radius(bar_view, 0, 0);
+    lv_obj_set_pos(bar_view, 0, topHeight + tunerHeight);
+    lv_obj_set_size(bar_view, LV_HOR_RES - 3, barHeight);
+
+    tabview_mid = lv_tabview_create(main_screen);
+    lv_tabview_set_tab_bar_position(tabview_mid, LV_DIR_LEFT);
+
+    lv_tabview_set_tab_bar_size(tabview_mid, buttonHeight);
+    lv_obj_add_event_cb(tabview_mid, tabview_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+//    lv_obj_set_pos(tabview_mid, 5, topHeight + tunerHeight + barHeight);
+    lv_obj_set_pos(tabview_mid, 5, 200);
+    lv_obj_set_size(tabview_mid, LV_HOR_RES - 3, tabHeight);
+
+    tab[0] = lv_tabview_add_tab(tabview_mid, "Spectrum");
+    tab[1] = lv_tabview_add_tab(tabview_mid, "Band");
+    tab[2] = lv_tabview_add_tab(tabview_mid, "RX");
+    tab[3] = lv_tabview_add_tab(tabview_mid, "AGC");
+    tab[4] = lv_tabview_add_tab(tabview_mid, "TX");
+    tab[5] = lv_tabview_add_tab(tabview_mid, "Sdr");
+    tab[7] = lv_tabview_add_tab(tabview_mid, LV_SYMBOL_SETTINGS);
+
+    lv_obj_clear_flag(lv_tabview_get_content(tabview_mid), (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLL_CHAIN | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_ONE));
+    tab_buttons = lv_tabview_get_tab_btns(tabview_mid);
+
+    static lv_style_t style_btn;
+    lv_style_init(&style_btn);
+    lv_style_set_radius(&style_btn, 0);
+    lv_style_set_border_width(&style_btn, 1);
+    lv_style_set_border_opa(&style_btn, LV_OPA_50);
+    lv_style_set_border_color(&style_btn, lv_color_black());
+    lv_style_set_border_side(&style_btn, LV_BORDER_SIDE_INTERNAL);
+    lv_style_set_radius(&style_btn, 0);
+    lv_obj_add_style(tab_buttons, &style_btn, LV_PART_ITEMS);
+#endif
+
+    gui_left_bar_init(gui_dev.main_screen, button_group, 0, LBAR_W, LBAR_H);
+    gui_vfo_init(gui_dev.main_screen, VFO_X, VFO_Y, gui_dev.screenWidth - VFO_X, VFO_HEIGHT, NULL);
+    gui_spectrum_init(gui_dev.main_screen, SPECTRUM_X, SPECTRUM_Y, SPECTRUM_W, SPECTRUM_H, ifrate);
+}
+
+static void tabview_event_cb(lv_event_t* e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t* obj = (lv_obj_t*)lv_event_get_target(e);
+    int i = lv_tabview_get_tab_act(tabview_mid);
+}
+
+void gui_tick(void)
+{
+    gui_spectrum_draw_display();
+
+//    gui_spectrum_set_freq(gui_dev.vfoA);
+//    gui_vfo_set(0, gui_dev.vfoA++, 1, 0, 0, 0);
+}
+
+void gui_set_vfo(int vfo, uint32_t value)
+{
+    if(vfo == 0)
+        gui_dev.vfoA = value;
+    else
+        gui_dev.vfoB = value;
+}
+
+void gui_set_rssi(float value)
+{
+    gui_dev.RXArssi = value;
+    gui_meter_update();
 }

@@ -112,19 +112,19 @@ architecture rtl of Zedboard_AXI_VGA is
     signal px_nco_phase  : std_logic_vector(35 downto 0);
     signal px_nco_cntrl  : std_logic_vector(35 downto 0);
     signal thpixels      : unsigned(11 downto 0);
-    signal hpixels       : unsigned(11 downto 0);
+    signal hpixels       : unsigned(11 downto 0) := x"320";
     signal hpulse        : unsigned(7 downto 0);
     signal hfp           : unsigned(11 downto 0);
     signal hbp           : unsigned(11 downto 0);
     signal hspol         : std_logic;
     signal tvlines       : unsigned(11 downto 0);
-    signal vlines        : unsigned(11 downto 0);
+    signal vlines        : unsigned(11 downto 0) := x"1E0";
     signal vpulse        : unsigned(7 downto 0);
     signal vfp           : unsigned(11 downto 0);
     signal vbp           : unsigned(11 downto 0);
     signal vspol         : std_logic;
     signal dma_data      : std_logic_vector(31 downto 0);
-    signal rgb_data      : std_logic_vector(31 downto 0);
+    signal rgb_data      : std_logic_vector(31 downto 0) := (others => '0');
     signal vgamem_rd_en  : std_logic;
     signal fifo_readyw   : std_logic;
     signal dma_ready     : std_logic;
@@ -136,6 +136,9 @@ architecture rtl of Zedboard_AXI_VGA is
     signal irq_en        : std_logic;
     signal fifo_wr_en    : std_logic;  -- Промежуточный сигнал для wr_en
     signal brightness    : std_logic_vector(7 downto 0) := x"20";
+    signal fifo_rd_en_comb : std_logic; -- Промежуточный сигнал для чтения из FIFO
+    signal fifo_empty : std_logic;
+
 
     -- Компонент AXI Control Interface
     component axi_vga_ctrl is
@@ -275,7 +278,6 @@ begin
     g <= rgb_data(15 downto 8) when (vgamem_rd_en = '1') else (others => '0');
     b <= rgb_data(7 downto 0) when (vgamem_rd_en = '1') else (others => '0');
 
-
     -- Распаковка управляющих регистров
     thpixels <= unsigned(h_cntrl1(11 downto 0));
     hpixels  <= unsigned(h_cntrl1(23 downto 12));
@@ -296,56 +298,68 @@ begin
     px_nco_cntrl(31 downto 0)  <= lsbs_px_nco;
     
 --    vgamem_rd_en <= '1' when (h_cnt < hpixels and v_cnt < vlines and fifo_ready = '1') else '0';
-    vgamem_rd_en <= '1' when (h_cnt < hpixels and v_cnt < vlines and fifo_ready = '1' and dma_ready = '1' and rst_ready = '1') else '0';
+--    vgamem_rd_en <= '1' when (h_cnt < hpixels and v_cnt < vlines and fifo_ready = '1' and dma_ready = '1' and rst_ready = '1') else '0';
+    vgamem_rd_en <= '1' when (h_cnt < hpixels) and (v_cnt < vlines) else '0';
+--    vgamem_rd_en <= '1' when (unsigned(h_cnt) >= 1 and unsigned(h_cnt) < unsigned(hpixels) + 1 and unsigned(v_cnt) < unsigned(vlines)) else '0';
+
     dma_ready    <= total_pixels(31);
     dma_rst      <= total_pixels(30);
     rst_ready    <= not (rst_busy_wr or rst_busy_rd);
---    dma_tcnt     <= shift_left(resize(unsigned(total_pixels(22 downto 0)), 25), 2) - 128;
-    dma_tcnt <= shift_left(resize(unsigned(total_pixels(22 downto 0)), 25), 2);
+    dma_tcnt     <= shift_left(resize(unsigned(total_pixels(22 downto 0)), 25), 2) - 128;
+--    dma_tcnt <= shift_left(resize(unsigned(total_pixels(22 downto 0)), 25), 2);
     irq_en       <= irq_reg(0);
     frm_cpt_irq  <= irq;
 
     -- DMA Data
     dma_data <= m_axi_rdata;
-    lcd_dclk     <= px_clk;
+    lcd_dclk <= px_clk;
  --   lcd_dclk <= px_nco_phase(35);
     lcd_de <= vgamem_rd_en;
 
     -- VGA Processing
     process(px_clk)
-    begin
-        if rising_edge(px_clk) then
-            if (fifo_ready = '1' and dma_ready = '1' and rst_ready = '1') then
-                if (h_cnt >= thpixels) then
-                    h_cnt <= (others => '0');
-                    if (v_cnt >= tvlines) then
-                        v_cnt <= (others => '0');
-                    else
-                        v_cnt <= v_cnt + 1;
-                    end if;
+begin
+    if rising_edge(px_clk) then        
+        if dma_rst = '1' then
+            fifo_ready <= '0';
+            h_cnt <= (others => '0');
+            v_cnt <= (others => '0');
+        end if;    
+        
+        if fifo_ready = '1' then
+            -- Логика непрерывной развёртки
+            if (unsigned(h_cnt) >= unsigned(thpixels) - 1) then
+                h_cnt <= (others => '0');
+                if (unsigned(v_cnt) >= unsigned(tvlines) - 1) then
+                    v_cnt <= (others => '0');
                 else
-                    h_cnt <= h_cnt + 1;
+                    v_cnt <= v_cnt + 1;
                 end if;
-
-                -- Формирование горизонтального синхроимпульса
-                if (h_cnt >= (hpixels + hfp) and h_cnt < (hpixels + hfp + hpulse)) then
-                    h_sync_r <= '1';
-                else
-                    h_sync_r <= '0';
-                end if;
-
-                -- Формирование вертикального синхроимпульса
-                if (v_cnt >= (vlines + vfp) and v_cnt < (vlines + vfp + vpulse)) then
-                    v_sync_r <= '1';
-                else
-                    v_sync_r <= '0';
-                end if;
-
-            elsif (fifo_readyw = '1' and rst_ready = '1') then
-                fifo_ready <= fifo_readyw;
+            else
+                h_cnt <= h_cnt + 1;
             end if;
+    
+            -- Горизонтальная синхронизация
+            if (unsigned(h_cnt) >= (unsigned(hpixels) + unsigned(hfp)) and 
+                unsigned(h_cnt) < (unsigned(hpixels) + unsigned(hfp) + unsigned(hpulse))) then
+                h_sync_r <= '1';
+            else
+                h_sync_r <= '0';
+            end if;
+    
+            -- Вертикальная синхронизация
+            if (unsigned(v_cnt) >= (unsigned(vlines) + unsigned(vfp)) and 
+                unsigned(v_cnt) < (unsigned(vlines) + unsigned(vfp) + unsigned(vpulse))) then
+                v_sync_r <= '1';
+            else
+                v_sync_r <= '0';
+            end if;
+        elsif (fifo_readyw = '1' and rst_ready = '1') then
+            fifo_ready <= '1';
         end if;
-    end process;
+    end if;
+end process;
+
 
     -- AXI Control Interface Processing
     process(up_clk)
@@ -383,6 +397,7 @@ begin
                     when "0000000110" => up_rdata <= ddr_fbuf_addr;
                     when "0000000111" => up_rdata <= total_pixels;
                     when "0000001000" => up_rdata <= irq_reg;
+                    when "0000001001" => up_rdata <= x"000000" & brightness;
                     when others       => up_rdata <= x"DEADDEAD";
                 end case;
             end if;
@@ -397,13 +412,12 @@ begin
                 when IDLE =>
                     irq <= '0';
                     if (dma_ready = '1' and rst_ready = '1') then
-                        if (ddr_address = x"00000000") then
+                        if (ddr_address = x"00000000") then                       
                             ddr_address <= ddr_fbuf_addr;
                             dma_cnt <= (others => '0');
-                        end if;
-                        state_r <= READ_REQ;
+                       end if;   
+                       state_r <= READ_REQ;                      
                     end if;
-
                 when READ_REQ =>
                     if (fifo_readyw = '0') then
                         ar_valid <= '1';
@@ -429,7 +443,6 @@ begin
                         end if;
                         state_r <= IDLE;
                     end if;
-
                 when others =>
                     state_r <= IDLE;
             end case;
@@ -483,6 +496,7 @@ begin
             up_rack          => up_rack
         );
 
+    fifo_rd_en_comb <= vgamem_rd_en when (fifo_ready = '1' and dma_ready = '1' and rst_ready = '1') else '0';
     -- Instantiate XPM FIFO Async
     fifo_inst : xpm_fifo_async
         generic map (
@@ -517,9 +531,9 @@ begin
             wr_ack         => open,
             wr_rst_busy    => rst_busy_wr,
             rd_clk         => px_clk,
-            rd_en          => vgamem_rd_en,
+            rd_en          => fifo_rd_en_comb,
             dout           => rgb_data,
-            empty          => open,
+            empty          => fifo_empty,
             underflow      => open,
             rd_rst_busy    => rst_busy_rd,
             prog_empty     => open,

@@ -8,12 +8,11 @@
 #include "FreeRTOS.h"
 #include "xscugic.h"
 #include "vga.h"
-#include "gui.h"
+#include "gui_parts.h"
 
 struct vga_prams 					*vga_data;
 extern XScuGic 						xInterruptController;
 struct vga_creg_map					*vga = (void*)VGA_CTRL_BASE;
-extern s_gui_globals				gui;
 
 static uint64_t get_nco_value( unsigned int px_clk );
 
@@ -30,21 +29,20 @@ struct vga_prams vga_table[] = {
   {1600,    1440, 32,		 48, 	 80,  	SYNC_NEG, 953, 		900, 	6,  	 3,  	 44,	 SYNC_POS, 182750000},	// 1440 x 900 @ 120 Hz CVT Reduced Blanking
   {1340, 	1024, 40, 	     140, 	 136, 	SYNC_NEG, 635, 		600, 	3, 		 12, 	 20, 	 SYNC_NEG, 51200000},  // 1024 x 600 @ 60 Hz (7" RGB Display)
   //  {1184,    1024, 32,        48,     80,    SYNC_NEG, 624,      600,    6,       3,      15,     SYNC_POS, 44250000 },  // 1024 x 600 @ 60 Hz (7" RGB Display)
-  {1056,    800,  30,        40,     186,   SYNC_POS, 525,      480,    3,       13,     29,     SYNC_POS, 33330000 }, // * 800 x 480 @ 60 Hz (HL070MI / AT070TN92)
+  {1056,    800,   6,        46,     210,   SYNC_NEG, 525,      480,    3,       22,     23,     SYNC_NEG, 33330000 }, // * 800 x 480 @ 60 Hz (HL070MI / AT070TN92)
 };
 
-void vga_irq_handler( void *p ) {
-
-	vga->vga_fbuf_addr = gui.dma_src;
-	gui.buf_switched = pdTRUE;
-	XScuGic_Disable(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_0_FRM_CPT_IRQ_INTR);
-	lv_display_flush_ready(gui.disp);
+void vga_irq_handler( void *p )
+{
+	vga->vga_fbuf_addr = gui_dev.dma_src;
+	gui_dev.buf_switched = pdTRUE;
+	XScuGic_Disable(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR);
+	lv_display_flush_ready(gui_dev.display);
 }
 
 struct vga_prams* set_vga_prams( uint8_t table_idx ) {
 
 	uint64_t	nco_val;
-	int			Status;
 
 	vga_data = &vga_table[table_idx];
 	vga->h_ctrl1 = SET_THP( vga_data->tot_h_px );
@@ -64,20 +62,25 @@ struct vga_prams* set_vga_prams( uint8_t table_idx ) {
 	vga->px_nco_msbs = ((nco_val & 0xFF00000000) >> 32);
 	vga->vga_fbuf_addr = VGA_DDR_DMA_BASE;
 	vga->total_pixels = (vga_data->h_px * vga_data->v_ln) | DMA_FIFO_RST;
+//	vga->total_pixels = (vga_data->h_px * vga_data->v_ln) | DMA_FRAME_READY;
+	vga->brightness = 64;  //
 
-	vga->brightness = 50;  //
+	return vga_data;
+}
+
+void vga_start_interrupt(void)
+{
 	/*
 	 * Connect the interrupt handler that will be called when an
 	 * interrupt occurs for the device.
 	 */
-	Status = XScuGic_Connect(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_0_FRM_CPT_IRQ_INTR, \
+	int	Status = XScuGic_Connect(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR, \
 			(Xil_ExceptionHandler)&vga_irq_handler, NULL);
 	if (Status != XST_SUCCESS) {
 		// TODO: Some error report...
 	}
-	XScuGic_SetPriorityTriggerType(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_0_FRM_CPT_IRQ_INTR, \
+	XScuGic_SetPriorityTriggerType(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR, \
 			0xB8, 0x3);
-	return vga_data;
 }
 
 static void update_dual_buf( lv_display_t *disp_drv, const lv_area_t *area,  uint8_t * px_map )
@@ -109,7 +112,7 @@ void vga_disp_flush(lv_display_t *disp_drv, const lv_area_t *area, uint8_t * px_
 	static uint8_t	first_call = 1;
 
 	if( first_call ) {
-		gui.dma_src = (uint32_t)px_map;
+		gui_dev.dma_src = (uint32_t)px_map;
 		first_call =  0;
 		vga->total_pixels &= ~DMA_FIFO_RST; 	// Release Reset
 		vga->total_pixels |= DMA_FRAME_READY;	// Start Proceedings
@@ -117,12 +120,13 @@ void vga_disp_flush(lv_display_t *disp_drv, const lv_area_t *area, uint8_t * px_
 	}
 	if( lv_disp_flush_is_last( disp_drv ) )
 	{
+		Xil_DCacheFlushRange((INTPTR)px_map, gui_dev.screenWidth * gui_dev.screenHeight * sizeof(uint32_t));
 		// swap framebuffers (NOTE: LVGL will swap the buffers in the background, so here we can set the LCD framebuffer to the current LVGL buffer, which has been just completed
-		gui.dma_src = (uint32_t)lv_display_get_buf_active(disp_drv)->data;
-		gui.buf_switched = pdFALSE;
-		XScuGic_Enable(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_0_FRM_CPT_IRQ_INTR);
+		gui_dev.dma_src = (uint32_t)lv_display_get_buf_active(disp_drv)->data;
+		gui_dev.buf_switched = pdFALSE;
+		XScuGic_Enable(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR);
 		// wait for VSYNC to avoid tearing
-		while(!gui.buf_switched) {};// vTaskDelay(1);
+		while(!gui_dev.buf_switched) {};// vTaskDelay(1);
 //		update_dual_buf(disp_drv, area, px_map);
 	}
 	else

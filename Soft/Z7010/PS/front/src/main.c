@@ -22,6 +22,7 @@
 #include "xgpiops.h"
 #include "xstatus.h"
 #include "sleep.h"
+#include "vga.h"
 
 #define GUI_THREAD_STACKSIZE 		2048 * 4
 #define GUI_PRIORITY				2
@@ -38,6 +39,65 @@
 extern void gui_thread(void *p);
 
 XGpioPs Gpio;
+
+// Константы дисплея (соответствуют геометрии вашего фреймбуфера)
+#define LCD_WIDTH  1024
+#define LCD_HEIGHT 600
+
+uint32_t *lcd_framebuffer = (uint32_t *)0x0F000000;
+extern struct vga_creg_map					*vga;
+
+/**
+ * @brief Заполняет видеобуфер тестовой таблицей (вертикальные цветные полосы и сетка)
+ * @param framebuffer_addr Указатель на начало фреймбуфера в DDR (значение из ddr_fbuf_addr)
+ */
+void vga_fill_test_pattern(uint32_t *framebuffer_addr) {
+    if (!framebuffer_addr) return;
+
+    // Массив стандартных RGB888 цветов для полос:
+    // Белый, Желтый, Голубой, Зеленый, Пурпурный, Красный, Синий, Черный
+    uint32_t test_colors[8] = {
+        0xFFFFFF, // Белый
+        0xFFFF00, // Желтый
+        0x00FFFF, // Голубой
+        0x00FF00, // Зеленый
+        0xFF00FF, // Пурпурный
+        0xFF0000, // Красный
+        0x0000FF, // Синий
+        0x000000  // Черный
+    };
+
+    uint32_t width_per_strip = LCD_WIDTH / 8;
+
+    for (uint32_t y = 0; y < LCD_HEIGHT; y++) {
+        for (uint32_t x = 0; x < LCD_WIDTH; x++) {
+            uint32_t pixel_color = 0;
+
+            // 1. Рисуем сетку поверх (каждые 40 пикселей) и белую рамку по краям экрана
+            if (x == 0 || x == (LCD_WIDTH - 1) || y == 0 || y == (LCD_HEIGHT - 1) ||
+                (x % 40 == 0) || (y % 40 == 0)) {
+
+                pixel_color = 0xFFFFFF; // Белая сетка
+            }
+            // 2. Внутри сетки выводим вертикальные цветные полосы
+            else {
+                uint32_t strip_index = x / width_per_strip;
+                if (strip_index > 7) strip_index = 7;
+                pixel_color = test_colors[strip_index];
+            }
+
+            // Запись пикселя в память фреймбуфера
+            // Формат в памяти обычно XRGB, где старший байт не используется
+            framebuffer_addr[y * LCD_WIDTH + x] = pixel_color;
+        }
+    }
+
+    // Очистка кэша данных (Data Cache), чтобы Zynq принудительно сбросил данные из кэша в DDR3
+    // Без этого DMA-контроллер в FPGA может прочитать старые/пустые данные из физической памяти
+//    #ifdef XILINX_XILCACHES_H
+    Xil_DCacheFlushRange((INTPTR)framebuffer_addr, LCD_WIDTH * LCD_HEIGHT * sizeof(uint32_t));
+ //   #endif
+}
 
 int main( void )
 {
@@ -59,13 +119,19 @@ int main( void )
 
 	XGpioPs_WritePin(&Gpio, LCD_EN_GPIO, 1);
 	XGpioPs_WritePin(&Gpio, VGA_LR_GPIO, 1);
-	XGpioPs_WritePin(&Gpio, VGA_UD_GPIO, 1);
+	XGpioPs_WritePin(&Gpio, VGA_UD_GPIO, 0);
 	XGpioPs_WritePin(&Gpio, VGA_MODE_GPIO, 1);
 	XGpioPs_WritePin(&Gpio, VGA_DITHB_GPIO, 0);
 	XGpioPs_WritePin(&Gpio, VGA_RST_GPIO, 0);
 	usleep(5000);
 	XGpioPs_WritePin(&Gpio, VGA_RST_GPIO, 1);
-//	XGpioPs_WritePin(&Gpio, LCD_EN_GPIO, 1);
+
+//	vga_fill_test_pattern(lcd_framebuffer);
+//	set_vga_prams(VGA_1024X600_60HZ);
+//	vga->total_pixels = (vga_data->h_px * vga_data->v_ln) | DMA_FRAME_READY;
+
+
+#if 1
 
 	xTaskCreate( 	gui_thread, 					/* The function that implements the task. */
 					( const char * ) "GUI Scheduler", 		/* Text name for the task, provided to assist debugging only. */
@@ -77,7 +143,7 @@ int main( void )
 
 	/* Start the tasks and timer running. */
 	vTaskStartScheduler();
-
+#endif
 	/* If all is well, the scheduler will now be running, and the following line
 	will never be reached.  If the following line does execute, then there was
 	insufficient FreeRTOS heap memory available for the idle and/or timer tasks

@@ -18,8 +18,6 @@
 
 #include "xparameters_ps.h"
 
-#define STDIN_BASEADDRESS 0xE0000000
-#define STDOUT_BASEADDRESS 0xE0000000
 
 /******************************************************************/
 
@@ -89,9 +87,9 @@
 /******************************************************************/
 
 
-/* Peripheral Definitions for peripheral ZEDBOARD_AXI_VGA_0 */
-#define XPAR_ZEDBOARD_AXI_VGA_0_BASEADDR 0x40000000
-#define XPAR_ZEDBOARD_AXI_VGA_0_HIGHADDR 0x7FFFFFFF
+/* Peripheral Definitions for peripheral ZEDBOARD_AXI_VGA_1 */
+#define XPAR_ZEDBOARD_AXI_VGA_1_BASEADDR 0x40000000
+#define XPAR_ZEDBOARD_AXI_VGA_1_HIGHADDR 0x7FFFFFFF
 
 
 /* Peripheral Definitions for peripheral PS7_AFI_0 */
@@ -184,6 +182,9 @@
 /******************************************************************/
 
 
+/* Canonical Definitions for peripheral ZEDBOARD_AXI_VGA_1 */
+#define XPAR_ZEDBOARD_AXI_VGA_0_BASEADDR 0x40000000
+#define XPAR_ZEDBOARD_AXI_VGA_0_HIGHADDR 0x7FFFFFFF
 
 
 
@@ -264,7 +265,7 @@
 
 /* Definition for input Clock */
 /* Definitions for Fabric interrupts connected to ps7_scugic_0 */
-#define XPAR_FABRIC_ZEDBOARD_AXI_VGA_0_FRM_CPT_IRQ_INTR 61U
+#define XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR 61U
 
 /******************************************************************/
 
