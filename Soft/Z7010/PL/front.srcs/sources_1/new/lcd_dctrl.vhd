@@ -45,7 +45,7 @@ architecture Behavioral of lcd_dctrl_en is
     -- Период ШИМ = 1 / 200 Гц = 5,000,000 нс.
     -- При тактовой частоте 100 МГц (такт = 10 нс) полный период ШИМ равен: 
     -- 5,000,000 нс / 10 нс = 500,000 тактов.
-    constant PWM_PERIOD : integer := 500000;
+    constant PWM_PERIOD : integer := 100000;
     
     -- Счетчик для формирования периода ШИМ (от 0 до 499,999)
     signal pwm_counter : integer range 0 to PWM_PERIOD - 1 := 0;
@@ -63,7 +63,8 @@ begin
     brightness <= unsigned(s_brightness);
     -- Вычисление порога скважности (яркость * шагов_на_уровень)
     -- Умножение на константу оптимизируется синтезатором в сдвиги и сложения
-    duty_cycle_limit <= to_integer(brightness) * 1953;
+--    duty_cycle_limit <= to_integer(brightness) * 1953;
+    duty_cycle_limit <= (to_integer(brightness) * 100000) / 256;
     
 process(clk)
     begin

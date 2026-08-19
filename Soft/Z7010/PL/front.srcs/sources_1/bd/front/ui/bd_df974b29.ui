@@ -1,40 +1,40 @@
 {
    "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"0.652095",
-   "Default View_TopLeft":"-437,2",
+   "Default View_ScaleFactor":"1.05933",
+   "Default View_TopLeft":"409,432",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0
 #  -string -flagsOSRD
-preplace port DDR -pg 1 -lvl 5 -x 1610 -y 620 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -lvl 5 -x 1610 -y 790 -defaultsOSRD
-preplace port port-id_vga_h_sync -pg 1 -lvl 5 -x 1610 -y 830 -defaultsOSRD
-preplace port port-id_vga_v_sync -pg 1 -lvl 5 -x 1610 -y 860 -defaultsOSRD
-preplace port port-id_vga_dclk -pg 1 -lvl 5 -x 1610 -y 890 -defaultsOSRD
-preplace port port-id_vga_mode -pg 1 -lvl 5 -x 1610 -y 20 -defaultsOSRD
-preplace port port-id_vga_ud -pg 1 -lvl 5 -x 1610 -y 50 -defaultsOSRD
-preplace port port-id_vga_dithb -pg 1 -lvl 5 -x 1610 -y 80 -defaultsOSRD
-preplace port port-id_vga_lr -pg 1 -lvl 5 -x 1610 -y 140 -defaultsOSRD
-preplace port port-id_vga_rst -pg 1 -lvl 5 -x 1610 -y 110 -defaultsOSRD
-preplace port port-id_btn_lsb -pg 1 -lvl 5 -x 1610 -y 170 -defaultsOSRD
-preplace port port-id_btn_usb -pg 1 -lvl 5 -x 1610 -y 200 -defaultsOSRD
-preplace port port-id_btn_am -pg 1 -lvl 5 -x 1610 -y 230 -defaultsOSRD
-preplace port port-id_btn_fm -pg 1 -lvl 5 -x 1610 -y 260 -defaultsOSRD
-preplace port port-id_btn_dig -pg 1 -lvl 5 -x 1610 -y 290 -defaultsOSRD
-preplace port port-id_btn_cw -pg 1 -lvl 5 -x 1610 -y 320 -defaultsOSRD
-preplace port port-id_btn_tune -pg 1 -lvl 5 -x 1610 -y 350 -defaultsOSRD
-preplace port port-id_btn_band2 -pg 1 -lvl 5 -x 1610 -y 380 -defaultsOSRD
-preplace port port-id_btn_band3 -pg 1 -lvl 5 -x 1610 -y 410 -defaultsOSRD
-preplace port port-id_btn_band4 -pg 1 -lvl 5 -x 1610 -y 440 -defaultsOSRD
-preplace port port-id_btn_band5 -pg 1 -lvl 5 -x 1610 -y 470 -defaultsOSRD
-preplace port port-id_btn_band6 -pg 1 -lvl 5 -x 1610 -y 500 -defaultsOSRD
-preplace port port-id_btn_band7 -pg 1 -lvl 5 -x 1610 -y 530 -defaultsOSRD
-preplace port port-id_btn_band8 -pg 1 -lvl 5 -x 1610 -y 560 -defaultsOSRD
-preplace port port-id_lcd_en -pg 1 -lvl 5 -x 1610 -y 590 -defaultsOSRD
-preplace port port-id_vga_de -pg 1 -lvl 5 -x 1610 -y 920 -defaultsOSRD
-preplace port port-id_lcd_dctrl -pg 1 -lvl 5 -x 1610 -y 950 -defaultsOSRD
-preplace portBus vga_r -pg 1 -lvl 5 -x 1610 -y 980 -defaultsOSRD
-preplace portBus vga_g -pg 1 -lvl 5 -x 1610 -y 1010 -defaultsOSRD
-preplace portBus vga_b -pg 1 -lvl 5 -x 1610 -y 1040 -defaultsOSRD
+preplace port DDR -pg 1 -lvl 5 -x 1620 -y 620 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -lvl 5 -x 1620 -y 790 -defaultsOSRD
+preplace port port-id_vga_h_sync -pg 1 -lvl 5 -x 1620 -y 830 -defaultsOSRD
+preplace port port-id_vga_v_sync -pg 1 -lvl 5 -x 1620 -y 860 -defaultsOSRD
+preplace port port-id_vga_dclk -pg 1 -lvl 5 -x 1620 -y 890 -defaultsOSRD
+preplace port port-id_vga_mode -pg 1 -lvl 5 -x 1620 -y 20 -defaultsOSRD
+preplace port port-id_vga_ud -pg 1 -lvl 5 -x 1620 -y 50 -defaultsOSRD
+preplace port port-id_vga_dithb -pg 1 -lvl 5 -x 1620 -y 80 -defaultsOSRD
+preplace port port-id_vga_lr -pg 1 -lvl 5 -x 1620 -y 140 -defaultsOSRD
+preplace port port-id_vga_rst -pg 1 -lvl 5 -x 1620 -y 110 -defaultsOSRD
+preplace port port-id_btn_lsb -pg 1 -lvl 5 -x 1620 -y 170 -defaultsOSRD
+preplace port port-id_btn_usb -pg 1 -lvl 5 -x 1620 -y 200 -defaultsOSRD
+preplace port port-id_btn_am -pg 1 -lvl 5 -x 1620 -y 230 -defaultsOSRD
+preplace port port-id_btn_fm -pg 1 -lvl 5 -x 1620 -y 260 -defaultsOSRD
+preplace port port-id_btn_dig -pg 1 -lvl 5 -x 1620 -y 290 -defaultsOSRD
+preplace port port-id_btn_cw -pg 1 -lvl 5 -x 1620 -y 320 -defaultsOSRD
+preplace port port-id_btn_tune -pg 1 -lvl 5 -x 1620 -y 350 -defaultsOSRD
+preplace port port-id_btn_band2 -pg 1 -lvl 5 -x 1620 -y 380 -defaultsOSRD
+preplace port port-id_btn_band3 -pg 1 -lvl 5 -x 1620 -y 410 -defaultsOSRD
+preplace port port-id_btn_band4 -pg 1 -lvl 5 -x 1620 -y 440 -defaultsOSRD
+preplace port port-id_btn_band5 -pg 1 -lvl 5 -x 1620 -y 470 -defaultsOSRD
+preplace port port-id_btn_band6 -pg 1 -lvl 5 -x 1620 -y 500 -defaultsOSRD
+preplace port port-id_btn_band7 -pg 1 -lvl 5 -x 1620 -y 530 -defaultsOSRD
+preplace port port-id_btn_band8 -pg 1 -lvl 5 -x 1620 -y 560 -defaultsOSRD
+preplace port port-id_lcd_en -pg 1 -lvl 5 -x 1620 -y 590 -defaultsOSRD
+preplace port port-id_vga_de -pg 1 -lvl 5 -x 1620 -y 920 -defaultsOSRD
+preplace port port-id_lcd_dctrl -pg 1 -lvl 5 -x 1620 -y 950 -defaultsOSRD
+preplace portBus vga_r -pg 1 -lvl 5 -x 1620 -y 980 -defaultsOSRD
+preplace portBus vga_g -pg 1 -lvl 5 -x 1620 -y 1010 -defaultsOSRD
+preplace portBus vga_b -pg 1 -lvl 5 -x 1620 -y 1040 -defaultsOSRD
 preplace inst processing_system7_0 -pg 1 -lvl 3 -x 970 -y 660 -defaultsOSRD
 preplace inst rst_ps7_0_100M -pg 1 -lvl 2 -x 550 -y 930 -defaultsOSRD
 preplace inst axi_mem_intercon -pg 1 -lvl 2 -x 550 -y 660 -defaultsOSRD
@@ -61,30 +61,30 @@ preplace netloc Net16 1 4 1 1550J 430n
 preplace netloc Net17 1 4 1 1530J 450n
 preplace netloc Net18 1 4 1 1520J 470n
 preplace netloc Net19 1 4 1 1510J 490n
-preplace netloc processing_system7_0_FCLK_CLK0 1 1 3 380 830 730 790 1230
-preplace netloc processing_system7_0_FCLK_CLK1 1 0 4 20 670 370 790 720 800 1210
-preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 4 20 870 360 820 NJ 820 1180
-preplace netloc rst_ps7_0_200M_peripheral_aresetn 1 1 3 360 810 NJ 810 1200
-preplace netloc rst_ps7_0_50M_peripheral_aresetn 1 2 2 740 1070 1240
 preplace netloc Net20 1 4 1 1500J 510n
-preplace netloc Zedboard_AXI_VGA_1_h_sync 1 4 1 1530J 830n
-preplace netloc Zedboard_AXI_VGA_1_v_sync 1 4 1 1570J 860n
-preplace netloc Zedboard_AXI_VGA_1_lcd_dclk 1 4 1 1590J 890n
-preplace netloc Zedboard_AXI_VGA_1_lcd_de 1 4 1 1500J 920n
-preplace netloc Zedboard_AXI_VGA_1_r 1 4 1 1590J 970n
+preplace netloc Zedboard_AXI_VGA_1_b 1 4 1 1570J 1010n
+preplace netloc Zedboard_AXI_VGA_1_frm_cpt_irq 1 2 3 760 780 NJ 780 1520
 preplace netloc Zedboard_AXI_VGA_1_g 1 4 1 1590J 990n
-preplace netloc Zedboard_AXI_VGA_1_b 1 4 1 1560J 1010n
-preplace netloc Zedboard_AXI_VGA_1_frm_cpt_irq 1 2 3 750 1090 NJ 1090 1500
+preplace netloc Zedboard_AXI_VGA_1_h_sync 1 4 1 1550J 830n
+preplace netloc Zedboard_AXI_VGA_1_lcd_dclk 1 4 1 1590J 890n
 preplace netloc Zedboard_AXI_VGA_1_lcd_dctrl 1 4 1 NJ 950
+preplace netloc Zedboard_AXI_VGA_1_lcd_de 1 4 1 1590J 920n
+preplace netloc Zedboard_AXI_VGA_1_r 1 4 1 1590J 970n
+preplace netloc Zedboard_AXI_VGA_1_v_sync 1 4 1 1580J 860n
+preplace netloc processing_system7_0_FCLK_CLK0 1 1 3 380 820 740 820 1220
+preplace netloc processing_system7_0_FCLK_CLK1 1 0 4 20 670 370 780 750 800 1200
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 4 20 870 370 830 NJ 830 1180
+preplace netloc rst_ps7_0_200M_peripheral_aresetn 1 1 3 360 1080 NJ 1080 1230
+preplace netloc rst_ps7_0_50M_peripheral_aresetn 1 2 2 760 1070 1220
+preplace netloc Zedboard_AXI_VGA_1_m_axi 1 1 4 380 790 NJ 790 NJ 790 1500
 preplace netloc axi_mem_intercon_M00_AXI 1 2 1 720 640n
 preplace netloc processing_system7_0_DDR 1 3 2 NJ 620 NJ
-preplace netloc processing_system7_0_FIXED_IO 1 3 2 1240J 790 NJ
-preplace netloc processing_system7_0_GPIO_0 1 3 1 1240 320n
-preplace netloc processing_system7_0_M_AXI_GP0 1 2 2 760 830 1190
-preplace netloc ps7_0_axi_periph_M00_AXI 1 3 1 1220 890n
-preplace netloc Zedboard_AXI_VGA_1_m_axi 1 1 4 380 780 NJ 780 NJ 780 1500
-levelinfo -pg 1 0 190 550 970 1370 1610
-pagesize -pg 1 -db -bbox -sgen 0 0 1730 1100
+preplace netloc processing_system7_0_FIXED_IO 1 3 2 NJ 640 1590J
+preplace netloc processing_system7_0_GPIO_0 1 3 1 1190 320n
+preplace netloc processing_system7_0_M_AXI_GP0 1 2 2 760 810 1190
+preplace netloc ps7_0_axi_periph_M00_AXI 1 3 1 1210 890n
+levelinfo -pg 1 0 190 550 970 1370 1620
+pagesize -pg 1 -db -bbox -sgen 0 0 1740 1100
 "
 }
 {

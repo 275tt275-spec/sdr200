@@ -27,8 +27,11 @@
 #define VGA_1024X600_60HZ		9
 #define VGA_800X480_60HZ		10
 
-#define VGA_DDR_DMA_BASE		0x0F000000		// This is the DDR address the DMA hardware fetches VGA pixel data from (32MB is reserved)
-#define VGA_DDR_DMA_SIZE		0x2000000		// Size of above buffer
+// Константы дисплея (соответствуют геометрии вашего фреймбуфера)
+#define LCD_WIDTH  1024
+#define LCD_HEIGHT 600
+//#define VGA_DDR_DMA_BASE		0x0F000000		// This is the DDR address the DMA hardware fetches VGA pixel data from (32MB is reserved)
+//#define VGA_DDR_DMA_SIZE		0x2000000		// Size of above buffer
 #define VGA_CTRL_BASE			XPAR_ZEDBOARD_AXI_VGA_0_BASEADDR
 #define SYNC_NEG				0
 #define SYNC_POS				1

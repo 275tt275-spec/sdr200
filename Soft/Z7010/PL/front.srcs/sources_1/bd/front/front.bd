@@ -2969,10 +2969,10 @@
         "ports": [
           "processing_system7_0/FCLK_CLK1",
           "processing_system7_0/S_AXI_HP0_ACLK",
-          "axi_mem_intercon/M00_ACLK",
           "rst_ps7_0_200M/slowest_sync_clk",
           "axi_mem_intercon/ACLK",
           "axi_mem_intercon/S00_ACLK",
+          "axi_mem_intercon/M00_ACLK",
           "Zedboard_AXI_VGA_1/vga_clk",
           "Zedboard_AXI_VGA_1/m_axi_aclk"
         ]
@@ -2987,18 +2987,18 @@
       "rst_ps7_0_200M_peripheral_aresetn": {
         "ports": [
           "rst_ps7_0_200M/peripheral_aresetn",
-          "axi_mem_intercon/M00_ARESETN",
           "axi_mem_intercon/ARESETN",
           "axi_mem_intercon/S00_ARESETN",
+          "axi_mem_intercon/M00_ARESETN",
           "Zedboard_AXI_VGA_1/m_axi_aresetn"
         ]
       },
       "rst_ps7_0_50M_peripheral_aresetn": {
         "ports": [
           "rst_ps7_0_100M/peripheral_aresetn",
+          "ps7_0_axi_periph/ARESETN",
           "ps7_0_axi_periph/S00_ARESETN",
           "ps7_0_axi_periph/M00_ARESETN",
-          "ps7_0_axi_periph/ARESETN",
           "Zedboard_AXI_VGA_1/s_axi_aresetn"
         ]
       }

@@ -9,7 +9,7 @@ static lv_style_t style_indic;
 static lv_style_t style_label;
 static lv_obj_t* bar;
 static lv_obj_t* label1, *label2;
-static char str[16];
+static char str[32];
 
 void gui_meter_init(lv_obj_t* parent, int32_t x, int32_t y, int32_t w, int32_t h)
 {

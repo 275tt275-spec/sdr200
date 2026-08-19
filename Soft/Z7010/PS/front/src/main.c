@@ -24,7 +24,7 @@
 #include "sleep.h"
 #include "vga.h"
 
-#define GUI_THREAD_STACKSIZE 		2048 * 4
+#define GUI_THREAD_STACKSIZE 		2048 * 8
 #define GUI_PRIORITY				2
 #define GPIO_DEVICE_ID				XPAR_XGPIOPS_0_DEVICE_ID
 
@@ -39,10 +39,6 @@
 extern void gui_thread(void *p);
 
 XGpioPs Gpio;
-
-// Константы дисплея (соответствуют геометрии вашего фреймбуфера)
-#define LCD_WIDTH  1024
-#define LCD_HEIGHT 600
 
 uint32_t *lcd_framebuffer = (uint32_t *)0x0F000000;
 extern struct vga_creg_map					*vga;

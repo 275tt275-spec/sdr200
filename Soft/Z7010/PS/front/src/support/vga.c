@@ -16,6 +16,9 @@ struct vga_creg_map					*vga = (void*)VGA_CTRL_BASE;
 
 static uint64_t get_nco_value( unsigned int px_clk );
 
+uint32_t lv_buf_1[LCD_WIDTH * LCD_HEIGHT] __attribute__((aligned(32)));
+uint32_t lv_buf_2[LCD_WIDTH * LCD_HEIGHT] __attribute__((aligned(32)));
+
 struct vga_prams vga_table[] = {
 //tot_h_px, h_px, h_syn_len, h_fpch, h_bpch, h_pol,    tot_v_ln,v_ln, v_syn_len, v_fpch, v_bpch, v_pol, 	px_clk
   {800,     640,  96,  		 16, 	 48,  	SYNC_NEG, 525, 		480, 	2,  	 10, 	 33, 	 SYNC_NEG, 25175000 },	// 640 x 480 @ 60 Hz Standard VGA
@@ -60,10 +63,10 @@ struct vga_prams* set_vga_prams( uint8_t table_idx ) {
 	nco_val = get_nco_value( vga_data->px_clk );
 	vga->px_nco_lsbs = nco_val & 0xFFFFFFFF;
 	vga->px_nco_msbs = ((nco_val & 0xFF00000000) >> 32);
-	vga->vga_fbuf_addr = VGA_DDR_DMA_BASE;
+	vga->vga_fbuf_addr = (volatile uint32_t)&lv_buf_1[0];
 	vga->total_pixels = (vga_data->h_px * vga_data->v_ln) | DMA_FIFO_RST;
 //	vga->total_pixels = (vga_data->h_px * vga_data->v_ln) | DMA_FRAME_READY;
-	vga->brightness = 64;  //
+	vga->brightness = 32;  //
 
 	return vga_data;
 }
@@ -120,13 +123,15 @@ void vga_disp_flush(lv_display_t *disp_drv, const lv_area_t *area, uint8_t * px_
 	}
 	if( lv_disp_flush_is_last( disp_drv ) )
 	{
-		Xil_DCacheFlushRange((INTPTR)px_map, gui_dev.screenWidth * gui_dev.screenHeight * sizeof(uint32_t));
+		uint32_t size_in_bytes = gui_dev.screenWidth * gui_dev.screenHeight * sizeof(uint32_t);
+		size_in_bytes = (size_in_bytes + 31) & ~31;
+		Xil_DCacheFlushRange((INTPTR)px_map, size_in_bytes);
 		// swap framebuffers (NOTE: LVGL will swap the buffers in the background, so here we can set the LCD framebuffer to the current LVGL buffer, which has been just completed
 		gui_dev.dma_src = (uint32_t)lv_display_get_buf_active(disp_drv)->data;
 		gui_dev.buf_switched = pdFALSE;
 		XScuGic_Enable(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR);
 		// wait for VSYNC to avoid tearing
-		while(!gui_dev.buf_switched) {};// vTaskDelay(1);
+//		while(!gui_dev.buf_switched) {};// vTaskDelay(1);
 //		update_dual_buf(disp_drv, area, px_map);
 	}
 	else

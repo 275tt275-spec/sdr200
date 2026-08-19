@@ -9,6 +9,7 @@
 #include <gui_parts.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -64,6 +65,11 @@ char str_band[] = "80M";
 char str_mode[] = "USB";
 double ifrate = 0.256e6;
 
+uint32_t freq = 14074000;
+
+extern uint32_t lv_buf_1[LCD_WIDTH * LCD_HEIGHT] __attribute__((aligned(32)));
+extern uint32_t lv_buf_2[LCD_WIDTH * LCD_HEIGHT] __attribute__((aligned(32)));
+
 
 static void process_gui_msg_q( lv_timer_t *timer ) {
 
@@ -79,7 +85,7 @@ void gui_thread(void *p)
 	lv_init();
 
 	display = lv_display_create(params->h_px, params->v_ln);
-	lv_display_set_buffers(display, (void*)LV_VDB_ADR, (void*)LV_VDB2_ADR,
+	lv_display_set_buffers(display, (void*)&lv_buf_1[0], (void*)&lv_buf_2[0],
 				LV_HOR_RES_MAX * LV_VER_RES_MAX * lv_color_format_get_size(lv_display_get_color_format(display)),
 				LV_DISPLAY_RENDER_MODE_DIRECT);
 	lv_display_set_flush_cb(display, vga_disp_flush);
@@ -89,7 +95,18 @@ void gui_thread(void *p)
 
 	while(1) {
 		lv_task_handler();
-		vTaskDelay(pdMS_TO_TICKS(4));
+		vTaskDelay(pdMS_TO_TICKS(10));
+        // Вручную говорим LVGL, что прошло ровно 10 миллисекунд
+        lv_tick_inc(10);
+
+		static uint32_t rssi_counter = 0;
+	    if(++rssi_counter >= 50) { // Каждые 500 мс (50 итераций по 10 мс)
+	        rssi_counter = 0;
+	        int randomNum = rand() % 100;
+	        gui_set_rssi((float)randomNum - 100);
+	        gui_set_vfo(0, freq++);
+//	        gui_tick();
+	    }
 	}
 }
 

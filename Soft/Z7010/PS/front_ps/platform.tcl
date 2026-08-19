@@ -32,3 +32,8 @@ bsp write
 bsp reload
 catch {bsp regenerate}
 platform generate
+platform active {front_ps}
+domain active {freertos10_xilinx_domain}
+bsp reload
+bsp reload
+platform generate -domains 
