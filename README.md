@@ -1,1 +1,1 @@
-<img width="917" height="729" alt="SDR200_f" src="https://github.com/user-attachments/assets/c4225629-e0c4-43e8-a610-4626ca592379" />
+<img width="963" height="700" alt="2026-08-31 092919" src="https://github.com/user-attachments/assets/90184e8a-6c97-4199-a925-ad24058df3a2" />
