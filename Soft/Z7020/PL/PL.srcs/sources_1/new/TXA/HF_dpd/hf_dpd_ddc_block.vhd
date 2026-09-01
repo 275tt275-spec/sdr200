@@ -4,41 +4,47 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity hf_dpd_ddc_block is
-    generic (
-        -- Коэффициент децимации (например, 2048: 122.88 МГц / 2048 = 60 кГц, идеально для полосы 5 кГц)
-        DECIMATION_RATE : integer := 2048 
-    );
     Port (
         aclk              : in  STD_LOGIC;                     -- 122.88 MHz
+        aresetn           : in  STD_LOGIC;
         s_axis_adc_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
         s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
         m_axis_bb_i       : out signed (15 downto 0);          -- Выход Baseband (60 kHz)
         m_axis_bb_q       : out signed (15 downto 0);          -- Выход Baseband (60 kHz)
-        m_axis_bb_valid   : out STD_LOGIC                      -- Строб готовности данных (1 такт из 2048)
+        m_axis_bb_valid   : out STD_LOGIC;                     -- Строб готовности данных (1 такт из 2048)
+        ovr               : out STD_LOGIC
     );
 end hf_dpd_ddc_block;
 
 architecture Behavioral of hf_dpd_ddc_block is
+
+    component cic_hf_dpd IS
+        PORT (
+            aclk : IN STD_LOGIC;
+            aresetn : IN STD_LOGIC;
+            s_axis_data_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+            s_axis_data_tvalid : IN STD_LOGIC;
+            s_axis_data_tready : OUT STD_LOGIC;
+            m_axis_data_tdata : OUT STD_LOGIC_VECTOR(55 DOWNTO 0);
+            m_axis_data_tvalid : OUT STD_LOGIC
+        );
+    end component cic_hf_dpd;
+
+   -- Константы ограничений для 16-битного знакового выхода (Saturated Output)
+    constant MAX_SIGNED_16 : signed(15 downto 0) := x"7FFF"; -- +32767
+    constant MIN_SIGNED_16 : signed(15 downto 0) := x"8000"; -- -32768
+
     -- Сигналы смесителя
-    signal adc_reg         : signed(15 downto 0) := (others => '0');
-    signal dds_cos, dds_sin : signed(15 downto 0) := (others => '0');
-    signal mix_i, mix_q     : signed(31 downto 0) := (others => '0');
-
-    -- Секция интеграторов (работают на полной частоте 122.88 МГц)
-    -- Разрядность увеличена до 64 бит для предотвращения переполнения при децимации
-    signal int_i1, int_i2, int_i3 : signed(63 downto 0) := (others => '0');
-    signal int_q1, int_q2, int_q3 : signed(63 downto 0) := (others => '0');
-
-    -- Счетчик децимации
-    signal decim_cnt       : integer range 0 to DECIMATION_RATE-1 := 0;
-    signal decim_clk_en    : std_logic := '0';
-
-    -- Секция гребенчатых фильтров (Comb), работают на пониженной частоте
-    signal comb_i1_reg, comb_i2_reg : signed(63 downto 0) := (others => '0');
-    signal comb_q1_reg, comb_q2_reg : signed(63 downto 0) := (others => '0');
+    signal adc_reg              : signed(15 downto 0) := (others => '0');
+    signal dds_cos, dds_sin     : signed(15 downto 0) := (others => '0');
+    signal mix_i, mix_q         : signed(31 downto 0) := (others => '0');
+    signal mix_i16, mix_q16     : std_logic_vector(15 downto 0);
+    signal cic_out_i, cic_out_q : std_logic_vector(55 downto 0);
+    signal cic_v_i, cic_v_q     : std_logic := '0';
+    signal cic_reg_i, cic_reg_q : signed(55 downto 0);
+    signal v_reg_i, v_reg_q     : std_logic := '0';
     
-    signal comb_i1, comb_i2, comb_i3 : signed(63 downto 0) := (others => '0');
-    signal comb_q1, comb_q2, comb_q3 : signed(63 downto 0) := (others => '0');
+    signal ovr_reg  : STD_LOGIC := '0';
 
 begin
 
@@ -54,57 +60,82 @@ begin
 
             mix_i   <= adc_reg * dds_cos;
             mix_q   <= adc_reg * dds_sin;
+         end if;
+    end process;
 
-            -----------------------------------------------------------------
-            -- 2. ИНТЕГРАТОРЫ (3 каскада накопления, 122.88 МГц)
-            -----------------------------------------------------------------
-            int_i1 <= int_i1 + resize(mix_i, 64);
-            int_i2 <= int_i2 + int_i1;
-            int_i3 <= int_i3 + int_i2;
+    ovr <= ovr_reg;
+    mix_i16 <= std_logic_vector(mix_i(30 downto 15));
+    mix_q16 <= std_logic_vector(mix_q(30 downto 15));
+    
+    hf_dpd_cic_i : cic_hf_dpd
+    PORT MAP (
+        aclk => aclk,
+        aresetn => aresetn,
+        s_axis_data_tdata => mix_i16,
+        s_axis_data_tvalid => '1',
+        s_axis_data_tready => open,
+        m_axis_data_tdata => cic_out_i,
+        m_axis_data_tvalid => cic_v_i
+    );
+    
+    hf_dpd_cic_q : cic_hf_dpd
+    PORT MAP (
+        aclk => aclk,
+        aresetn => aresetn,
+        s_axis_data_tdata => mix_q16,
+        s_axis_data_tvalid => '1',
+        s_axis_data_tready => open,
+        m_axis_data_tdata => cic_out_q,
+        m_axis_data_tvalid => cic_v_q
+    );
 
-            int_q1 <= int_q1 + resize(mix_q, 64);
-            int_q2 <= int_q2 + int_q1;
-            int_q3 <= int_q3 + int_q2;
-
-            -----------------------------------------------------------------
-            -- 3. ДЕЦИМАТОР (Генератор строба частоты)
-            -----------------------------------------------------------------
-            if decim_cnt = DECIMATION_RATE - 1 then
-                decim_cnt    <= 0;
-                decim_clk_en <= '1';
+    process(aclk)
+    begin
+        if rising_edge(aclk) then
+            ovr_reg <= '0';
+            if cic_v_i = '1' then
+                cic_reg_i <= signed(cic_out_i);
+                v_reg_i <= '1';
+            end if;
+            if cic_v_q = '1' then
+                cic_reg_q <= signed(cic_out_q);
+                v_reg_q <= '1';
+            end if;
+            if v_reg_i = '1' and v_reg_q = '1' then
+                m_axis_bb_valid <= '1';
+                v_reg_i <= '0';
+                v_reg_q <= '0';
+                
+                if (cic_reg_i(55 downto 47) /= "000000000" and cic_reg_i(55 downto 47) /= "111111111") then
+                    -- Переполнение! Смотрим на старший (знаковый) бит для определения знака полки
+                    if cic_reg_i(55) = '0' then
+                        m_axis_bb_i <= MAX_SIGNED_16; -- Положительное насыщение
+                    else
+                        m_axis_bb_i <= MIN_SIGNED_16; -- Отрицательное насыщение
+                    end if;
+                    ovr_reg <= '1';
+                else
+                    -- Переполнения нет, безопасно отдаем целевые 16 бит
+                    m_axis_bb_i <= cic_reg_i(47 downto 32);
+                end if;
+                
+                if (cic_reg_q(55 downto 47) /= "000000000" and cic_reg_q(55 downto 47) /= "111111111") then
+                    -- Переполнение! Смотрим на старший (знаковый) бит для определения знака полки
+                    if cic_reg_q(55) = '0' then
+                        m_axis_bb_q <= MAX_SIGNED_16; -- Положительное насыщение
+                    else
+                        m_axis_bb_q <= MIN_SIGNED_16; -- Отрицательное насыщение
+                    end if;
+                    ovr_reg <= '1';
+                else
+                    -- Переполнения нет, безопасно отдаем целевые 16 бит
+                    m_axis_bb_q <= cic_reg_q(47 downto 32);
+                end if;
+                
             else
-                decim_cnt    <= decim_cnt + 1;
-                decim_clk_en <= '0';
+                m_axis_bb_valid <= '0';    
             end if;
 
-            -----------------------------------------------------------------
-            -- 4. ГРЕБЕНЧАТЫЕ ФИЛЬТРЫ (Comb - дифференциаторы, частота ~60 кГц)
-            -----------------------------------------------------------------
-            m_axis_bb_valid <= decim_clk_en; -- Выходной строб валидности данных
-
-            if decim_clk_en = '1' then
-                -- Каскад 1
-                comb_i1      <= int_i3 - comb_i1_reg;
-                comb_i1_reg  <= int_i3;
-                comb_q1      <= int_q3 - comb_q1_reg;
-                comb_q1_reg  <= int_q3;
-
-                -- Каскад 2
-                comb_i2      <= comb_i1 - comb_i2_reg;
-                comb_i2_reg  <= comb_i1;
-                comb_q2      <= comb_q1 - comb_q2_reg;
-                comb_q2_reg  <= comb_q1;
-
-                -- Каскад 3
-                comb_i3      <= comb_i2;
-                comb_q3      <= comb_q2;
-
-                -- Выходной сдвиг (разрядность нормализуется в зависимости от усиления CIC)
-                -- Для 3-каскадного CIC с децимацией 2048 усиление составляет примерно 2048^3
-                -- Мы берем стабильные старшие биты результата
-                m_axis_bb_i  <= comb_i3(55 downto 40); 
-                m_axis_bb_q  <= comb_q3(55 downto 40);
-            end if;
         end if;
     end process;
 

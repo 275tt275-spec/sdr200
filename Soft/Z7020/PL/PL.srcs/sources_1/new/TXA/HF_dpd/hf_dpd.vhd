@@ -8,6 +8,7 @@ entity hf_dpd is
         s_axis_adc_tdata : in  STD_LOGIC_VECTOR (15 downto 0); -- adc in 122.88 MHz
         m_axis_iq_tdata : out  STD_LOGIC_VECTOR (31 downto 0); -- iq out 122.88 MHz
         aclk : in  STD_LOGIC; -- 122.88 MHz
+        aresetn : in  STD_LOGIC;
         s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (4 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
@@ -22,11 +23,13 @@ architecture Behavioral of hf_dpd is
     component hf_dpd_ddc_block
         Port (
             aclk              : in  STD_LOGIC;                     -- 122.88 MHz
+            aresetn           : in  STD_LOGIC;
             s_axis_adc_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
             s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
             m_axis_bb_i       : out signed (15 downto 0);          -- Выход Baseband (60 kHz)
             m_axis_bb_q       : out signed (15 downto 0);          -- Выход Baseband (60 kHz)
-            m_axis_bb_valid   : out STD_LOGIC                      -- Строб готовности данных (1 такт из 2048)
+            m_axis_bb_valid   : out STD_LOGIC;                     -- Строб готовности данных (1 такт из 2048)
+            ovr               : out STD_LOGIC
         );
     end component;
 
@@ -76,6 +79,7 @@ begin
     DDC_INST : hf_dpd_ddc_block
     port map (
         aclk             => aclk,
+        aresetn          => aresetn,
         s_axis_adc_tdata => s_axis_adc_tdata,
         s_axis_dds_tdata => s_axis_dds_tdata,
         m_axis_bb_i      => rx_bb_i,
@@ -109,8 +113,8 @@ begin
             tx_out_p <= (tx_i_del * coeff_i) + (tx_q_del * coeff_r);
 
             -- Такт 5: Выход на ЦАП (16 бит I, 16 бит Q)
-            m_axis_iq_tdata(15 downto 0)  <= std_logic_vector(tx_out_i(31 downto 16));
-            m_axis_iq_tdata(31 downto 16) <= std_logic_vector(tx_out_p(31 downto 16));
+            m_axis_iq_tdata(15 downto 0)  <= std_logic_vector(tx_out_i(37 downto 22));
+            m_axis_iq_tdata(31 downto 16) <= std_logic_vector(tx_out_p(37 downto 22));
         end if;
     end process;
 
