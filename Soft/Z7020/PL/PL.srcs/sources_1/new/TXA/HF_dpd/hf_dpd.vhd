@@ -7,31 +7,23 @@ entity hf_dpd is
     Port ( 
         -- AXI Stream вход (I/Q данные)
         s_axis_iq_tdata   : in  STD_LOGIC_VECTOR (47 downto 0);
-        s_axis_iq_tvalid  : in  STD_LOGIC;
-        s_axis_iq_tready  : out STD_LOGIC;  -- out порт
         
         -- Вход с АЦП (обратная связь)
         s_axis_adc_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
-        s_axis_adc_tvalid : in  STD_LOGIC;
         
         -- Выход I/Q после линеаризации
         m_axis_iq_tdata   : out STD_LOGIC_VECTOR (31 downto 0);
-        m_axis_iq_tvalid  : out STD_LOGIC;
-        m_axis_iq_tready  : in  STD_LOGIC;
         
         -- Управление через конфигурационный интерфейс
         s_axis_cfg_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest  : in  STD_LOGIC_VECTOR (4 downto 0);
         s_axis_cfg_tvalid : in  STD_LOGIC;
-        s_axis_cfg_tready : out STD_LOGIC;  -- out порт
         
         -- DDS для DDC
         s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
-        s_axis_dds_tvalid : in  STD_LOGIC;
         
         -- Выход конфигурации
         m_cfg_dout        : out STD_LOGIC_VECTOR (31 downto 0);
-        m_cfg_dout_valid  : out STD_LOGIC;
         
         -- Статус переполнения
         m_ovf             : out STD_LOGIC_VECTOR(1 downto 0);
@@ -48,10 +40,6 @@ architecture Structural of hf_dpd is
     -- 1. ВНУТРЕННИЕ СИГНАЛЫ (решение проблемы с чтением out портов)
     -- ========================================================================
     
-    -- Сигналы для AXI Stream ready (внутренние, чтобы можно было читать)
-    signal s_axis_iq_tready_int  : STD_LOGIC := '1';
-    signal s_axis_cfg_tready_int : STD_LOGIC := '1';
-    
     -- Сигналы для DDC
     signal bb_i, bb_q           : signed(15 downto 0);
     signal bb_valid             : STD_LOGIC;
@@ -60,28 +48,19 @@ architecture Structural of hf_dpd is
     -- Сигналы управления
     signal cfg_train_en         : STD_LOGIC := '0';
     signal cfg_hold_coeffs      : STD_LOGIC := '0';
+    signal cfg_bypass           : STD_LOGIC := '1';
     signal cfg_address          : INTEGER range 0 to 31;
     signal cfg_data             : STD_LOGIC_VECTOR(31 downto 0);
     signal cfg_we               : STD_LOGIC;
     
     -- Сигналы для DPD ядра
     signal dpd_i_out, dpd_q_out : signed(15 downto 0);
-    signal dpd_valid            : STD_LOGIC;
     signal dpd_ovf              : STD_LOGIC;
     
     -- Буфер для входных данных
     signal iq_i, iq_q           : signed(23 downto 0);
-    signal iq_valid             : STD_LOGIC;
     
 begin
-    
-    -- ========================================================================
-    -- 2. ПОДКЛЮЧЕНИЕ ВНУТРЕННИХ СИГНАЛОВ К ВЫХОДНЫМ ПОРТАМ
-    -- ========================================================================
-    
-    -- Присваиваем внутренние сигналы выходным портам
-    s_axis_iq_tready  <= s_axis_iq_tready_int;
-    s_axis_cfg_tready <= s_axis_cfg_tready_int;
     
     -- ========================================================================
     -- 3. БЛОК ПРИЕМА ВХОДНЫХ I/Q ДАННЫХ
@@ -92,19 +71,11 @@ begin
             if aresetn = '0' then
                 iq_i <= (others => '0');
                 iq_q <= (others => '0');
-                iq_valid <= '0';
-                s_axis_iq_tready_int <= '1';  -- Используем внутренний сигнал
             else
-                s_axis_iq_tready_int <= '1';   -- Используем внутренний сигнал
-                if s_axis_iq_tvalid = '1' and s_axis_iq_tready_int = '1' then
-                    -- Извлечение I и Q из 48-битного слова
-                    -- Формат: {Q(23:0), I(23:0)}
-                    iq_i <= signed(s_axis_iq_tdata(23 downto 0));
-                    iq_q <= signed(s_axis_iq_tdata(47 downto 24));
-                    iq_valid <= '1';
-                else
-                    iq_valid <= '0';
-                end if;
+                -- Извлечение I и Q из 48-битного слова
+                -- Формат: {Q(23:0), I(23:0)}
+                iq_i <= signed(s_axis_iq_tdata(23 downto 0));
+                iq_q <= signed(s_axis_iq_tdata(47 downto 24));
             end if;
         end if;
     end process;
@@ -117,7 +88,6 @@ begin
             aclk              => aclk,
             aresetn           => aresetn,
             s_axis_adc_tdata  => s_axis_adc_tdata,
-            s_axis_adc_tvalid => s_axis_adc_tvalid,
             s_axis_dds_tdata  => s_axis_dds_tdata,
             m_axis_bb_i       => bb_i,
             m_axis_bb_q       => bb_q,
@@ -142,13 +112,10 @@ begin
             -- Входной сигнал (I/Q 24-бит -> приводим к 16 бит)
             s_axis_iq_i       => iq_i(23 downto 8),
             s_axis_iq_q       => iq_q(23 downto 8),
-            s_axis_iq_valid   => iq_valid,
             
             -- Выходной сигнал
             m_axis_iq_i       => dpd_i_out,
             m_axis_iq_q       => dpd_q_out,
-            m_axis_iq_valid   => dpd_valid,
-            m_axis_iq_ready   => m_axis_iq_tready,
             
             -- Сигнал обратной связи
             s_axis_fb_i       => bb_i,
@@ -158,6 +125,7 @@ begin
             -- Управление
             cfg_train_en      => cfg_train_en,
             cfg_hold_coeffs   => cfg_hold_coeffs,
+            cfg_bypass        => cfg_bypass,
             
             -- Статус
             m_ovf             => dpd_ovf
@@ -171,15 +139,9 @@ begin
         if rising_edge(aclk) then
             if aresetn = '0' then
                 m_axis_iq_tdata <= (others => '0');
-                m_axis_iq_tvalid <= '0';
             else
-                if dpd_valid = '1' and m_axis_iq_tready = '1' then
-                    -- Формат: {Q(15:0), I(15:0)}
-                    m_axis_iq_tdata <= std_logic_vector(dpd_q_out) & std_logic_vector(dpd_i_out);
-                    m_axis_iq_tvalid <= '1';
-                else
-                    m_axis_iq_tvalid <= '0';
-                end if;
+                -- Формат: {Q(15:0), I(15:0)}
+                m_axis_iq_tdata <= std_logic_vector(dpd_q_out) & std_logic_vector(dpd_i_out);
             end if;
         end if;
     end process;
@@ -193,37 +155,32 @@ begin
             if aresetn = '0' then
                 cfg_train_en <= '0';
                 cfg_hold_coeffs <= '0';
+                cfg_bypass <= '1';
                 cfg_address <= 0;
                 cfg_data <= (others => '0');
                 cfg_we <= '0';
-                s_axis_cfg_tready_int <= '1';  -- Используем внутренний сигнал
                 m_cfg_dout <= (others => '0');
-                m_cfg_dout_valid <= '0';
             else
-                s_axis_cfg_tready_int <= '1';   -- Используем внутренний сигнал
-                m_cfg_dout_valid <= '0';
                 
-                if s_axis_cfg_tvalid = '1' and s_axis_cfg_tready_int = '1' then
+                if s_axis_cfg_tvalid = '1' then
                     case to_integer(unsigned(s_axis_cfg_tdest)) is
                         when 0 => -- Адрес 0: Управление
                             cfg_train_en <= s_axis_cfg_tdata(0);
                             cfg_hold_coeffs <= s_axis_cfg_tdata(1);
+                            cfg_bypass <= s_axis_cfg_tdata(2);
                             cfg_we <= '1';
                             
                             -- Ответное подтверждение
                             m_cfg_dout <= x"00000001";
-                            m_cfg_dout_valid <= '1';
                             
                         when 1 => -- Адрес 1: Чтение статуса
                             m_cfg_dout(0) <= dpd_ovf;
                             m_cfg_dout(1) <= adc_ovf;
                             m_cfg_dout(2) <= cfg_train_en;
                             m_cfg_dout(3) <= cfg_hold_coeffs;
-                            m_cfg_dout_valid <= '1';
                             
                         when others =>
                             m_cfg_dout <= (others => '0');
-                            m_cfg_dout_valid <= '1';
                     end case;
                 end if;
             end if;

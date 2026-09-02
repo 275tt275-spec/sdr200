@@ -8,8 +8,7 @@ entity hf_dpd_ddc_block is
         aclk              : in  STD_LOGIC;
         aresetn           : in  STD_LOGIC;
         s_axis_adc_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
-        s_axis_adc_tvalid : in  STD_LOGIC;
-        s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
+        s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);  -- {Q(15:0), I(15:0)}
         m_axis_bb_i       : out signed (15 downto 0);
         m_axis_bb_q       : out signed (15 downto 0);
         m_axis_bb_valid   : out STD_LOGIC;
@@ -17,182 +16,203 @@ entity hf_dpd_ddc_block is
     );
 end hf_dpd_ddc_block;
 
-architecture Behavioral of hf_dpd_ddc_block is
+architecture Structural of hf_dpd_ddc_block is
     
-    -- Сигналы для NCO
-    signal phase_acc       : unsigned(31 downto 0);
-    signal phase_inc       : unsigned(31 downto 0);
-    signal sin_lut_out     : signed(15 downto 0);
-    signal cos_lut_out     : signed(15 downto 0);
+    -- ========================================================================
+    -- 1. КОМПОНЕНТ CIC IP (СГЕНЕРИРОВАННЫЙ ВАМИ)
+    -- ========================================================================
+    COMPONENT cic_hf_dpd
+        PORT (
+            aclk                : IN  STD_LOGIC;
+            aresetn             : IN  STD_LOGIC;
+            s_axis_data_tdata   : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
+            s_axis_data_tvalid  : IN  STD_LOGIC;
+            s_axis_data_tready  : OUT STD_LOGIC;
+            m_axis_data_tdata   : OUT STD_LOGIC_VECTOR(55 DOWNTO 0);
+            m_axis_data_tvalid  : OUT STD_LOGIC
+        );
+    END COMPONENT;
     
-    -- Сигналы для умножителей
-    signal adc_data        : signed(15 downto 0);
-    signal mix_i, mix_q    : signed(31 downto 0);
+    -- ========================================================================
+    -- 2. СИГНАЛЫ
+    -- ========================================================================
     
-    -- Сигналы для CIC фильтра (децимация 2048)
-    -- Для 122.88 МГц -> 60 кГц частота дискретизации
-    constant CIC_STAGES    : integer := 4;
-    constant CIC_DECIM     : integer := 2048;
+    -- Сигналы DDS (входные I/Q)
+    signal dds_i             : signed(15 downto 0) := (others => '0');
+    signal dds_q             : signed(15 downto 0) := (others => '0');
     
-    type cic_state_t is array (0 to CIC_STAGES-1) of signed(31 downto 0);
-    signal cic_int_i, cic_int_q : cic_state_t;
+    -- Сигналы АЦП
+    signal adc_data          : signed(15 downto 0) := (others => '0');
     
-    type cic_comb_t is array (0 to CIC_STAGES-1) of signed(31 downto 0);
-    signal cic_comb_i, cic_comb_q : cic_comb_t;
+    -- Сигналы смесителя
+    signal mix_i_full        : signed(31 downto 0) := (others => '0');
+    signal mix_q_full        : signed(31 downto 0) := (others => '0');
+    signal mix_i, mix_q      : signed(15 downto 0) := (others => '0');
     
-    signal cic_comb_delay_i, cic_comb_delay_q : cic_comb_t;
+    -- Сигналы для CIC IP
+    signal cic_i_tdata       : STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
+    signal cic_i_tvalid      : STD_LOGIC := '0';
+    signal cic_i_tready      : STD_LOGIC;
+    signal cic_i_tdata_out   : STD_LOGIC_VECTOR(55 downto 0) := (others => '0');
+    signal cic_i_tvalid_out  : STD_LOGIC := '0';
     
-    signal decim_counter   : integer range 0 to CIC_DECIM-1;
-    signal decim_en        : STD_LOGIC;
+    signal cic_q_tdata       : STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
+    signal cic_q_tvalid      : STD_LOGIC := '0';
+    signal cic_q_tready      : STD_LOGIC;
+    signal cic_q_tdata_out   : STD_LOGIC_VECTOR(55 downto 0) := (others => '0');
+    signal cic_q_tvalid_out  : STD_LOGIC := '0';
     
-    -- Сигналы для выходного буфера
-    signal bb_i_reg, bb_q_reg : signed(15 downto 0);
-    signal valid_reg       : STD_LOGIC;
+    -- Сигналы для выхода
+    signal bb_i_scaled       : signed(15 downto 0) := (others => '0');
+    signal bb_q_scaled       : signed(15 downto 0) := (others => '0');
+    signal valid_reg         : STD_LOGIC := '0';
+    signal overflow_flag     : STD_LOGIC := '0';
+    signal init_done         : STD_LOGIC := '0';
+    
+    -- Константы масштабирования для CIC
+    -- CIC: 3 каскада, децимация 2048, вход 16 бит, выход 49 бит
+    -- Сдвиг для приведения к 16 бит: 49 - 16 = 33
+    constant SCALE_SHIFT    : integer := 32;
     
 begin
     
     -- ========================================================================
-    -- 1. NCO (Численный управляемый генератор)
+    -- 3. ИЗВЛЕЧЕНИЕ I/Q ИЗ DDS
     -- ========================================================================
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                phase_acc <= (others => '0');
-                phase_inc <= unsigned(s_axis_dds_tdata(31 downto 0));
-            else
-                phase_inc <= unsigned(s_axis_dds_tdata(31 downto 0));
-                phase_acc <= phase_acc + phase_inc;
-            end if;
-        end if;
-    end process;
-    
-    -- LUT для Sin/Cos (квартальная аппроксимация)
-    DDS_LUT_Inst: entity work.dds_lut
-        Port map (
-            clk      => aclk,
-            phase    => phase_acc(31 downto 24), -- Используем старшие 8 бит
-            sin_out  => sin_lut_out,
-            cos_out  => cos_lut_out
-        );
+    -- Формат s_axis_dds_tdata: {Q(15:0), I(15:0)}
+    dds_i <= signed(s_axis_dds_tdata(15 downto 0));
+    dds_q <= signed(s_axis_dds_tdata(31 downto 16));
     
     -- ========================================================================
-    -- 2. Смеситель (Перенос на нулевую частоту)
+    -- 4. СМЕСИТЕЛЬ (I/Q ДЕМОДУЛЯЦИЯ)
     -- ========================================================================
     process(aclk)
     begin
         if rising_edge(aclk) then
             if aresetn = '0' then
                 adc_data <= (others => '0');
+                mix_i_full <= (others => '0');
+                mix_q_full <= (others => '0');
                 mix_i <= (others => '0');
                 mix_q <= (others => '0');
-            elsif s_axis_adc_tvalid = '1' then
+                init_done <= '0';
+            else
                 adc_data <= signed(s_axis_adc_tdata);
-                -- I = adc * cos, Q = adc * sin
-                mix_i <= adc_data * cos_lut_out;
-                mix_q <= adc_data * sin_lut_out;
-            end if;
-        end if;
-    end process;
-    
-    -- ========================================================================
-    -- 3. CIC фильтр (интегратор + дециматор + гребенчатый фильтр)
-    -- ========================================================================
-    
-    -- Интегратор
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                for i in 0 to CIC_STAGES-1 loop
-                    cic_int_i(i) <= (others => '0');
-                    cic_int_q(i) <= (others => '0');
-                end loop;
-            else
-                cic_int_i(0) <= cic_int_i(0) + mix_i(31 downto 16);
-                cic_int_q(0) <= cic_int_q(0) + mix_q(31 downto 16);
+                init_done <= '1';
                 
-                for i in 1 to CIC_STAGES-1 loop
-                    cic_int_i(i) <= cic_int_i(i) + cic_int_i(i-1);
-                    cic_int_q(i) <= cic_int_q(i) + cic_int_q(i-1);
-                end loop;
+                -- I = adc * cos (I компонента DDS)
+                -- Q = adc * sin (Q компонента DDS)
+                mix_i_full <= adc_data * dds_i;
+                mix_q_full <= adc_data * dds_q;
+                
+                -- Обрезаем до 16 бит для CIC (берем старшие биты)
+                mix_i <= mix_i_full(30 downto 15);
+                mix_q <= mix_q_full(30 downto 15);
             end if;
         end if;
     end process;
     
-    -- Дециматор
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                decim_counter <= 0;
-                decim_en <= '0';
-            else
-                if decim_counter = CIC_DECIM-1 then
-                    decim_counter <= 0;
-                    decim_en <= '1';
+    -- ========================================================================
+    -- 5. CIC ФИЛЬТРЫ ДЛЯ I И Q КАНАЛОВ
+    -- ========================================================================
+    
+    -- I канал
+    cic_i_tdata <= std_logic_vector(mix_i);
+    cic_i_tvalid <= init_done;
+    
+    CIC_I_Inst: cic_hf_dpd
+        PORT MAP (
+            aclk                => aclk,
+            aresetn             => aresetn,
+            s_axis_data_tdata   => cic_i_tdata,
+            s_axis_data_tvalid  => cic_i_tvalid,
+            s_axis_data_tready  => cic_i_tready,
+            m_axis_data_tdata   => cic_i_tdata_out,
+            m_axis_data_tvalid  => cic_i_tvalid_out
+        );
+    
+    -- Q канал
+    cic_q_tdata <= std_logic_vector(mix_q);
+    cic_q_tvalid <= init_done;
+    
+    CIC_Q_Inst: cic_hf_dpd
+        PORT MAP (
+            aclk                => aclk,
+            aresetn             => aresetn,
+            s_axis_data_tdata   => cic_q_tdata,
+            s_axis_data_tvalid  => cic_q_tvalid,
+            s_axis_data_tready  => cic_q_tready,
+            m_axis_data_tdata   => cic_q_tdata_out,
+            m_axis_data_tvalid  => cic_q_tvalid_out
+        );
+    
+-- ========================================================================
+-- 6. МАСШТАБИРОВАНИЕ И НАСЫЩЕНИЕ ВЫХОДА (УПРОЩЕННАЯ ВЕРСИЯ)
+-- ========================================================================
+process(aclk)
+    variable temp_i, temp_q : signed(55 downto 0);
+    variable scaled_i, scaled_q : signed(15 downto 0);
+begin
+    if rising_edge(aclk) then
+        if aresetn = '0' then
+            bb_i_scaled <= (others => '0');
+            bb_q_scaled <= (others => '0');
+            valid_reg <= '0';
+            overflow_flag <= '0';
+        else
+            if cic_i_tvalid_out = '0' and cic_q_tvalid_out = '0' then
+                overflow_flag <= '0';
+            end if;
+            
+            if cic_i_tvalid_out = '1' and cic_q_tvalid_out = '1' then
+                -- Преобразуем выход CIC в signed
+                temp_i := signed(cic_i_tdata_out);
+                temp_q := signed(cic_q_tdata_out);
+                
+                -- ============================================================
+                -- МАСШТАБИРОВАНИЕ С НАСЫЩЕНИЕМ
+                -- ============================================================
+                
+                -- I канал
+                -- Сначала проверяем на переполнение до сдвига
+                if temp_i > shift_left(to_signed(32767, 56), SCALE_SHIFT) then
+                    bb_i_scaled <= to_signed(32767, 16);
+                    overflow_flag <= '1';
+                elsif temp_i < shift_left(to_signed(-32768, 56), SCALE_SHIFT) then
+                    bb_i_scaled <= to_signed(-32768, 16);
+                    overflow_flag <= '1';
                 else
-                    decim_counter <= decim_counter + 1;
-                    decim_en <= '0';
+                    -- Безопасный сдвиг
+                    scaled_i := resize(shift_right(temp_i, SCALE_SHIFT), 16);
+                    bb_i_scaled <= scaled_i;
                 end if;
-            end if;
-        end if;
-    end process;
-    
-    -- Гребенчатый фильтр
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                for i in 0 to CIC_STAGES-1 loop
-                    cic_comb_delay_i(i) <= (others => '0');
-                    cic_comb_delay_q(i) <= (others => '0');
-                    cic_comb_i(i) <= (others => '0');
-                    cic_comb_q(i) <= (others => '0');
-                end loop;
-            elsif decim_en = '1' then
-                -- Сохраняем выход интегратора в момент децимации
-                cic_comb_delay_i(0) <= cic_int_i(CIC_STAGES-1);
-                cic_comb_delay_q(0) <= cic_int_q(CIC_STAGES-1);
-                cic_comb_i(0) <= cic_int_i(CIC_STAGES-1) - cic_comb_delay_i(0);
-                cic_comb_q(0) <= cic_int_q(CIC_STAGES-1) - cic_comb_delay_q(0);
                 
-                for i in 1 to CIC_STAGES-1 loop
-                    cic_comb_delay_i(i) <= cic_comb_i(i-1);
-                    cic_comb_delay_q(i) <= cic_comb_q(i-1);
-                    cic_comb_i(i) <= cic_comb_i(i-1) - cic_comb_delay_i(i);
-                    cic_comb_q(i) <= cic_comb_q(i-1) - cic_comb_delay_q(i);
-                end loop;
-            end if;
-        end if;
-    end process;
-    
-    -- ========================================================================
-    -- 4. Выходной буфер
-    -- ========================================================================
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                bb_i_reg <= (others => '0');
-                bb_q_reg <= (others => '0');
+                -- Q канал
+                if temp_q > shift_left(to_signed(32767, 56), SCALE_SHIFT) then
+                    bb_q_scaled <= to_signed(32767, 16);
+                    overflow_flag <= '1';
+                elsif temp_q < shift_left(to_signed(-32768, 56), SCALE_SHIFT) then
+                    bb_q_scaled <= to_signed(-32768, 16);
+                    overflow_flag <= '1';
+                else
+                    scaled_q := resize(shift_right(temp_q, SCALE_SHIFT), 16);
+                    bb_q_scaled <= scaled_q;
+                end if;
+                
+                valid_reg <= '1';
+            else
                 valid_reg <= '0';
-            else
-                if decim_en = '1' then
-                    -- Масштабирование и приведение к 16 бит
-                    bb_i_reg <= resize(shift_right(cic_comb_i(CIC_STAGES-1), CIC_STAGES*2 - 1), 16);
-                    bb_q_reg <= resize(shift_right(cic_comb_q(CIC_STAGES-1), CIC_STAGES*2 - 1), 16);
-                    valid_reg <= '1';
-                else
-                    valid_reg <= '0';
-                end if;
             end if;
         end if;
-    end process;
+    end if;
+end process;
     
-    m_axis_bb_i <= bb_i_reg;
-    m_axis_bb_q <= bb_q_reg;
+    -- ========================================================================
+    -- 7. ВЫХОДНЫЕ СИГНАЛЫ
+    -- ========================================================================
+    m_axis_bb_i <= bb_i_scaled;
+    m_axis_bb_q <= bb_q_scaled;
     m_axis_bb_valid <= valid_reg;
-    ovr <= '0';
+    ovr <= overflow_flag;
     
-end Behavioral;
+end Structural;
