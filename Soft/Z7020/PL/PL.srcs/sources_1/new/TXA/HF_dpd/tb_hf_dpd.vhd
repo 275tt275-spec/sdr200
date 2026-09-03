@@ -20,6 +20,7 @@ architecture Behavioral of tb_hf_dpd is
     
     -- Вход с АЦП (обратная связь) - РЕАЛЬНЫЙ СИГНАЛ
     signal s_axis_adc_tdata  : STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
+    signal s_axis_dac_tdata  : STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
     
     -- Выход I/Q после линеаризации
     signal m_axis_iq_tdata   : STD_LOGIC_VECTOR(31 downto 0);
@@ -34,9 +35,6 @@ architecture Behavioral of tb_hf_dpd is
     
     -- Выход конфигурации
     signal m_cfg_dout        : STD_LOGIC_VECTOR(31 downto 0);
-    
-    -- Статус переполнения
-    signal m_ovf             : STD_LOGIC_VECTOR(1 downto 0);
     
     -- Сигналы для PA модели
     signal pa_input_i, pa_input_q : signed(15 downto 0) := (others => '0');
@@ -86,12 +84,12 @@ begin
             s_axis_iq_tdata   => s_axis_iq_tdata,
             s_axis_adc_tdata  => s_axis_adc_tdata,
             m_axis_iq_tdata   => m_axis_iq_tdata,
+            s_axis_dac_tdata  => s_axis_dac_tdata,
             s_axis_cfg_tdata  => s_axis_cfg_tdata,
             s_axis_cfg_tdest  => s_axis_cfg_tdest,
             s_axis_cfg_tvalid => s_axis_cfg_tvalid,
             s_axis_dds_tdata  => s_axis_dds_tdata,
-            m_cfg_dout        => m_cfg_dout,
-            m_ovf             => m_ovf
+            m_cfg_dout        => m_cfg_dout
         );
     
     -- ========================================================================
@@ -224,6 +222,43 @@ begin
         end if;
     end process;
     
+    -- ========================================================================
+    -- 6.5 ФОРМИРОВАНИЕ ЧИСТОГО РЕАЛЬНОГО СИГНАЛА ДЛЯ ЦАП (БЕЗ ИСКАЖЕНИЙ PA)
+    -- ========================================================================
+    process(aclk)
+        variable dac_i_mult : integer;
+        variable dac_q_mult : integer;
+        variable dac_real_sample : integer;
+        variable dac_input_i : signed(15 downto 0);
+        variable dac_input_q : signed(15 downto 0);
+    begin
+        if rising_edge(aclk) then
+            if aresetn = '0' then
+                s_axis_dac_tdata <= (others => '0');
+            else
+                -- Извлекаем I/Q из выхода DPD (до нелинейного усилителя PA)
+                dac_input_i := signed(m_axis_iq_tdata(15 downto 0));
+                dac_input_q := signed(m_axis_iq_tdata(31 downto 16));
+                
+                -- Переносим спектр вверх на частоту DDS (как в реальном ЦАП)
+                dac_i_mult := (to_integer(dac_input_i) * to_integer(dds_cos)) / 32767;
+                dac_q_mult := (to_integer(dac_input_q) * to_integer(dds_sin)) / 32767;
+                
+                -- Формируем чистый вещественный (RF) сигнал для опорного DDC
+                dac_real_sample := dac_i_mult - dac_q_mult;
+                
+                -- Защита от переполнения разрядности (насыщение до 16 бит)
+                if dac_real_sample > 32767 then 
+                    dac_real_sample := 32767; 
+                elsif dac_real_sample < -32768 then 
+                    dac_real_sample := -32768; 
+                end if;
+                
+                s_axis_dac_tdata <= std_logic_vector(to_signed(dac_real_sample, 16));
+            end if;
+        end if;
+    end process;
+    
     s_axis_adc_tdata <= std_logic_vector(pa_output_real);
     
     -- ========================================================================
@@ -241,7 +276,7 @@ begin
         log_enable <= '1';
         
         -- Включение режима обучения
-        s_axis_cfg_tdata <= x"00000005";
+        s_axis_cfg_tdata <= x"00000001";
         s_axis_cfg_tdest <= "00000";
         s_axis_cfg_tvalid <= '1';
         wait for CLK_PERIOD;
@@ -254,7 +289,8 @@ begin
         wait for CLK_PERIOD;
         s_axis_cfg_tvalid <= '0';
         wait for CLK_PERIOD;
-         
+        wait for 0.5 ms;
+            
         -- Ждем завершения теста
         wait for 1 ms;
         
@@ -309,9 +345,10 @@ begin
                     write(line_out, string'(";"));
                     
                     -- Статус переполнения
-                    write(line_out, m_ovf(0));
-                    write(line_out, string'(";"));
-                    write(line_out, m_ovf(1));
+                    write(line_out, m_cfg_dout(0));
+                    write(line_out, m_cfg_dout(1));
+                    write(line_out, m_cfg_dout(2));
+                    write(line_out, m_cfg_dout(3));
                     
                     -- Завершаем строку
                     writeline(log_file, line_out);

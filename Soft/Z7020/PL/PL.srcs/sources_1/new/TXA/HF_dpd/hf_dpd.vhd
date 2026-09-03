@@ -43,6 +43,8 @@ architecture Structural of hf_dpd is
     signal ref_i, ref_q         : signed(15 downto 0);
     signal ref_valid            : STD_LOGIC;
     signal ddc_ovf              : std_logic_vector(1 downto 0);
+    signal error_i, error_q     : signed(31 downto 0) := (others => '0');
+    signal error_valid          : STD_LOGIC := '0';
     
     -- Сигналы управления
     signal cfg_delay_ticks      : std_logic_vector(7 downto 0) := x"0c";
@@ -104,6 +106,29 @@ begin
         ovr               => ddc_ovf(1)
     );
     
+    DPD_Error_Inst: entity work.dpd_align_and_error_top
+    Generic map (
+        DATA_WIDTH   => 16,
+        ADDR_WIDTH   => 8,    -- 2^8 = 256 тактов максимальной задержки для RAM
+        ALPHA_SHIFT  => 8     -- Коэффициент сглаживания фильтра (1/256)
+    )
+    Port map (
+        aclk                 => aclk,
+        aresetn              => aresetn,
+        cfg_delay_ticks      => cfg_delay_ticks,
+        cfg_train_en         => cfg_train_en,
+        cfg_hold_coeffs      => cfg_hold_coeffs,
+        s_axis_ref_tdata_i   => ref_i,
+        s_axis_ref_tdata_q   => ref_q,
+        s_axis_ref_tvalid    => ref_valid,
+        s_axis_fb_tdata_i    => bb_i,
+        s_axis_fb_tdata_q    => bb_q,
+        s_axis_fb_tvalid     => bb_valid,
+        m_axis_err_i         => error_i,
+        m_axis_err_q         => error_q,
+        m_axis_err_valid     => error_valid
+    );
+    
     -- ========================================================================
     -- 5. ЯДРО DPD
     -- ========================================================================
@@ -130,6 +155,11 @@ begin
             s_axis_fb_i       => bb_i,
             s_axis_fb_q       => bb_q,
             s_axis_fb_valid   => bb_valid,
+            
+            -- Сигнал ошибки
+            error_i           => error_i,
+            error_q           => error_q,
+            error_valid       => error_valid,
             
             -- Управление
             cfg_delay_ticks   => cfg_delay_ticks,

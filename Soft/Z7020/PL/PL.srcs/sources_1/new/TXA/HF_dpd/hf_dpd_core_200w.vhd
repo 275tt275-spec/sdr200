@@ -23,6 +23,9 @@ entity hf_dpd_core_200w is
         s_axis_fb_i       : in  signed(15 downto 0);
         s_axis_fb_q       : in  signed(15 downto 0);
         s_axis_fb_valid   : in  STD_LOGIC;
+        error_i           : in signed(31 downto 0);
+        error_q           : in signed(31 downto 0);
+        error_valid       : in  STD_LOGIC;
         cfg_delay_ticks   : in  std_logic_vector(7 downto 0);
         cfg_train_en      : in  STD_LOGIC;
         cfg_hold_coeffs   : in  STD_LOGIC;
@@ -124,8 +127,6 @@ architecture Behavioral of hf_dpd_core_200w is
     signal coeffs : coeff_pair_array_t;
     signal mult_i, mult_q : mult_result_t := (others => (others => '0'));
     signal sum_i, sum_q : signed(31 downto 0) := (others => '0');
-    signal error_i, error_q : signed(31 downto 0) := (others => '0');
-    signal error_valid : STD_LOGIC := '0';
     signal learn_rate : signed(15 downto 0) := to_signed(32, 16);  -- Áûëî 8
     signal ovf_i, ovf_q : STD_LOGIC := '0';
     signal init_done : STD_LOGIC := '0';
@@ -455,35 +456,7 @@ begin
         end if;
     end process;
     
-    m_ovf <= ovf_i or ovf_q;
-    
-    in_i_reg <= std_logic_vector(s_axis_iq_i);
-    in_q_reg <= std_logic_vector(s_axis_iq_q);
-  
--- Âû÷èñëåíèå îøèáêè   
-u_align_and_error :  dpd_align_and_error_top
-    GENERIC MAP (
-        DATA_WIDTH  => 16,
-        ADDR_WIDTH  => 8,
-        ALPHA_SHIFT => 4
-    )
-    PORT MAP (
-        aclk                 => aclk,
-        aresetn              => aresetn,
-        cfg_delay_ticks      => cfg_delay_ticks,
-        cfg_train_en         => cfg_train_en,
-        cfg_hold_coeffs      => cfg_hold_coeffs,
-        s_axis_ref_tdata_i   => in_i_reg,
-        s_axis_ref_tdata_q   => in_q_reg,
-        s_axis_ref_tvalid    => '1',
-        s_axis_fb_tdata_i    => s_axis_fb_i,
-        s_axis_fb_tdata_q    => s_axis_fb_q,
-        s_axis_fb_tvalid     => s_axis_fb_valid,
-        m_axis_err_i         => error_i,
-        m_axis_err_q         => error_q,
-        m_axis_err_valid     => error_valid
-    );
- 
+    m_ovf <= ovf_i or ovf_q; 
 
 -- ========================================================================
 -- 12. ÁËÎÊ ÎÁÍÎÂËÅÍÈß LUT (Ñ ÔÈËÜÒÐÎÂÀÍÍÎÉ ÎØÈÁÊÎÉ)

@@ -19,8 +19,8 @@ entity dpd_align_and_error_top is
         cfg_hold_coeffs      : in  std_logic;
         
         -- Входной опорный сигнал (Прямой тракт TX)
-        s_axis_ref_tdata_i   : in  std_logic_vector(DATA_WIDTH-1 downto 0);
-        s_axis_ref_tdata_q   : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+        s_axis_ref_tdata_i   : in  signed(DATA_WIDTH-1 downto 0);
+        s_axis_ref_tdata_q   : in  signed(DATA_WIDTH-1 downto 0);
         s_axis_ref_tvalid    : in  std_logic;
         
         -- Входной сигнал обратной связи (Тракт приема FB от АЦП)
@@ -83,6 +83,8 @@ architecture Structural of dpd_align_and_error_top is
     signal delayed_ref_i       : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal delayed_ref_q       : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal delayed_ref_valid   : std_logic;
+    signal ref_tdata_i         : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal ref_tdata_q         : std_logic_vector(DATA_WIDTH-1 downto 0);
 
     signal delayed_ref_i_sgn   : signed(DATA_WIDTH-1 downto 0);
     signal delayed_ref_q_sgn   : signed(DATA_WIDTH-1 downto 0);
@@ -92,6 +94,8 @@ begin
     -- Преобразование типов std_logic_vector в signed для корректной математики
     delayed_ref_i_sgn <= signed(delayed_ref_i);
     delayed_ref_q_sgn <= signed(delayed_ref_q);
+    ref_tdata_i <= std_logic_vector(s_axis_ref_tdata_i);
+    ref_tdata_q <= std_logic_vector(s_axis_ref_tdata_q);
 
     -- Инстанцирование 1: Линия задержки опорного сигнала TX
     u_time_alignment : time_alignment
@@ -103,8 +107,8 @@ begin
             aclk                 => aclk,
             aresetn              => aresetn,
             cfg_delay_ticks      => cfg_delay_ticks,
-            s_axis_ref_tdata_i   => s_axis_ref_tdata_i,
-            s_axis_ref_tdata_q   => s_axis_ref_tdata_q,
+            s_axis_ref_tdata_i   => ref_tdata_i,
+            s_axis_ref_tdata_q   => ref_tdata_q,
             s_axis_ref_tvalid    => s_axis_ref_tvalid,
             m_axis_align_tdata_i => delayed_ref_i,
             m_axis_align_tdata_q => delayed_ref_q,
