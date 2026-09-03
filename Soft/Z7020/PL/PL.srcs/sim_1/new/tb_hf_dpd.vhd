@@ -22,7 +22,7 @@ architecture Behavioral of tb_hf_dpd is
             s_axis_cfg_tvalid : in  STD_LOGIC;
             s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
             m_cfg_dout        : out STD_LOGIC_VECTOR (31 downto 0);
-            m_ovf             : out STD_LOGIC_VECTOR (3 downto 0)
+            m_ovf             : out STD_LOGIC_VECTOR (1 downto 0)
         );
     end component;
 
@@ -37,7 +37,7 @@ architecture Behavioral of tb_hf_dpd is
     signal s_axis_cfg_tvalid : std_logic := '0';
     signal s_axis_dds_tdata  : std_logic_vector(31 downto 0) := (others => '0');
     signal m_cfg_dout        : std_logic_vector(31 downto 0);
-    signal m_ovf             : std_logic_vector(3 downto 0);
+    signal m_ovf             : std_logic_vector(1 downto 0);
 
     -- Константы тактовой частоты (122.88 МГц -> период ~8.138 нс)
     constant CLK_PERIOD : time := 8.138 ns;

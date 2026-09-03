@@ -125,7 +125,6 @@ begin
             -- Управление
             cfg_train_en      => cfg_train_en,
             cfg_hold_coeffs   => cfg_hold_coeffs,
-            cfg_bypass        => cfg_bypass,
             
             -- Статус
             m_ovf             => dpd_ovf
@@ -135,10 +134,22 @@ begin
     -- 6. ФОРМИРОВАНИЕ ВЫХОДНОГО AXI STREAM
     -- ========================================================================
     process(aclk)
+        variable i_scaled, q_scaled : signed(15 downto 0);
     begin
         if rising_edge(aclk) then
             if aresetn = '0' then
                 m_axis_iq_tdata <= (others => '0');
+            elsif cfg_bypass = '1' then
+                -- Вход: 48 бит {Q(23:0), I(23:0)}
+                -- Выход: 32 бит {Q(15:0), I(15:0)}
+                -- Берем старшие 16 бит с округлением
+                
+                -- I канал (биты 23..0)
+                i_scaled := resize(shift_right(signed(s_axis_iq_tdata(23 downto 0)), 8), 16);
+                -- Q канал (биты 47..24)
+                q_scaled := resize(shift_right(signed(s_axis_iq_tdata(47 downto 24)), 8), 16);
+                
+                m_axis_iq_tdata <= std_logic_vector(q_scaled) & std_logic_vector(i_scaled);
             else
                 -- Формат: {Q(15:0), I(15:0)}
                 m_axis_iq_tdata <= std_logic_vector(dpd_q_out) & std_logic_vector(dpd_i_out);

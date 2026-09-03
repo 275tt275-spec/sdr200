@@ -142,11 +142,8 @@ begin
                 sin_val := sin(2.0 * MATH_PI * real(to_integer(test_phase_acc)) / 2.0**32);
                 cos_val := cos(2.0 * MATH_PI * real(to_integer(test_phase_acc)) / 2.0**32);
                 
---                i_int := integer(round(sin_val * 8388607.0));
---                q_int := integer(round(cos_val * 8388607.0));
-                
-                i_int := integer(round(sin_val * 100000.0));   -- Уменьшили в 10 раз
-                q_int := integer(round(cos_val * 100000.0));
+                i_int := integer(round(sin_val * 8388607.0));
+                q_int := integer(round(cos_val * 8388607.0));
                 
                 test_i_24 <= to_signed(i_int, 24);
                 test_q_24 <= to_signed(q_int, 24);

@@ -3,6 +3,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use IEEE.MATH_REAL.ALL;
 
+use std.textio.all;
+use ieee.std_logic_textio.all;
+
 entity hf_dpd_core_200w is
     Generic (
         MEMORY_DEPTH    : integer := 3;
@@ -22,7 +25,6 @@ entity hf_dpd_core_200w is
         s_axis_fb_valid   : in  STD_LOGIC;
         cfg_train_en      : in  STD_LOGIC;
         cfg_hold_coeffs   : in  STD_LOGIC;
-        cfg_bypass        : in  STD_LOGIC;
         m_ovf             : out STD_LOGIC
     );
 end hf_dpd_core_200w;
@@ -55,7 +57,7 @@ architecture Behavioral of hf_dpd_core_200w is
     begin
         for m in 0 to MEMORY_DEPTH-1 loop
             for addr in 0 to (2**LUT_ADDR_WIDTH)-1 loop
-                result(m)(addr) := to_signed(410, COEFF_WIDTH);  -- Еще уменьшено!
+                result(m)(addr) := to_signed(41, COEFF_WIDTH);  -- Было 410! Уменьшили в 10 раз
             end loop;
         end loop;
         return result;
@@ -90,9 +92,12 @@ architecture Behavioral of hf_dpd_core_200w is
     signal fb_i_delayed, fb_q_delayed : fb_delay_t := (others => (others => '0'));
     signal fb_i_curr, fb_q_curr       : signed(15 downto 0) := (others => '0');
     signal error_i, error_q : signed(31 downto 0) := (others => '0');
-    signal learn_rate : signed(15 downto 0) := to_signed(8, 16);
+    signal learn_rate : signed(15 downto 0) := to_signed(32, 16);  -- Было 8
     signal ovf_i, ovf_q : STD_LOGIC := '0';
     signal init_done : STD_LOGIC := '0';
+    signal error_i_filtered, error_q_filtered : signed(31 downto 0) := (others => '0');
+    signal error_i_filtered_valid : STD_LOGIC := '0';
+    constant ALPHA : signed(15 downto 0) := to_signed(128, 16);  -- 0.5
     
 begin
     
@@ -105,7 +110,7 @@ begin
             if aresetn = '0' then
                 for m in 0 to MEMORY_DEPTH-1 loop
                     for addr in 0 to (2**LUT_ADDR_WIDTH)-1 loop
-                        lut_real(m)(addr) <= to_signed(410, COEFF_WIDTH);  -- Еще уменьшено!
+                        lut_real(m)(addr) <= to_signed(41, COEFF_WIDTH);  -- Еще уменьшено!
                         lut_imag(m)(addr) <= (others => '0');
                     end loop;
                 end loop;
@@ -185,41 +190,48 @@ begin
         end process;
     end generate;
     
-    -- ========================================================================
-    -- 7. ЧТЕНИЕ ИЗ LUT С ЗАЩИТОЙ
+   -- ========================================================================
+    -- 7. ЧТЕНИЕ ИЗ LUT С ПРАВИЛЬНОЙ АДРЕСАЦИЕЙ
     -- ========================================================================
     gen_luts: for m in 0 to MEMORY_DEPTH-1 generate
         process(aclk)
             variable addr_int : integer;
+            variable amp_val : unsigned(15 downto 0);
         begin
             if rising_edge(aclk) then
                 if aresetn = '0' then
-                    coeffs(m).real_part <= to_signed(32767, COEFF_WIDTH);
+                    coeffs(m).real_part <= to_signed(410, COEFF_WIDTH);
                     coeffs(m).imag_part <= (others => '0');
                 else
                     -- Защита от X в адресе
                     if is_x(std_logic_vector(amp_sq(m))) then
-                        coeffs(m).real_part <= to_signed(32767, COEFF_WIDTH);
+                        coeffs(m).real_part <= to_signed(410, COEFF_WIDTH);
                         coeffs(m).imag_part <= (others => '0');
                     else
+                        -- ========================================================
+                        -- ПРАВИЛЬНОЕ ФОРМИРОВАНИЕ АДРЕСА
+                        -- ========================================================
+                        -- Берем старшие LUT_ADDR_WIDTH бит
                         addr_int := to_integer(unsigned(amp_sq(m)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
-                        -- Защита от выхода за пределы массива
-                        if addr_int < 2**LUT_ADDR_WIDTH and addr_int >= 0 then
-                            -- Защита от X в LUT
-                            if is_x(std_logic_vector(lut_real(m)(addr_int))) then
-                                coeffs(m).real_part <= to_signed(32767, COEFF_WIDTH);
-                            else
-                                coeffs(m).real_part <= lut_real(m)(addr_int);
-                            end if;
-                            
-                            if is_x(std_logic_vector(lut_imag(m)(addr_int))) then
-                                coeffs(m).imag_part <= (others => '0');
-                            else
-                                coeffs(m).imag_part <= lut_imag(m)(addr_int);
-                            end if;
+                        
+                        -- ЗАЩИТА ОТ ВЫХОДА ЗА ПРЕДЕЛЫ МАССИВА
+                        if addr_int >= 2**LUT_ADDR_WIDTH then
+                            addr_int := 2**LUT_ADDR_WIDTH - 1;  -- Насыщение адреса
+                        elsif addr_int < 0 then
+                            addr_int := 0;
+                        end if;
+                        
+                        -- Защита от X в LUT
+                        if is_x(std_logic_vector(lut_real(m)(addr_int))) then
+                            coeffs(m).real_part <= to_signed(410, COEFF_WIDTH);
                         else
-                            coeffs(m).real_part <= to_signed(32767, COEFF_WIDTH);
+                            coeffs(m).real_part <= lut_real(m)(addr_int);
+                        end if;
+                        
+                        if is_x(std_logic_vector(lut_imag(m)(addr_int))) then
                             coeffs(m).imag_part <= (others => '0');
+                        else
+                            coeffs(m).imag_part <= lut_imag(m)(addr_int);
                         end if;
                     end if;
                 end if;
@@ -369,42 +381,45 @@ begin
     -- 10. ФОРМИРОВАНИЕ ВЫХОДНОГО СИГНАЛА (С МАСШТАБИРОВАНИЕМ)
     -- ========================================================================
     process(aclk)
-    variable sum_i_scaled, sum_q_scaled : signed(31 downto 0);
+        variable temp_i, temp_q : signed(15 downto 0);
+        variable sum_i_rounded, sum_q_rounded : signed(31 downto 0);
+        constant SHIFT : integer := 9;
     begin
-    if rising_edge(aclk) then
-        if aresetn = '0' then
-            m_axis_iq_i <= (others => '0');
-            m_axis_iq_q <= (others => '0');
-        elsif cfg_bypass = '1' then
-            m_axis_iq_i <= s_axis_iq_i;
-            m_axis_iq_q <= s_axis_iq_q;
-        else
-            -- Масштабирование: делим на 4 (сдвиг вправо на 2)
-            sum_i_scaled := shift_right(sum_i, 2);
-            sum_q_scaled := shift_right(sum_q, 2);
-            
-            -- Защита от X в sum
-            if is_x(std_logic_vector(sum_i_scaled)) then
+        if rising_edge(aclk) then
+            if aresetn = '0' then
                 m_axis_iq_i <= (others => '0');
-            elsif sum_i_scaled > to_signed(32767, 32) then
-                m_axis_iq_i <= to_signed(32767, 16);
-            elsif sum_i_scaled < to_signed(-32768, 32) then
-                m_axis_iq_i <= to_signed(-32768, 16);
-            else
-                m_axis_iq_i <= sum_i_scaled(15 downto 0);
-            end if;
-            
-            if is_x(std_logic_vector(sum_q_scaled)) then
                 m_axis_iq_q <= (others => '0');
-            elsif sum_q_scaled > to_signed(32767, 32) then
-                m_axis_iq_q <= to_signed(32767, 16);
-            elsif sum_q_scaled < to_signed(-32768, 32) then
-                m_axis_iq_q <= to_signed(-32768, 16);
             else
-                m_axis_iq_q <= sum_q_scaled(15 downto 0);
+                -- ================================================================
+                -- I КАНАЛ
+                -- ================================================================
+                -- Добавляем половину для округления
+                sum_i_rounded := sum_i + to_signed(2**(SHIFT-1), 32);
+                temp_i := resize(shift_right(sum_i_rounded, SHIFT), 16);
+                
+                if temp_i > to_signed(32767, 16) then
+                    m_axis_iq_i <= to_signed(32767, 16);
+                elsif temp_i < to_signed(-32768, 16) then
+                    m_axis_iq_i <= to_signed(-32768, 16);
+                else
+                    m_axis_iq_i <= temp_i;
+                end if;
+                
+                -- ================================================================
+                -- Q КАНАЛ
+                -- ================================================================
+                sum_q_rounded := sum_q + to_signed(2**(SHIFT-1), 32);
+                temp_q := resize(shift_right(sum_q_rounded, SHIFT), 16);
+                
+                if temp_q > to_signed(32767, 16) then
+                    m_axis_iq_q <= to_signed(32767, 16);
+                elsif temp_q < to_signed(-32768, 16) then
+                    m_axis_iq_q <= to_signed(-32768, 16);
+                else
+                    m_axis_iq_q <= temp_q;
+                end if;
             end if;
         end if;
-    end if;
     end process;
     
     m_ovf <= ovf_i or ovf_q;
@@ -460,8 +475,251 @@ begin
                 else
                     error_q <= resize((q_curr - fb_q_curr), 32);
                 end if;
+
             end if;
         end if;
     end process;
+    
+-- ========================================================================
+-- ФИЛЬТРАЦИЯ ОШИБКИ (ЭКСПОНЕНЦИАЛЬНОЕ СГЛАЖИВАНИЕ)
+-- ========================================================================
+process(aclk)
+    variable diff_i, diff_q : signed(31 downto 0);
+begin
+    if rising_edge(aclk) then
+        if aresetn = '0' then
+            error_i_filtered <= (others => '0');
+            error_q_filtered <= (others => '0');
+            error_i_filtered_valid <= '0';
+        else
+            if cfg_train_en = '1' and cfg_hold_coeffs = '0' then
+                if not is_x(std_logic_vector(error_i)) and not is_x(std_logic_vector(error_q)) then
+                    
+                    -- Exponential Moving Average (EMA)
+                    -- filtered_new = ALPHA * raw + (256 - ALPHA) * filtered_old
+                    error_i_filtered <= resize((error_i * ALPHA) / 256 + 
+                                                (error_i_filtered * (256 - ALPHA)) / 256, 32);
+                    
+                    error_q_filtered <= resize((error_q * ALPHA) / 256 + 
+                                                (error_q_filtered * (256 - ALPHA)) / 256, 32);
+                    
+                    error_i_filtered_valid <= '1';
+                end if;
+            else
+                error_i_filtered_valid <= '0';
+            end if;
+        end if;
+    end if;
+end process;
+
+-- ========================================================================
+-- 12. БЛОК ОБНОВЛЕНИЯ LUT (С ФИЛЬТРОВАННОЙ ОШИБКОЙ)
+-- ========================================================================
+    process(aclk)
+        variable grad_i, grad_q : signed(31 downto 0);
+        variable update_i, update_q : signed(31 downto 0);
+        variable new_real, new_imag : signed(COEFF_WIDTH-1 downto 0);
+        variable addr_int : integer;
+        variable safe_real, safe_imag : signed(COEFF_WIDTH-1 downto 0);
+        variable err_i_safe, err_q_safe : signed(31 downto 0);
+        
+        constant MAX_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(32767, COEFF_WIDTH);
+        constant MIN_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(-32768, COEFF_WIDTH);
+        constant MAX_UPDATE : signed(31 downto 0) := to_signed(64, 32);
+        constant MAX_GRAD : signed(31 downto 0) := to_signed(32768, 32);  -- Было 131072
+        constant MAX_ERROR  : signed(31 downto 0) := to_signed(131072, 32);
+        constant SCALE_FACTOR : integer := 256;  -- Было 4096
+    begin
+        if rising_edge(aclk) then
+            if aresetn = '0' then
+                null;
+            elsif cfg_train_en = '1' and cfg_hold_coeffs = '0' and s_axis_fb_valid = '1' then
+                if not is_x(std_logic_vector(amp_sq(0))) and
+                   not is_x(std_logic_vector(error_i_filtered)) and  -- Используем фильтрованную!
+                   not is_x(std_logic_vector(error_q_filtered)) then
+                    
+                    -- ================================================================
+                    -- ОГРАНИЧЕНИЕ ФИЛЬТРОВАННОЙ ОШИБКИ
+                    -- ================================================================
+                    if error_i_filtered > MAX_ERROR then
+                        err_i_safe := MAX_ERROR;
+                    elsif error_i_filtered < -MAX_ERROR then
+                        err_i_safe := -MAX_ERROR;
+                    else
+                        err_i_safe := error_i_filtered;
+                    end if;
+                    
+                    if error_q_filtered > MAX_ERROR then
+                        err_q_safe := MAX_ERROR;
+                    elsif error_q_filtered < -MAX_ERROR then
+                        err_q_safe := -MAX_ERROR;
+                    else
+                        err_q_safe := error_q_filtered;
+                    end if;
+                    
+                    addr_int := to_integer(unsigned(amp_sq(0)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
+                    
+                    if addr_int >= 2**LUT_ADDR_WIDTH then
+                        addr_int := 2**LUT_ADDR_WIDTH - 1;
+                    elsif addr_int < 0 then
+                        addr_int := 0;
+                    end if;
+                    
+                    for m in 0 to MEMORY_DEPTH-1 loop
+                        if not is_x(std_logic_vector(fb_i_delayed(m))) and 
+                           not is_x(std_logic_vector(fb_q_delayed(m))) then
+                            
+                            -- ВЫЧИСЛЕНИЕ ГРАДИЕНТА (используем фильтрованную ошибку)
+                            grad_i := resize((fb_i_delayed(m) * err_i_safe) / SCALE_FACTOR + 
+                                             (fb_q_delayed(m) * err_q_safe) / SCALE_FACTOR, 32);
+                            
+                            grad_q := resize((fb_q_delayed(m) * err_i_safe) / SCALE_FACTOR - 
+                                             (fb_i_delayed(m) * err_q_safe) / SCALE_FACTOR, 32);
+                            
+                            -- Ограничение градиента
+                            if grad_i > MAX_GRAD then
+                                grad_i := MAX_GRAD;
+                            elsif grad_i < -MAX_GRAD then
+                                grad_i := -MAX_GRAD;
+                            end if;
+                            
+                            if grad_q > MAX_GRAD then
+                                grad_q := MAX_GRAD;
+                            elsif grad_q < -MAX_GRAD then
+                                grad_q := -MAX_GRAD;
+                            end if;
+                            
+                            -- Обновление
+                            update_i := resize((grad_i * learn_rate) / 32768, 32);
+                            update_q := resize((grad_q * learn_rate) / 32768, 32);
+                            
+                            if update_i > MAX_UPDATE then
+                                update_i := MAX_UPDATE;
+                            elsif update_i < -MAX_UPDATE then
+                                update_i := -MAX_UPDATE;
+                            end if;
+                            
+                            if update_q > MAX_UPDATE then
+                                update_q := MAX_UPDATE;
+                            elsif update_q < -MAX_UPDATE then
+                                update_q := -MAX_UPDATE;
+                            end if;
+                            
+                            -- Чтение из LUT с защитой
+                            if is_x(std_logic_vector(lut_real(m)(addr_int))) then
+                                safe_real := to_signed(41, COEFF_WIDTH);
+                            else
+                                safe_real := lut_real(m)(addr_int);
+                            end if;
+                            
+                            if is_x(std_logic_vector(lut_imag(m)(addr_int))) then
+                                safe_imag := to_signed(0, COEFF_WIDTH);
+                            else
+                                safe_imag := lut_imag(m)(addr_int);
+                            end if;
+                            
+                            -- Обновление
+                            new_real := safe_real + resize(update_i, COEFF_WIDTH);
+                            new_imag := safe_imag + resize(update_q, COEFF_WIDTH);
+                            
+                            if new_real > MAX_COEFF then
+                                lut_real(m)(addr_int) <= MAX_COEFF;
+                            elsif new_real < MIN_COEFF then
+                                lut_real(m)(addr_int) <= MIN_COEFF;
+                            else
+                                lut_real(m)(addr_int) <= new_real;
+                            end if;
+                            
+                            if new_imag > MAX_COEFF then
+                                lut_imag(m)(addr_int) <= MAX_COEFF;
+                            elsif new_imag < MIN_COEFF then
+                                lut_imag(m)(addr_int) <= MIN_COEFF;
+                            else
+                                lut_imag(m)(addr_int) <= new_imag;
+                            end if;
+                        end if;
+                    end loop;
+                end if;
+            end if;
+        end if;
+    end process;    
+
+-- ========================================================================
+-- ЗАПИСЬ ОТЛАДОЧНЫХ ДАННЫХ В ФАЙЛ (С ПРАВИЛЬНЫМ ОБЪЯВЛЕНИЕМ)
+-- ========================================================================
+process(aclk)
+    file log_file : text open write_mode is "debug_data.csv";
+    variable line_out : line;
+    variable time_ns : integer;
+    variable dbg_addr : integer;  -- <-- ОБЪЯВЛЯЕМ ПЕРЕМЕННУЮ ЗДЕСЬ!
+begin
+    if rising_edge(aclk) then
+        if aresetn = '1' then
+            -- Время в наносекундах
+            time_ns := (now / 1 ns);
+            write(line_out, time_ns);
+            write(line_out, string'(";"));
+            
+            -- sum_i и sum_q
+            write(line_out, to_integer(sum_i));
+            write(line_out, string'(";"));
+            write(line_out, to_integer(sum_q));
+            write(line_out, string'(";"));
+            
+            -- error_i и error_q
+            write(line_out, to_integer(error_i));
+            write(line_out, string'(";"));
+            write(line_out, to_integer(error_q));
+            write(line_out, string'(";"));
+            
+            -- Коэффициенты LUT для адреса 0
+            write(line_out, to_integer(lut_real(0)(0)));
+            write(line_out, string'(";"));
+            write(line_out, to_integer(lut_imag(0)(0)));
+            write(line_out, string'(";"));
+            
+            -- ТЕПЕРЬ МОЖНО ИСПОЛЬЗОВАТЬ addr_int
+            -- Вычисляем адрес
+            if not is_x(std_logic_vector(amp_sq(0))) then
+                dbg_addr := to_integer(unsigned(amp_sq(0)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
+                if dbg_addr >= 2**LUT_ADDR_WIDTH then
+                    dbg_addr := 2**LUT_ADDR_WIDTH - 1;
+                end if;
+            else
+                dbg_addr := 0;
+            end if;
+            
+            write(line_out, dbg_addr);
+            write(line_out, string'(";"));
+            
+            -- Значение LUT по текущему адресу
+            if dbg_addr < 2**LUT_ADDR_WIDTH and dbg_addr >= 0 then
+                write(line_out, to_integer(lut_real(0)(dbg_addr)));
+                write(line_out, string'(";"));
+                write(line_out, to_integer(lut_imag(0)(dbg_addr)));
+            else
+                write(line_out, 0);
+                write(line_out, string'(";"));
+                write(line_out, 0);
+            end if;
+            write(line_out, string'(";"));
+            
+            -- Флаги
+            write(line_out, ovf_i);
+            write(line_out, string'(";"));
+            write(line_out, ovf_q);
+            
+            -- Флаги условий
+            write(line_out, string'(";"));
+            write(line_out, cfg_train_en);
+            write(line_out, string'(";"));
+            write(line_out, cfg_hold_coeffs);
+            write(line_out, string'(";"));
+            write(line_out, s_axis_fb_valid);            
+            
+            writeline(log_file, line_out);
+        end if;
+    end if;
+end process;
     
 end Behavioral;
