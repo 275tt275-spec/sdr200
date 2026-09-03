@@ -7,12 +7,12 @@ entity hf_dpd is
     Port ( 
         -- AXI Stream вход (I/Q данные)
         s_axis_iq_tdata   : in  STD_LOGIC_VECTOR (47 downto 0);
-        
         -- Вход с АЦП (обратная связь)
         s_axis_adc_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
-        
         -- Выход I/Q после линеаризации
         m_axis_iq_tdata   : out STD_LOGIC_VECTOR (31 downto 0);
+        -- Данные с ЦАП
+        s_axis_dac_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
         
         -- Управление через конфигурационный интерфейс
         s_axis_cfg_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
@@ -24,10 +24,7 @@ entity hf_dpd is
         
         -- Выход конфигурации
         m_cfg_dout        : out STD_LOGIC_VECTOR (31 downto 0);
-        
-        -- Статус переполнения
-        m_ovf             : out STD_LOGIC_VECTOR(1 downto 0);
-        
+       
         -- Тактирование и сброс
         aclk              : in  STD_LOGIC;
         aresetn           : in  STD_LOGIC
@@ -43,9 +40,12 @@ architecture Structural of hf_dpd is
     -- Сигналы для DDC
     signal bb_i, bb_q           : signed(15 downto 0);
     signal bb_valid             : STD_LOGIC;
-    signal adc_ovf              : STD_LOGIC;
+    signal ref_i, ref_q         : signed(15 downto 0);
+    signal ref_valid            : STD_LOGIC;
+    signal ddc_ovf              : std_logic_vector(1 downto 0);
     
     -- Сигналы управления
+    signal cfg_delay_ticks      : std_logic_vector(7 downto 0) := x"0c";
     signal cfg_train_en         : STD_LOGIC := '0';
     signal cfg_hold_coeffs      : STD_LOGIC := '0';
     signal cfg_bypass           : STD_LOGIC := '1';
@@ -80,20 +80,29 @@ begin
         end if;
     end process;
     
-    -- ========================================================================
-    -- 4. DDC БЛОК
-    -- ========================================================================
-    DDC_Inst: entity work.hf_dpd_ddc_block
-        Port map (
-            aclk              => aclk,
-            aresetn           => aresetn,
-            s_axis_adc_tdata  => s_axis_adc_tdata,
-            s_axis_dds_tdata  => s_axis_dds_tdata,
-            m_axis_bb_i       => bb_i,
-            m_axis_bb_q       => bb_q,
-            m_axis_bb_valid   => bb_valid,
-            ovr               => adc_ovf
-        );
+    DDC_Inst_ref: entity work.hf_dpd_ddc_block
+    Port map (
+        aclk              => aclk,
+        aresetn           => aresetn,
+        s_axis_adc_tdata  => s_axis_dac_tdata,
+        s_axis_dds_tdata  => s_axis_dds_tdata,
+        m_axis_bb_i       => ref_i,
+        m_axis_bb_q       => ref_q,
+        m_axis_bb_valid   => ref_valid,
+        ovr               => ddc_ovf(0)
+    );
+
+    DDC_Inst_fb: entity work.hf_dpd_ddc_block
+    Port map (
+        aclk              => aclk,
+        aresetn           => aresetn,
+        s_axis_adc_tdata  => s_axis_adc_tdata,
+        s_axis_dds_tdata  => s_axis_dds_tdata,
+        m_axis_bb_i       => bb_i,
+        m_axis_bb_q       => bb_q,
+        m_axis_bb_valid   => bb_valid,
+        ovr               => ddc_ovf(1)
+    );
     
     -- ========================================================================
     -- 5. ЯДРО DPD
@@ -123,6 +132,7 @@ begin
             s_axis_fb_valid   => bb_valid,
             
             -- Управление
+            cfg_delay_ticks   => cfg_delay_ticks,
             cfg_train_en      => cfg_train_en,
             cfg_hold_coeffs   => cfg_hold_coeffs,
             
@@ -159,7 +169,7 @@ begin
     
     -- ========================================================================
     -- 7. БЛОК УПРАВЛЕНИЯ КОНФИГУРАЦИЕЙ
-    -- ========================================================================
+    -- ========================================================================    
     process(aclk)
     begin
         if rising_edge(aclk) then
@@ -172,6 +182,10 @@ begin
                 cfg_we <= '0';
                 m_cfg_dout <= (others => '0');
             else
+                m_cfg_dout(0) <= dpd_ovf;
+                m_cfg_dout(1) <= cfg_train_en;
+                m_cfg_dout(2) <= cfg_hold_coeffs;
+                m_cfg_dout(3 downto 2) <= ddc_ovf;
                 
                 if s_axis_cfg_tvalid = '1' then
                     case to_integer(unsigned(s_axis_cfg_tdest)) is
@@ -181,27 +195,15 @@ begin
                             cfg_bypass <= s_axis_cfg_tdata(2);
                             cfg_we <= '1';
                             
-                            -- Ответное подтверждение
-                            m_cfg_dout <= x"00000001";
-                            
-                        when 1 => -- Адрес 1: Чтение статуса
-                            m_cfg_dout(0) <= dpd_ovf;
-                            m_cfg_dout(1) <= adc_ovf;
-                            m_cfg_dout(2) <= cfg_train_en;
-                            m_cfg_dout(3) <= cfg_hold_coeffs;
-                            
+                        when 1 => 
+                            cfg_delay_ticks <= s_axis_cfg_tdata(7 downto 0);   
+      
                         when others =>
-                            m_cfg_dout <= (others => '0');
+                            
                     end case;
                 end if;
             end if;
         end if;
     end process;
-    
-    -- ========================================================================
-    -- 8. ВЫХОДНЫЕ СТАТУСНЫЕ СИГНАЛЫ
-    -- ========================================================================
-    m_ovf(0) <= dpd_ovf;
-    m_ovf(1) <= adc_ovf;
     
 end Structural;

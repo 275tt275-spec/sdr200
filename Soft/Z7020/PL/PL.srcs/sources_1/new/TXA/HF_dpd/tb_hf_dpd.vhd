@@ -241,21 +241,20 @@ begin
         log_enable <= '1';
         
         -- Включение режима обучения
-        s_axis_cfg_tdata <= x"00000001";
+        s_axis_cfg_tdata <= x"00000005";
         s_axis_cfg_tdest <= "00000";
         s_axis_cfg_tvalid <= '1';
         wait for CLK_PERIOD;
         s_axis_cfg_tvalid <= '0';
         wait for CLK_PERIOD;
         
-        -- Чтение статуса
         s_axis_cfg_tdata <= x"00000000";
         s_axis_cfg_tdest <= "00001";
         s_axis_cfg_tvalid <= '1';
         wait for CLK_PERIOD;
         s_axis_cfg_tvalid <= '0';
-        wait for 100 ns;
-        
+        wait for CLK_PERIOD;
+         
         -- Ждем завершения теста
         wait for 1 ms;
         

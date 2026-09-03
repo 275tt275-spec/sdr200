@@ -23,6 +23,7 @@ entity hf_dpd_core_200w is
         s_axis_fb_i       : in  signed(15 downto 0);
         s_axis_fb_q       : in  signed(15 downto 0);
         s_axis_fb_valid   : in  STD_LOGIC;
+        cfg_delay_ticks   : in  std_logic_vector(7 downto 0);
         cfg_train_en      : in  STD_LOGIC;
         cfg_hold_coeffs   : in  STD_LOGIC;
         m_ovf             : out STD_LOGIC
@@ -38,6 +39,7 @@ architecture Behavioral of hf_dpd_core_200w is
     type signed_array_t is array (0 to MEMORY_DEPTH-1) of signed(15 downto 0);
     type lut_memory_t is array (0 to (2**LUT_ADDR_WIDTH)-1) of signed(COEFF_WIDTH-1 downto 0);
     type lut_array_t is array (0 to MEMORY_DEPTH-1) of lut_memory_t;
+    type fb_delay_t is array (0 to MEMORY_DEPTH-1) of signed(15 downto 0);
     
     type coeff_pair_t is record
         real_part : signed(COEFF_WIDTH-1 downto 0);
@@ -46,7 +48,6 @@ architecture Behavioral of hf_dpd_core_200w is
     
     type coeff_pair_array_t is array (0 to MEMORY_DEPTH-1) of coeff_pair_t;
     type mult_result_t is array (0 to MEMORY_DEPTH-1) of signed(31 downto 0);
-    type fb_delay_t is array (0 to MEMORY_DEPTH-1) of signed(15 downto 0);
     
 -- ========================================================================
 -- 2. ФУНКЦИИ ИНИЦИАЛИЗАЦИИ (ЕЩЕ УМЕНЬШЕННЫЕ КОЭФФИЦИЕНТЫ)
@@ -74,10 +75,44 @@ architecture Behavioral of hf_dpd_core_200w is
         return result;
     end function;
     
+    component dpd_align_and_error_top is
+    Generic (
+        DATA_WIDTH   : integer := 16;
+        ADDR_WIDTH   : integer := 8;    -- 2^8 = 256 тактов максимальной задержки для RAM
+        ALPHA_SHIFT  : integer := 8     -- Коэффициент сглаживания фильтра (1/256)
+    );
+    Port (
+        -- Системные сигналы
+        aclk                 : in  std_logic;
+        aresetn              : in  std_logic;
+        
+        -- Интерфейс конфигурации
+        cfg_delay_ticks      : in  std_logic_vector(ADDR_WIDTH-1 downto 0);
+        cfg_train_en         : in  std_logic;
+        cfg_hold_coeffs      : in  std_logic;
+        
+        -- Входной опорный сигнал (Прямой тракт TX)
+        s_axis_ref_tdata_i   : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+        s_axis_ref_tdata_q   : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+        s_axis_ref_tvalid    : in  std_logic;
+        
+        -- Входной сигнал обратной связи (Тракт приема FB от АЦП)
+        s_axis_fb_tdata_i    : in  signed(DATA_WIDTH-1 downto 0);
+        s_axis_fb_tdata_q    : in  signed(DATA_WIDTH-1 downto 0);
+        s_axis_fb_tvalid     : in  std_logic;
+        
+        -- Выход вычисленной и сглаженной ошибки для адаптации LUT
+        m_axis_err_i         : out signed(31 downto 0);
+        m_axis_err_q         : out signed(31 downto 0);
+        m_axis_err_valid     : out std_logic
+    );
+    end component dpd_align_and_error_top;
+    
     -- ========================================================================
     -- 3. СИГНАЛЫ С ИНИЦИАЛИЗАЦИЕЙ
     -- ========================================================================
     
+    signal in_i_reg, in_q_reg       : std_logic_vector(15 downto 0); 
     signal i_delayed, q_delayed : signed_array_t := (others => (others => '0'));
     signal i_curr, q_curr       : signed(15 downto 0) := (others => '0');
     signal amp_sq              : signed_array_t := (others => (others => '0'));
@@ -89,15 +124,13 @@ architecture Behavioral of hf_dpd_core_200w is
     signal coeffs : coeff_pair_array_t;
     signal mult_i, mult_q : mult_result_t := (others => (others => '0'));
     signal sum_i, sum_q : signed(31 downto 0) := (others => '0');
-    signal fb_i_delayed, fb_q_delayed : fb_delay_t := (others => (others => '0'));
-    signal fb_i_curr, fb_q_curr       : signed(15 downto 0) := (others => '0');
     signal error_i, error_q : signed(31 downto 0) := (others => '0');
+    signal error_valid : STD_LOGIC := '0';
     signal learn_rate : signed(15 downto 0) := to_signed(32, 16);  -- Было 8
     signal ovf_i, ovf_q : STD_LOGIC := '0';
     signal init_done : STD_LOGIC := '0';
-    signal error_i_filtered, error_q_filtered : signed(31 downto 0) := (others => '0');
-    signal error_i_filtered_valid : STD_LOGIC := '0';
     constant ALPHA : signed(15 downto 0) := to_signed(128, 16);  -- 0.5
+    signal fb_i_delayed, fb_q_delayed : fb_delay_t := (others => (others => '0'));
     
 begin
     
@@ -424,93 +457,33 @@ begin
     
     m_ovf <= ovf_i or ovf_q;
     
-    -- ========================================================================
-    -- 11. БЛОК АДАПТАЦИИ
-    -- ========================================================================
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                fb_i_curr <= (others => '0');
-                fb_q_curr <= (others => '0');
-                fb_i_delayed <= (others => (others => '0'));
-                fb_q_delayed <= (others => (others => '0'));
-            elsif s_axis_fb_valid = '1' then
-                -- Защита от X на входе обратной связи
-                if is_x(std_logic_vector(s_axis_fb_i)) then
-                    fb_i_curr <= (others => '0');
-                else
-                    fb_i_curr <= s_axis_fb_i;
-                end if;
-                
-                if is_x(std_logic_vector(s_axis_fb_q)) then
-                    fb_q_curr <= (others => '0');
-                else
-                    fb_q_curr <= s_axis_fb_q;
-                end if;
-                
-                for m in 0 to MEMORY_DEPTH-2 loop
-                    fb_i_delayed(m+1) <= fb_i_delayed(m);
-                    fb_q_delayed(m+1) <= fb_q_delayed(m);
-                end loop;
-                fb_i_delayed(0) <= fb_i_curr;
-                fb_q_delayed(0) <= fb_q_curr;
-            end if;
-        end if;
-    end process;
-    
-    -- Вычисление ошибки
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            if cfg_train_en = '1' and cfg_hold_coeffs = '0' then
-                if is_x(std_logic_vector(i_curr)) or is_x(std_logic_vector(fb_i_curr)) then
-                    error_i <= (others => '0');
-                else
-                    error_i <= resize((i_curr - fb_i_curr), 32);
-                end if;
-                
-                if is_x(std_logic_vector(q_curr)) or is_x(std_logic_vector(fb_q_curr)) then
-                    error_q <= (others => '0');
-                else
-                    error_q <= resize((q_curr - fb_q_curr), 32);
-                end if;
-
-            end if;
-        end if;
-    end process;
-    
--- ========================================================================
--- ФИЛЬТРАЦИЯ ОШИБКИ (ЭКСПОНЕНЦИАЛЬНОЕ СГЛАЖИВАНИЕ)
--- ========================================================================
-process(aclk)
-    variable diff_i, diff_q : signed(31 downto 0);
-begin
-    if rising_edge(aclk) then
-        if aresetn = '0' then
-            error_i_filtered <= (others => '0');
-            error_q_filtered <= (others => '0');
-            error_i_filtered_valid <= '0';
-        else
-            if cfg_train_en = '1' and cfg_hold_coeffs = '0' then
-                if not is_x(std_logic_vector(error_i)) and not is_x(std_logic_vector(error_q)) then
-                    
-                    -- Exponential Moving Average (EMA)
-                    -- filtered_new = ALPHA * raw + (256 - ALPHA) * filtered_old
-                    error_i_filtered <= resize((error_i * ALPHA) / 256 + 
-                                                (error_i_filtered * (256 - ALPHA)) / 256, 32);
-                    
-                    error_q_filtered <= resize((error_q * ALPHA) / 256 + 
-                                                (error_q_filtered * (256 - ALPHA)) / 256, 32);
-                    
-                    error_i_filtered_valid <= '1';
-                end if;
-            else
-                error_i_filtered_valid <= '0';
-            end if;
-        end if;
-    end if;
-end process;
+    in_i_reg <= std_logic_vector(s_axis_iq_i);
+    in_q_reg <= std_logic_vector(s_axis_iq_q);
+  
+-- Вычисление ошибки   
+u_align_and_error :  dpd_align_and_error_top
+    GENERIC MAP (
+        DATA_WIDTH  => 16,
+        ADDR_WIDTH  => 8,
+        ALPHA_SHIFT => 4
+    )
+    PORT MAP (
+        aclk                 => aclk,
+        aresetn              => aresetn,
+        cfg_delay_ticks      => cfg_delay_ticks,
+        cfg_train_en         => cfg_train_en,
+        cfg_hold_coeffs      => cfg_hold_coeffs,
+        s_axis_ref_tdata_i   => in_i_reg,
+        s_axis_ref_tdata_q   => in_q_reg,
+        s_axis_ref_tvalid    => '1',
+        s_axis_fb_tdata_i    => s_axis_fb_i,
+        s_axis_fb_tdata_q    => s_axis_fb_q,
+        s_axis_fb_tvalid     => s_axis_fb_valid,
+        m_axis_err_i         => error_i,
+        m_axis_err_q         => error_q,
+        m_axis_err_valid     => error_valid
+    );
+ 
 
 -- ========================================================================
 -- 12. БЛОК ОБНОВЛЕНИЯ LUT (С ФИЛЬТРОВАННОЙ ОШИБКОЙ)
@@ -535,47 +508,49 @@ end process;
                 null;
             elsif cfg_train_en = '1' and cfg_hold_coeffs = '0' and s_axis_fb_valid = '1' then
                 if not is_x(std_logic_vector(amp_sq(0))) and
-                   not is_x(std_logic_vector(error_i_filtered)) and  -- Используем фильтрованную!
-                   not is_x(std_logic_vector(error_q_filtered)) then
+                   not is_x(std_logic_vector(error_i)) and  -- Используем фильтрованную!
+                   not is_x(std_logic_vector(error_q)) then
                     
                     -- ================================================================
                     -- ОГРАНИЧЕНИЕ ФИЛЬТРОВАННОЙ ОШИБКИ
                     -- ================================================================
-                    if error_i_filtered > MAX_ERROR then
+                    if error_i > MAX_ERROR then
                         err_i_safe := MAX_ERROR;
-                    elsif error_i_filtered < -MAX_ERROR then
+                    elsif error_i < -MAX_ERROR then
                         err_i_safe := -MAX_ERROR;
                     else
-                        err_i_safe := error_i_filtered;
+                        err_i_safe := error_i;
                     end if;
                     
-                    if error_q_filtered > MAX_ERROR then
+                    if error_q > MAX_ERROR then
                         err_q_safe := MAX_ERROR;
-                    elsif error_q_filtered < -MAX_ERROR then
+                    elsif error_q< -MAX_ERROR then
                         err_q_safe := -MAX_ERROR;
                     else
-                        err_q_safe := error_q_filtered;
-                    end if;
-                    
-                    addr_int := to_integer(unsigned(amp_sq(0)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
-                    
-                    if addr_int >= 2**LUT_ADDR_WIDTH then
-                        addr_int := 2**LUT_ADDR_WIDTH - 1;
-                    elsif addr_int < 0 then
-                        addr_int := 0;
+                        err_q_safe := error_q;
                     end if;
                     
                     for m in 0 to MEMORY_DEPTH-1 loop
                         if not is_x(std_logic_vector(fb_i_delayed(m))) and 
                            not is_x(std_logic_vector(fb_q_delayed(m))) then
+                           
+                            -- Вычисляем адрес индивидуально для каждой ветви памяти!
+                            addr_int := to_integer(unsigned(amp_sq(m)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
                             
+                            -- Защита от выхода за границы для текущего addr_int
+                            if addr_int >= 2**LUT_ADDR_WIDTH then
+                                addr_int := 2**LUT_ADDR_WIDTH - 1;
+                            elsif addr_int < 0 then
+                                addr_int := 0;
+                            end if;
+
                             -- ВЫЧИСЛЕНИЕ ГРАДИЕНТА (используем фильтрованную ошибку)
                             grad_i := resize((fb_i_delayed(m) * err_i_safe) / SCALE_FACTOR + 
                                              (fb_q_delayed(m) * err_q_safe) / SCALE_FACTOR, 32);
                             
                             grad_q := resize((fb_q_delayed(m) * err_i_safe) / SCALE_FACTOR - 
                                              (fb_i_delayed(m) * err_q_safe) / SCALE_FACTOR, 32);
-                            
+                                                        
                             -- Ограничение градиента
                             if grad_i > MAX_GRAD then
                                 grad_i := MAX_GRAD;
