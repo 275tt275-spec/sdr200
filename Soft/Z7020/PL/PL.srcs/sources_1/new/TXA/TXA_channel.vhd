@@ -160,7 +160,7 @@ END component ila_1;
             m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
         );
     end component dds16a;
-     
+         
     signal txa_on : std_logic := '0'; 
     signal modulator_select : STD_LOGIC_VECTOR ( 2 downto 0 ) := "001"; 
     signal audio_out_tdata : std_logic_vector(23 downto 0);
@@ -193,7 +193,7 @@ END component ila_1;
     signal lim_over : STD_LOGIC_VECTOR(6 DOWNTO 0) := (others => '0');
     signal cfg_addr : std_logic_vector(3 downto 0);
     signal cfg_wr : std_logic := '0';
-    
+        
     signal resampler_over : std_logic;
     signal linear_ovf : std_logic_vector(3 downto 0);
     signal ovf_out : std_logic_vector(31 downto 0) := (others => '0');
@@ -210,7 +210,7 @@ debug_0 : ila_0
 
     cfg_data_out <= overflow_reg;
     
-audio_0 : audio_input
+u_audio_input : audio_input
      Port map ( 
        aclk => aclk,   
        s_axis_tdata => s_axis_audio_tdata,
@@ -250,7 +250,7 @@ begin
             overflow_reg <= (others => '0');
         else         
             -- 2. Защелкиваем: если пришла '1', она останется в регистре
-            overflow_reg <= overflow_reg or current_overflows;          
+            overflow_reg <= overflow_reg or current_overflows;        
             if cfg_wr = '1' then   
                 if cfg_addr = x"0" then
                     dds_cfg_tdata <= s_axis_cfg_tdata;
@@ -267,7 +267,7 @@ begin
    end if;
 end process cmd_process;
 
-audio_proc_0 : audio_proc
+u_audio_proc : audio_proc
     PORT MAP ( 
         m_axis_audio_tdata => speech_out_tdata,
         m_axis_audio_tvalid => speech_out_tvalid,
@@ -286,7 +286,7 @@ audio_proc_0 : audio_proc
  --  modulator_in_tdata <= speech_in_tdata;
  --  modulator_in_tvalid <= speech_in_tvalid;
     
-modulator_0 : TXA_modulator
+u_modulator : TXA_modulator
     PORT MAP ( 
         m_axis_iq_tdata => modulator_out_tdata,
         m_axis_iq_tvalid => modulator_out_tvalid,
@@ -303,7 +303,7 @@ modulator_0 : TXA_modulator
     resampler_in_tvalid <= modulator_out_tvalid;
     resampler_in_tdata <= modulator_out_tdata;
 
-resampler_0 : TXA_resampler
+u_resampler : TXA_resampler
     PORT MAP  ( 
         m_axis_iq_tdata => iq_tdata,
         s_axis_modulator_tdata => resampler_in_tdata,
@@ -320,7 +320,7 @@ resampler_0 : TXA_resampler
     fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) + resize(signed(s_adc_data_rx1), 17));
     linear_din2 <= fb_forward(16 downto 1); -- проверить там раньше было 14 бит  
            
-linear_0 : linear_dds_iq
+u_linear : linear_dds_iq
     PORT MAP  ( 
         din1_i => linear_in_i,
         din1_q => linear_in_q,

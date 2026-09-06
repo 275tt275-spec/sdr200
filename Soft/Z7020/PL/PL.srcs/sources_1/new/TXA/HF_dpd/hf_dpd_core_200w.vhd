@@ -61,7 +61,7 @@ architecture Behavioral of hf_dpd_core_200w is
     begin
         for m in 0 to MEMORY_DEPTH-1 loop
             for addr in 0 to (2**LUT_ADDR_WIDTH)-1 loop
-                result(m)(addr) := to_signed(41, COEFF_WIDTH);  -- Было 410! Уменьшили в 10 раз
+                result(m)(addr) := to_signed(410, COEFF_WIDTH);  -- Было 410! Уменьшили в 10 раз
             end loop;
         end loop;
         return result;
@@ -127,10 +127,9 @@ architecture Behavioral of hf_dpd_core_200w is
     signal coeffs : coeff_pair_array_t;
     signal mult_i, mult_q : mult_result_t := (others => (others => '0'));
     signal sum_i, sum_q : signed(31 downto 0) := (others => '0');
-    signal learn_rate : signed(15 downto 0) := to_signed(32, 16);  -- Было 8
+    signal learn_rate : signed(15 downto 0) := to_signed(32, 16);
     signal ovf_i, ovf_q : STD_LOGIC := '0';
     signal init_done : STD_LOGIC := '0';
-    constant ALPHA : signed(15 downto 0) := to_signed(128, 16);  -- 0.5
     signal fb_i_delayed, fb_q_delayed : fb_delay_t := (others => (others => '0'));
     
 begin
@@ -144,7 +143,7 @@ begin
             if aresetn = '0' then
                 for m in 0 to MEMORY_DEPTH-1 loop
                     for addr in 0 to (2**LUT_ADDR_WIDTH)-1 loop
-                        lut_real(m)(addr) <= to_signed(41, COEFF_WIDTH);  -- Еще уменьшено!
+                        lut_real(m)(addr) <= to_signed(410, COEFF_WIDTH);  -- Еще уменьшено!
                         lut_imag(m)(addr) <= (others => '0');
                     end loop;
                 end loop;
@@ -457,6 +456,34 @@ begin
     end process;
     
     m_ovf <= ovf_i or ovf_q; 
+    
+    -- ========================================================================
+    -- 11.ФОРМИРОВАНИЕ СДВИГОВЫХ РЕГИСТРОВ ОБРАТНОЙ СВЯЗИ (ПО СТРОБУ DDC)
+    -- ========================================================================
+    process(aclk)
+    begin
+        if rising_edge(aclk) then
+            if aresetn = '0' then
+                fb_i_delayed <= (others => (others => '0'));
+                fb_q_delayed <= (others => (others => '0'));
+            else
+                -- КРИТИЧЕСКИ ВАЖНО: сдвиг происходит ТОЛЬКО когда DDC выдал новый отсчет
+                if s_axis_fb_valid = '1' then
+                    
+                    -- Сдвигаем историю задержек памяти для полинома назад
+                    for m in MEMORY_DEPTH-1 downto 1 loop
+                        fb_i_delayed(m) <= fb_i_delayed(m-1);
+                        fb_q_delayed(m) <= fb_q_delayed(m-1);
+                    end loop;
+                    
+                    -- Записываем свежий отсчет с выхода DDC в нулевую ячейку
+                    fb_i_delayed(0) <= s_axis_fb_i;
+                    fb_q_delayed(0) <= s_axis_fb_q;
+                    
+                end if;
+            end if;
+        end if;
+    end process;
 
 -- ========================================================================
 -- 12. БЛОК ОБНОВЛЕНИЯ LUT (С ФИЛЬТРОВАННОЙ ОШИБКОЙ)
@@ -471,7 +498,7 @@ begin
         
         constant MAX_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(32767, COEFF_WIDTH);
         constant MIN_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(-32768, COEFF_WIDTH);
-        constant MAX_UPDATE : signed(31 downto 0) := to_signed(64, 32);
+        constant MAX_UPDATE : signed(31 downto 0) := to_signed(640, 32);
         constant MAX_GRAD : signed(31 downto 0) := to_signed(32768, 32);  -- Было 131072
         constant MAX_ERROR  : signed(31 downto 0) := to_signed(131072, 32);
         constant SCALE_FACTOR : integer := 256;  -- Было 4096
@@ -555,7 +582,7 @@ begin
                             
                             -- Чтение из LUT с защитой
                             if is_x(std_logic_vector(lut_real(m)(addr_int))) then
-                                safe_real := to_signed(41, COEFF_WIDTH);
+                                safe_real := to_signed(410, COEFF_WIDTH);
                             else
                                 safe_real := lut_real(m)(addr_int);
                             end if;

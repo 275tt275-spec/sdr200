@@ -237,8 +237,8 @@ begin
                 s_axis_dac_tdata <= (others => '0');
             else
                 -- Извлекаем I/Q из выхода DPD (до нелинейного усилителя PA)
-                dac_input_i := signed(m_axis_iq_tdata(15 downto 0));
-                dac_input_q := signed(m_axis_iq_tdata(31 downto 16));
+                dac_input_i := signed(s_axis_iq_tdata(23 downto 8));
+                dac_input_q := signed(s_axis_iq_tdata(47 downto 32));
                 
                 -- Переносим спектр вверх на частоту DDS (как в реальном ЦАП)
                 dac_i_mult := (to_integer(dac_input_i) * to_integer(dds_cos)) / 32767;

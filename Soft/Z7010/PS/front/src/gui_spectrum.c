@@ -30,7 +30,7 @@ static lv_coord_t data_set[NFFT_SAMPLES / 2];
 static lv_coord_t data_set_peak[NFFT_SAMPLES / 2];
 static lv_coord_t data_set_nonfiltered[NFFT_SAMPLES / 2];
 static char* pFreq[VERTICAL_LINES];
-static char* strFreq[VERTICAL_LINES][16];
+static char strFreq[VERTICAL_LINES][32];
 
 static void draw_event_cb(lv_event_t* e);
 static void scale_event_cb(lv_event_t* e);
@@ -182,7 +182,7 @@ void gui_spectrum_init(lv_obj_t* scr, lv_coord_t x, lv_coord_t y, lv_coord_t w, 
         data_set_nonfiltered[i] = 0;
     }
     lv_chart_set_point_count(chart, ARRAY_SIZE(data_set));
-    lv_chart_set_ext_y_array(chart, ser, &data_set[0]);
+//    lv_chart_set_ext_y_array(chart, ser, &data_set[0]);
 
     gui_wf_Init(chart_container, 0, heightChart + fontsize + 1, w, heightWaterfall, 0.0, down, allparts, 2);
 #if 0
@@ -235,12 +235,24 @@ void gui_spectrum_enable_marker(int marker, bool enable)
 
 void gui_spectrum_draw_display()
 {
-    lv_chart_set_point_count(chart, ARRAY_SIZE(data_set));
-    lv_chart_set_ext_y_array(chart, ser, data_set);
-    if (peak_ser != NULL)
-    {
-        lv_chart_set_ext_y_array(chart, peak_ser, data_set_peak);
+    if (chart == NULL || ser == NULL) return;
+
+    uint32_t points_cnt = ARRAY_SIZE(data_set);
+
+    // Гарантируем, что LVGL знает точное количество точек
+    lv_chart_set_point_count(chart, points_cnt);
+
+    // Загоняем точки спектра поштучно во внутреннюю безопасную память виджета.
+    // Это атомарно защищает ядро отрисовщика от изменений массива во время рендеринга.
+    for(uint32_t i = 0; i < points_cnt; i++) {
+        lv_chart_set_value_by_id(chart, ser, i, (int32_t)data_set[i]);
+
+        if (peak_ser != NULL) {
+            lv_chart_set_value_by_id(chart, peak_ser, i, (int32_t)data_set_peak[i]);
+        }
     }
+
+    // Принудительно заставляем график обновиться на экране
     lv_chart_refresh(chart);
 
     gui_wf_Draw(gui_dev.waterfallgain);

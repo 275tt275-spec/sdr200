@@ -9,6 +9,7 @@
 #include "xscugic.h"
 #include "vga.h"
 #include "gui_parts.h"
+#include "semphr.h"
 
 struct vga_prams 					*vga_data;
 extern XScuGic 						xInterruptController;
@@ -16,8 +17,18 @@ struct vga_creg_map					*vga = (void*)VGA_CTRL_BASE;
 
 static uint64_t get_nco_value( unsigned int px_clk );
 
-uint32_t lv_buf_1[LCD_WIDTH * LCD_HEIGHT] __attribute__((aligned(32)));
-uint32_t lv_buf_2[LCD_WIDTH * LCD_HEIGHT] __attribute__((aligned(32)));
+// Задаем жесткие адреса в DDR, где гарантированно нет кода программы и кучи
+#define LV_BUF_1_ADDR    (0x100000 + 200 * 1024 * 1024) // 200 МБ от старта DDR
+#define LV_BUF_2_ADDR    (0x100000 + 205 * 1024 * 1024) // 205 МБ от старта DDR
+// Размер одного буфера дисплея (1024 * 600 * 4 байта = ~2.45 МБ)
+// Округляем вверх до мегабайта: нам нужно разметить по 3 МБ для каждого региона
+#define BUF_REMAP_SIZE_MB   3
+
+// Вместо массивов делаем указатели:
+uint32_t *lv_buf_1 = (uint32_t*)(LV_BUF_1_ADDR);
+uint32_t *lv_buf_2 = (uint32_t*)(LV_BUF_2_ADDR);
+
+SemaphoreHandle_t vga_flush_sem = NULL;
 
 struct vga_prams vga_table[] = {
 //tot_h_px, h_px, h_syn_len, h_fpch, h_bpch, h_pol,    tot_v_ln,v_ln, v_syn_len, v_fpch, v_bpch, v_pol, 	px_clk
@@ -35,12 +46,39 @@ struct vga_prams vga_table[] = {
   {1056,    800,   6,        46,     210,   SYNC_NEG, 525,      480,    3,       22,     23,     SYNC_NEG, 33330000 }, // * 800 x 480 @ 60 Hz (HL070MI / AT070TN92)
 };
 
+static void vga_memory_disable_cache(void)
+{
+    // Отрезаем кэширование для Буфера 1 (Размечаем 3 Мегабайта построчно)
+    for (uint32_t i = 0; i < BUF_REMAP_SIZE_MB; i++) {
+        uint32_t addr = LV_BUF_1_ADDR + (i * 1024 * 1024);
+        // Флаг 0x14C02 отключает кэш L1/L2 и делает память Strongly Ordered / Shareable Device
+        Xil_SetTlbAttributes(addr, 0x14C02);
+    }
+
+    // Отрезаем кэширование для Буфера 2 (Размечаем 3 Мегабайта построчно)
+    for (uint32_t i = 0; i < BUF_REMAP_SIZE_MB; i++) {
+        uint32_t addr = LV_BUF_2_ADDR + (i * 1024 * 1024);
+        Xil_SetTlbAttributes(addr, 0x14C02);
+    }
+
+    // Принудительно очищаем и инвалидируем кэш инструкций и данных,
+    // чтобы процессор применил новую таблицу MMU прямо сейчас
+    Xil_DCacheInvalidateRange(LV_BUF_1_ADDR, BUF_REMAP_SIZE_MB * 1024 * 1024);
+    Xil_DCacheInvalidateRange(LV_BUF_2_ADDR, BUF_REMAP_SIZE_MB * 1024 * 1024);
+}
+
 void vga_irq_handler( void *p )
 {
 	vga->vga_fbuf_addr = gui_dev.dma_src;
 	gui_dev.buf_switched = pdTRUE;
 	XScuGic_Disable(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR);
-	lv_display_flush_ready(gui_dev.display);
+    // Никакого LVGL здесь! Просто будим поток GUI
+	if(vga_flush_sem)
+	{
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		xSemaphoreGiveFromISR(vga_flush_sem, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+	}
 }
 
 struct vga_prams* set_vga_prams( uint8_t table_idx ) {
@@ -63,10 +101,15 @@ struct vga_prams* set_vga_prams( uint8_t table_idx ) {
 	nco_val = get_nco_value( vga_data->px_clk );
 	vga->px_nco_lsbs = nco_val & 0xFFFFFFFF;
 	vga->px_nco_msbs = ((nco_val & 0xFF00000000) >> 32);
-	vga->vga_fbuf_addr = (volatile uint32_t)&lv_buf_1[0];
 	vga->total_pixels = (vga_data->h_px * vga_data->v_ln) | DMA_FIFO_RST;
 //	vga->total_pixels = (vga_data->h_px * vga_data->v_ln) | DMA_FRAME_READY;
 	vga->brightness = 32;  //
+	vga->vga_fbuf_addr = (volatile uint32_t)LV_BUF_1_ADDR;
+
+	vga_flush_sem = xSemaphoreCreateBinary();
+	vga_memory_disable_cache();
+    // Изначально семафор должен быть выдан, чтобы первый кадр отрисовался без зависания
+    xSemaphoreGive(vga_flush_sem);
 
 	return vga_data;
 }
@@ -124,12 +167,27 @@ void vga_disp_flush(lv_display_t *disp_drv, const lv_area_t *area, uint8_t * px_
 	if( lv_disp_flush_is_last( disp_drv ) )
 	{
 		uint32_t size_in_bytes = gui_dev.screenWidth * gui_dev.screenHeight * sizeof(uint32_t);
-		size_in_bytes = (size_in_bytes + 31) & ~31;
-		Xil_DCacheFlushRange((INTPTR)px_map, size_in_bytes);
+//		size_in_bytes = (size_in_bytes + 31) & ~31;
+//		Xil_DCacheFlushRange((INTPTR)px_map, size_in_bytes);
 		// swap framebuffers (NOTE: LVGL will swap the buffers in the background, so here we can set the LCD framebuffer to the current LVGL buffer, which has been just completed
 		gui_dev.dma_src = (uint32_t)lv_display_get_buf_active(disp_drv)->data;
 		gui_dev.buf_switched = pdFALSE;
-		XScuGic_Enable(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR);
+
+        // 3. Убеждаемся, что семафор пуст
+        xSemaphoreTake(vga_flush_sem, 0);
+
+        // 4. Разрешаем прерывание VGA — теперь железное DMA начнет читать правильный адрес из DDR
+        XScuGic_Enable(&xInterruptController, XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR);
+
+        // 5. БЛОКИРУЕМ поток GUI до тех пор, пока прерывание VGA не отрапортует, что кадр выведен на экран
+        if(xSemaphoreTake(vga_flush_sem, pdMS_TO_TICKS(20)) == pdTRUE) {
+            // Кадр успешно отображен, структуры LVGL не повреждены, можно рендерить следующий
+            lv_display_flush_ready( disp_drv );
+        } else {
+            // Защита от зависания (Таймаут прерывания)
+            lv_display_flush_ready( disp_drv );
+        }
+
 		// wait for VSYNC to avoid tearing
 //		while(!gui_dev.buf_switched) {};// vTaskDelay(1);
 //		update_dual_buf(disp_drv, area, px_map);

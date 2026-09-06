@@ -53,4 +53,9 @@ set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS25} [get_ports btn_band6]
 set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS25} [get_ports btn_band7]
 set_property -dict {PACKAGE_PIN J14 IOSTANDARD LVCMOS25} [get_ports btn_band8]
 
+set_property -dict {PACKAGE_PIN J18 IOSTANDARD LVDS_25} [get_ports lvds_clk_p]
+set_property -dict {PACKAGE_PIN H18 IOSTANDARD LVDS_25} [get_ports lvds_clk_n]
+set_property -dict {PACKAGE_PIN K19 IOSTANDARD LVDS_25} [get_ports lvds_data_p]
+set_property -dict {PACKAGE_PIN J19 IOSTANDARD LVDS_25} [get_ports lvds_data_n]
+
 set_false_path -from [get_clocks clk_fpga_1] -to [get_clocks clk_fpga_1]

@@ -62,6 +62,22 @@ end entity Zedboard_AXI_VGA;
 
 architecture rtl of Zedboard_AXI_VGA is
 
+    attribute X_INTERFACE_INFO : string;
+    attribute X_INTERFACE_PARAMETER : string;
+    
+    attribute X_INTERFACE_INFO of s_axi_aclk: signal is "xilinx.com:signal:clock:1.0 s_axi_aclk CLK";
+    attribute X_INTERFACE_PARAMETER of s_axi_aclk: signal is "ASSOCIATED_BUSIF s_axi, ASSOCIATED_RESET s_axi_aresetn";
+    
+    attribute X_INTERFACE_INFO of s_axi_aresetn: signal is "xilinx.com:signal:reset:1.0 s_axi_aresetn RST";
+    attribute X_INTERFACE_PARAMETER of s_axi_aresetn: signal is "POLARITY ACTIVE_LOW";
+
+    attribute X_INTERFACE_INFO of m_axi_aclk: signal is "xilinx.com:signal:clock:1.0 m_axi_aclk CLK";
+    attribute X_INTERFACE_PARAMETER of m_axi_aclk: signal is "ASSOCIATED_BUSIF m_axi, ASSOCIATED_RESET m_axi_aresetn";
+    
+    attribute X_INTERFACE_INFO of m_axi_aresetn: signal is "xilinx.com:signal:reset:1.0 m_axi_aresetn RST";
+    attribute X_INTERFACE_PARAMETER of m_axi_aresetn: signal is "POLARITY ACTIVE_LOW";
+
+
     -- Константы состояний DMA
     constant IDLE        : std_logic_vector(7 downto 0) := x"01";
     constant ADDR_READY  : std_logic_vector(7 downto 0) := x"02";
@@ -79,15 +95,15 @@ architecture rtl of Zedboard_AXI_VGA is
     signal fifo_ready    : std_logic := '0';
 
     -- AXI Control Registers
-    signal h_cntrl1      : std_logic_vector(31 downto 0) := x"8840053f";
-    signal h_cntrl2      : std_logic_vector(31 downto 0) := x"000A0017";
-    signal v_cntrl1      : std_logic_vector(31 downto 0) := x"06300325";
-    signal v_cntrl2      : std_logic_vector(31 downto 0) := x"0001D003";
-    signal msbs_px_nco   : std_logic_vector(31 downto 0) := x"00000005";
-    signal lsbs_px_nco   : std_logic_vector(31 downto 0) := x"33333333";
-    signal ddr_fbuf_addr : std_logic_vector(31 downto 0) := x"0F000000";
-    signal total_pixels  : std_logic_vector(31 downto 0) := x"400C0000";
-    signal irq_reg       : std_logic_vector(31 downto 0) := (others => '0');
+    signal h_cntrl1      : std_logic_vector(31 downto 0);
+    signal h_cntrl2      : std_logic_vector(31 downto 0);
+    signal v_cntrl1      : std_logic_vector(31 downto 0);
+    signal v_cntrl2      : std_logic_vector(31 downto 0);
+    signal msbs_px_nco   : std_logic_vector(31 downto 0);
+    signal lsbs_px_nco   : std_logic_vector(31 downto 0);
+    signal ddr_fbuf_addr : std_logic_vector(31 downto 0);
+    signal total_pixels  : std_logic_vector(31 downto 0);
+    signal irq_reg       : std_logic_vector(31 downto 0);
 
     -- AXI DMA Master Registers
     signal ddr_address   : std_logic_vector(31 downto 0) := (others => '0');
@@ -95,17 +111,6 @@ architecture rtl of Zedboard_AXI_VGA is
     signal m_axi_rready_int : std_logic := '0';
     signal state_r       : std_logic_vector(7 downto 0) := IDLE;
     signal dma_cnt       : unsigned(22 downto 0) := (others => '0');
-
-    -- Internal AXI Control signals
-    signal up_clk        : std_logic;
-    signal up_wreq       : std_logic;
-    signal up_waddr      : std_logic_vector(13 downto 0);
-    signal up_wdata      : std_logic_vector(31 downto 0);
-    signal up_wack       : std_logic;
-    signal up_rreq       : std_logic;
-    signal up_raddr      : std_logic_vector(13 downto 0);
-    signal up_rdata      : std_logic_vector(31 downto 0);
-    signal up_rack       : std_logic;
 
     -- Internal VGA signals
     signal px_clk        : std_logic;
@@ -135,43 +140,57 @@ architecture rtl of Zedboard_AXI_VGA is
     signal dma_tcnt      : unsigned(24 downto 0);
     signal irq_en        : std_logic;
     signal fifo_wr_en    : std_logic;  -- Промежуточный сигнал для wr_en
-    signal brightness    : std_logic_vector(7 downto 0) := x"20";
+    signal brightness    : std_logic_vector(7 downto 0);
+    signal brightness32  : std_logic_vector(31 downto 0);
     signal fifo_rd_en_comb : std_logic; -- Промежуточный сигнал для чтения из FIFO
-    signal fifo_empty : std_logic;
-
+    signal fifo_empty   : std_logic;
 
     -- Компонент AXI Control Interface
-    component axi_vga_ctrl is
-        port (
-            up_rstn          : in  std_logic;
-            up_clk           : in  std_logic;
-            up_axi_awvalid   : in  std_logic;
-            up_axi_awaddr    : in  std_logic_vector(31 downto 0);
-            up_axi_awready   : out std_logic;
-            up_axi_wvalid    : in  std_logic;
-            up_axi_wdata     : in  std_logic_vector(31 downto 0);
-            up_axi_wstrb     : in  std_logic_vector(3 downto 0);
-            up_axi_wready    : out std_logic;
-            up_axi_bvalid    : out std_logic;
-            up_axi_bresp     : out std_logic_vector(1 downto 0);
-            up_axi_bready    : in  std_logic;
-            up_axi_arvalid   : in  std_logic;
-            up_axi_araddr    : in  std_logic_vector(31 downto 0);
-            up_axi_arready   : out std_logic;
-            up_axi_rvalid    : out std_logic;
-            up_axi_rresp     : out std_logic_vector(1 downto 0);
-            up_axi_rdata     : out std_logic_vector(31 downto 0);
-            up_axi_rready    : in  std_logic;
-            up_wreq          : out std_logic;
-            up_waddr         : out std_logic_vector(13 downto 0);
-            up_wdata         : out std_logic_vector(31 downto 0);
-            up_wack          : in  std_logic;
-            up_rreq          : out std_logic;
-            up_raddr         : out std_logic_vector(13 downto 0);
-            up_rdata         : in  std_logic_vector(31 downto 0);
-            up_rack          : in  std_logic
-        );
-    end component;
+    component axi_vga is
+    generic (
+        -- Ширина адресной шины AXI (64 КБ = 16 бит)
+        C_S_AXI_ADDR_WIDTH : integer := 16;
+        C_S_AXI_DATA_WIDTH : integer := 32
+    );
+    port (
+        -- Глобальные сигналы AXI
+        S_AXI_ACLK    : in  std_logic;
+        S_AXI_ARESETN : in  std_logic;
+        
+        -- Каналы записи адреса и данных (AXI Write)
+        S_AXI_AWADDR  : in  std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
+        S_AXI_AWVALID : in  std_logic;
+        S_AXI_AWREADY : out std_logic;
+        S_AXI_WDATA   : in  std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+        S_AXI_WSTRB   : in  std_logic_vector((C_S_AXI_DATA_WIDTH/8)-1 downto 0);
+        S_AXI_WVALID  : in  std_logic;
+        S_AXI_WREADY  : out std_logic;
+        S_AXI_BRESP   : out std_logic_vector(1 downto 0);
+        S_AXI_BVALID  : out std_logic;
+        S_AXI_BREADY  : in  std_logic;
+        
+        -- Каналы чтения адреса и данных (AXI Read)
+        S_AXI_ARADDR  : in  std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
+        S_AXI_ARVALID : in  std_logic;
+        S_AXI_ARREADY : out std_logic;
+        S_AXI_RDATA   : out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+        S_AXI_RRESP   : out std_logic_vector(1 downto 0);
+        S_AXI_RVALID  : out std_logic;
+        S_AXI_RREADY  : in  std_logic;
+        
+        -- Выходные сигналы для внутренней VGA-логики (генератора таймингов)
+        o_h_ctrl1        : out std_logic_vector(31 downto 0);
+        o_h_ctrl2        : out std_logic_vector(31 downto 0);
+        o_v_ctrl1        : out std_logic_vector(31 downto 0);
+        o_v_ctrl2        : out std_logic_vector(31 downto 0);
+        o_px_nco_lsbs    : out std_logic_vector(31 downto 0);
+        o_px_nco_msbs    : out std_logic_vector(31 downto 0);
+        o_vga_fbuf_addr  : out std_logic_vector(31 downto 0);
+        o_total_pixels   : out std_logic_vector(31 downto 0);
+        o_irq_reg        : out std_logic_vector(31 downto 0);
+        o_brightness     : out std_logic_vector(31 downto 0)
+    );
+    end component axi_vga;
 
     -- Компонент XPM FIFO Async
     component xpm_fifo_async is
@@ -261,7 +280,6 @@ begin
 
     -- Присваиваем внутренние сигналы выходным портам
     m_axi_rready <= m_axi_rready_int;
-    up_clk <= s_axi_aclk;
     
     -- Формируем сигнал записи в FIFO
     fifo_wr_en <= m_axi_rvalid and m_axi_rready_int;
@@ -360,50 +378,6 @@ begin
     end if;
 end process;
 
-
-    -- AXI Control Interface Processing
-    process(up_clk)
-    begin
-        if rising_edge(up_clk) then
-            up_wack <= up_wreq;
-            up_rack <= up_rreq;
-
-            -- Write operations
-            if (up_wreq = '1') then
-                case up_waddr(9 downto 0) is
-                    when "0000000000" => h_cntrl1 <= up_wdata;
-                    when "0000000001" => h_cntrl2 <= up_wdata;
-                    when "0000000010" => v_cntrl1 <= up_wdata;
-                    when "0000000011" => v_cntrl2 <= up_wdata;
-                    when "0000000100" => lsbs_px_nco <= up_wdata;
-                    when "0000000101" => msbs_px_nco <= up_wdata;
-                    when "0000000110" => ddr_fbuf_addr <= up_wdata;
-                    when "0000000111" => total_pixels <= up_wdata;
-                    when "0000001000" => irq_reg <= up_wdata;
-                    when "0000001001" => brightness <= up_wdata(7 downto 0);
-                    when others => null;
-                end case;
-            end if;
-
-            -- Read operations
-            if (up_rreq = '1') then
-                case up_raddr(9 downto 0) is
-                    when "0000000000" => up_rdata <= h_cntrl1;
-                    when "0000000001" => up_rdata <= h_cntrl2;
-                    when "0000000010" => up_rdata <= v_cntrl1;
-                    when "0000000011" => up_rdata <= v_cntrl2;
-                    when "0000000100" => up_rdata <= lsbs_px_nco;
-                    when "0000000101" => up_rdata <= msbs_px_nco;
-                    when "0000000110" => up_rdata <= ddr_fbuf_addr;
-                    when "0000000111" => up_rdata <= total_pixels;
-                    when "0000001000" => up_rdata <= irq_reg;
-                    when "0000001001" => up_rdata <= x"000000" & brightness;
-                    when others       => up_rdata <= x"DEADDEAD";
-                end case;
-            end if;
-        end if;
-    end process;
-
     -- AXI Master DMA Processing
     process(m_axi_aclk)
     begin
@@ -465,36 +439,57 @@ end process;
         );
 
     -- Instantiate AXI Control Interface
-    i_axi_vga_ctrl : axi_vga_ctrl
-        port map (
-            up_rstn          => s_axi_aresetn,
-            up_clk           => up_clk,
-            up_axi_awvalid   => s_axi_awvalid,
-            up_axi_awaddr    => s_axi_awaddr,
-            up_axi_awready   => s_axi_awready,
-            up_axi_wvalid    => s_axi_wvalid,
-            up_axi_wdata     => s_axi_wdata,
-            up_axi_wstrb     => s_axi_wstrb,
-            up_axi_wready    => s_axi_wready,
-            up_axi_bvalid    => s_axi_bvalid,
-            up_axi_bresp     => s_axi_bresp,
-            up_axi_bready    => s_axi_bready,
-            up_axi_arvalid   => s_axi_arvalid,
-            up_axi_araddr    => s_axi_araddr,
-            up_axi_arready   => s_axi_arready,
-            up_axi_rvalid    => s_axi_rvalid,
-            up_axi_rresp     => s_axi_rresp,
-            up_axi_rdata     => s_axi_rdata,
-            up_axi_rready    => s_axi_rready,
-            up_wreq          => up_wreq,
-            up_waddr         => up_waddr,
-            up_wdata         => up_wdata,
-            up_wack          => up_wack,
-            up_rreq          => up_rreq,
-            up_raddr         => up_raddr,
-            up_rdata         => up_rdata,
-            up_rack          => up_rack
-        );
+    i_axi_vga_ctrl : axi_vga
+    generic map(
+        C_S_AXI_ADDR_WIDTH => 16,
+        C_S_AXI_DATA_WIDTH => 32
+    )
+    port map (
+        -- Глобальные сигналы AXI
+        S_AXI_ACLK    => s_axi_aclk,
+        S_AXI_ARESETN => s_axi_aresetn,
+        
+        -- Входные адреса: обрезаем внешние 32-битные шины до 16 бит с помощью явных чисел
+        S_AXI_AWADDR  => s_axi_awaddr(15 downto 0),
+        S_AXI_AWVALID => s_axi_awvalid,
+        S_AXI_AWREADY => s_axi_awready,
+        
+        -- Данные и стробы: передаем целиком (они уже 32 и 4 бита на верхнем уровне)
+        S_AXI_WDATA   => s_axi_wdata,
+        S_AXI_WSTRB   => s_axi_wstrb,
+        S_AXI_WVALID  => s_axi_wvalid,
+        S_AXI_WREADY  => s_axi_wready,
+        
+        -- Ответ записи (убран срез, так как порт выходной)
+        S_AXI_BRESP   => s_axi_bresp,
+        S_AXI_BVALID  => s_axi_bvalid,
+        S_AXI_BREADY  => s_axi_bready,
+        
+        -- Входной адрес чтения: обрезаем до 16 бит
+        S_AXI_ARADDR  => s_axi_araddr(15 downto 0),
+        S_AXI_ARVALID => s_axi_arvalid,
+        S_AXI_ARREADY => s_axi_arready,
+        
+        -- Канал чтения данных (убраны срезы с выходных сигналов модуля)
+        S_AXI_RDATA   => s_axi_rdata,
+        S_AXI_RRESP   => s_axi_rresp,
+        S_AXI_RVALID  => s_axi_rvalid,
+        S_AXI_RREADY  => s_axi_rready,
+        
+        -- Подключение внутренних регистров к внутренним сигналам верхнего уровня
+        o_h_ctrl1        => h_cntrl1,
+        o_h_ctrl2        => h_cntrl2,
+        o_v_ctrl1        => v_cntrl1,
+        o_v_ctrl2        => v_cntrl2,
+        o_px_nco_lsbs    => lsbs_px_nco,
+        o_px_nco_msbs    => msbs_px_nco,
+        o_vga_fbuf_addr  => ddr_fbuf_addr,
+        o_total_pixels   => total_pixels,
+        o_irq_reg        => irq_reg,
+        o_brightness     => brightness32
+    );
+    
+    brightness <= brightness32(7 downto 0);
 
     fifo_rd_en_comb <= vgamem_rd_en when (fifo_ready = '1' and dma_ready = '1' and rst_ready = '1') else '0';
     -- Instantiate XPM FIFO Async

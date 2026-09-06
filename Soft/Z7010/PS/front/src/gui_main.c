@@ -66,10 +66,14 @@ char str_mode[] = "USB";
 double ifrate = 0.256e6;
 
 uint32_t freq = 14074000;
+extern uint32_t *lv_buf_1;
+extern uint32_t *lv_buf_2;
 
-extern uint32_t lv_buf_1[LCD_WIDTH * LCD_HEIGHT] __attribute__((aligned(32)));
-extern uint32_t lv_buf_2[LCD_WIDTH * LCD_HEIGHT] __attribute__((aligned(32)));
-
+static uint32_t my_tick_get_ms(void) {
+    // portTICK_PERIOD_MS при 100 Гц равен 10.
+    // Функция вернет точное время в мс с шагом в 10 мс без накопления системной ошибки.
+    return xTaskGetTickCount() * portTICK_PERIOD_MS;
+}
 
 static void process_gui_msg_q( lv_timer_t *timer ) {
 
@@ -83,24 +87,30 @@ void gui_thread(void *p)
 
 	/* initialize LVGL framework */
 	lv_init();
+	// !!! РЕГИСТРИРУЕМ КОРРЕКТНОЕ ВРЕМЯ !!!
+	lv_tick_set_cb(my_tick_get_ms);
 
 	display = lv_display_create(params->h_px, params->v_ln);
-	lv_display_set_buffers(display, (void*)&lv_buf_1[0], (void*)&lv_buf_2[0],
-				LV_HOR_RES_MAX * LV_VER_RES_MAX * lv_color_format_get_size(lv_display_get_color_format(display)),
-				LV_DISPLAY_RENDER_MODE_DIRECT);
+	lv_display_set_buffers(display, (void*)lv_buf_1, (void*)lv_buf_2,
+	            LV_HOR_RES_MAX * LV_VER_RES_MAX * sizeof(uint32_t),
+	            LV_DISPLAY_RENDER_MODE_DIRECT);
+
 	lv_display_set_flush_cb(display, vga_disp_flush);
 
 	gui_start(display);
 	lv_timer_create((lv_timer_cb_t)process_gui_msg_q, 20, NULL);	// Check for GUI thread messages every 20ms
 
 	while(1) {
-		lv_task_handler();
-		vTaskDelay(pdMS_TO_TICKS(10));
-        // Вручную говорим LVGL, что прошло ровно 10 миллисекунд
-        lv_tick_inc(10);
+		lv_timer_handler(); // Используем имя v9 API вместо старого lv_task_handler
+
+        // Так как configTICK_RATE_HZ = 100, задержка на 1 тик составит ровно 10 мс
+		vTaskDelay(1);
+
+        // Инкремент lv_tick_inc(10) УДАЛЕН. LVGL теперь сам берет время из my_tick_get_ms
 
 		static uint32_t rssi_counter = 0;
-	    if(++rssi_counter >= 50) { // Каждые 500 мс (50 итераций по 10 мс)
+	    if(++rssi_counter >= 10)
+	    { // Каждые 500 мс
 	        rssi_counter = 0;
 	        int randomNum = rand() % 100;
 	        gui_set_rssi((float)randomNum - 100);

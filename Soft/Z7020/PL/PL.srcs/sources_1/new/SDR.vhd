@@ -3,6 +3,8 @@
 -- write
 -- 0x00__   HW
 -- 0x0000  Global Reset
+-- 0x0002  ADC1 phase = 0x0000, ADC0 gain = 0x7FFF
+-- 0x0003  ADC1 dc offset, ADC0 dc offset
 -- 0x01__   RXA
 -- 0x0100  DDS NR
 -- 0x0101  MODULATION
@@ -112,9 +114,6 @@ entity SDR is
         m_axis_ser0_tdata : out STD_LOGIC_VECTOR (31 downto 0);
         m_axis_ser0_tvalid : out STD_LOGIC;
         m_axis_ser0_tlast : out STD_LOGIC;
-        m_axis_ser1_tdata : out STD_LOGIC_VECTOR (31 downto 0);
-        m_axis_ser1_tvalid : out STD_LOGIC;    
-        m_axis_ser1_tlast : out STD_LOGIC; 
         TX_ON : out std_logic;
         TX_FAIL : in std_logic;
 		aclk_122 : out std_logic
@@ -141,6 +140,20 @@ architecture Behavioral of SDR is
         aclk_out : out STD_LOGIC
     );
     end COMPONENT adc_2ch;
+    
+    component adc_corr is
+        Port (
+            aclk : in std_logic;
+            aresetn : in std_logic;
+            adc0_in : in std_logic_vector(15 downto 0);
+            adc1_in : in std_logic_vector(15 downto 0);
+            cfg_addra : in STD_LOGIC_VECTOR (0 downto 0);
+            cfg_dina : in STD_LOGIC_VECTOR (31 downto 0);
+            cfg_wr : in STD_LOGIC;
+            adc0_out    : out std_logic_vector(15 downto 0); 
+            adc1_out    : out std_logic_vector(15 downto 0)
+        );
+    end component adc_corr;
     
     component RXA is
     Port ( 
@@ -250,6 +263,8 @@ architecture Behavioral of SDR is
     signal axis_wb_tvalid : STD_LOGIC;
     signal audio_clk : STD_LOGIC;
     signal adc1_inv : STD_LOGIC  := '1';
+    signal adc_cfg_wr : std_logic := '0';
+    signal adc_corr_0, adc_corr_1 : STD_LOGIC_VECTOR (15 downto 0);
 
     ATTRIBUTE X_INTERFACE_INFO : string;
     ATTRIBUTE X_INTERFACE_INFO OF bram_addra: SIGNAL IS "xilinx.com:interface:bram:1.0 BRAM_PORTA ADDR";
@@ -283,8 +298,6 @@ begin
                   HW_cfg_douta;                                  
 
     HW_cfg_douta <= x"0000000" & CAT_DTR & CAT_RTC & CW_KEY & PTT;   
-
-    m_axis_ser1_tdata <= (others => '0');  
     
 cmd_process : process (aclk) is
 begin 
@@ -293,6 +306,7 @@ begin
         RXA_wr <= '0';
         TXA_wr <= '0'; 
         rst_sig <= '0';  
+        adc_cfg_wr <= '0';
         if bram_ena = '1' then
             cfg_addr_r <= cfg_addra;  
             if bram_wea = x"F" then 
@@ -300,6 +314,8 @@ begin
                     HW_wr <= '1';  
                     if cfg_addra(7 downto 0) = x"00" then
                         rst_sig <= '1';
+                    elsif cfg_addra(7 downto 0) = x"02" or cfg_addra(7 downto 0) = x"03" then
+                        adc_cfg_wr <= '1';
                     end if;  
                 elsif cfg_addra(10 downto 8) = "001" then
                     RXA_wr <= '1';
@@ -335,13 +351,26 @@ adc_0 : adc_2ch
         aclk_out => aclk
     );
     
+    u_adc_corr : adc_corr
+    Port map (
+        aclk => aclk,
+        aresetn => aresetn,
+        adc0_in => axis_adc0_tdata,
+        adc1_in => axis_adc1_tdata,
+        cfg_addra => cfg_addra(0 downto 0),
+        cfg_dina => bram_dina,
+        cfg_wr => adc_cfg_wr,
+        adc0_out => adc_corr_0,
+        adc1_out => adc_corr_1
+    );
+    
 RXA_0: RXA
     port map ( 
         aclk => aclk,
         aresetn => aresetn,
-        s_axis_adc0_tdata => axis_adc0_tdata,
+        s_axis_adc0_tdata => adc_corr_0,
         s_axis_adc0_tvalid => '1',
-        s_axis_adc1_tdata => axis_adc1_tdata,
+        s_axis_adc1_tdata => adc_corr_1,
         s_axis_adc1_tvalid => '1',
         m_axis_wb_tdata => axis_wb_tdata,
         m_axis_wb_tvalid => axis_wb_tvalid,
@@ -366,8 +395,6 @@ RXA_0: RXA
     m_axis_wb_tvalid <= axis_wb_tvalid;
     m_axis_ser0_tdata <= axis_wb_tdata;
     m_axis_ser0_tvalid <= axis_wb_tvalid;
-    m_axis_ser1_tvalid <= axis_wb_tvalid;
-
     
 swr_0 : swr
     port map ( 
@@ -405,9 +432,7 @@ TXA_0 : TXA
         aclk => aclk
     );
     
-    m_axis_ser0_tlast <= '1';
-    m_axis_ser1_tlast <= '1';
-    
+    m_axis_ser0_tlast <= '1';   
     s_axis_audioR_tdata <= s_axis_audioL_tdata;
     
 audio_0 : i2s

@@ -243,7 +243,7 @@ void hw_Start(void)
 
 	SendToCore1(SET_TXA_PS_RESTORE_CORR, sizeof(s_eeprom_iqc), eeprom_get_iqc(0));
 
-	//	fpga_TXA_ResamplerGain(9);
+	hw_SetPTT(0, TX_INPUT);
 }
 
 void hw_iic_write(uint16_t SlaveAddr, uint8_t* data, size_t len)

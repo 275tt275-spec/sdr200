@@ -1,4 +1,7 @@
-﻿#include "lvgl.h"
+﻿#include <stdio.h>
+#include <math.h>
+
+#include "lvgl.h"
 #include "gui_meter.h"
 #include "gui_parts.h"
 
@@ -9,7 +12,6 @@ static lv_style_t style_indic;
 static lv_style_t style_label;
 static lv_obj_t* bar;
 static lv_obj_t* label1, *label2;
-static char str[32];
 
 void gui_meter_init(lv_obj_t* parent, int32_t x, int32_t y, int32_t w, int32_t h)
 {
@@ -72,41 +74,59 @@ void gui_meter_init(lv_obj_t* parent, int32_t x, int32_t y, int32_t w, int32_t h
 
 void gui_meter_update(void)
 {
+    // Локальный буфер с запасом. Категорически избегаем общих/глобальных str!
+    char local_str[64];
+
     if (gui_dev.isTx == 0)
     {
-        int barValue = 110 + gui_dev.RXArssi;
+    	int rssi_int = lround(gui_dev.RXArssi);
+
+        int barValue = 110 + rssi_int;
         if (barValue < 0) barValue = 0;
         if (barValue > 100) barValue = 100;
         lv_bar_set_value(bar, barValue, LV_ANIM_OFF);
 
-        if (gui_dev.RXArssi < -121 + 3) sprintf(str, "S: 1");
-        else if (gui_dev.RXArssi < -115 + 3) sprintf(str, "S: 2");
-        else if (gui_dev.RXArssi < -109 + 3) sprintf(str, "S: 3");
-        else if (gui_dev.RXArssi < -103 + 3) sprintf(str, "S: 4");
-        else if (gui_dev.RXArssi < -97 + 3) sprintf(str, "S: 5");
-        else if (gui_dev.RXArssi < -91 + 3) sprintf(str, "S: 6");
-        else if (gui_dev.RXArssi < -85 + 3) sprintf(str, "S: 7");
-        else if (gui_dev.RXArssi < -79 + 3) sprintf(str, "S: 8");
-        else if (gui_dev.RXArssi < -73 + 3) sprintf(str, "S: 9");
-        else if (gui_dev.RXArssi < -63 + 5) sprintf(str, "S: 9#ff0000 +10#");
-        else if (gui_dev.RXArssi < -53 + 5) sprintf(str, "S: 9#ff0000 +20#");
-        else if (gui_dev.RXArssi < -43 + 5) sprintf(str, "S: 9#ff0000 +30#");
-        else if (gui_dev.RXArssi < -33 + 5) sprintf(str, "S: 9#ff0000 +40#");
-        else if (gui_dev.RXArssi < -23 + 5) sprintf(str, "S: 9#ff0000 +50#");
-        else sprintf(str, "S: 9#ff0000 +60#");
+        // Используем snprintf вместо sprintf для защиты от переполнения
+        if (rssi_int < -121 + 3)       snprintf(local_str, sizeof(local_str), "S: 1");
+        else if (rssi_int < -115 + 3)  snprintf(local_str, sizeof(local_str), "S: 2");
+        else if (rssi_int < -109 + 3)  snprintf(local_str, sizeof(local_str), "S: 3");
+        else if (rssi_int < -103 + 3)  snprintf(local_str, sizeof(local_str), "S: 4");
+        else if (rssi_int < -97 + 3)   snprintf(local_str, sizeof(local_str), "S: 5");
+        else if (rssi_int < -91 + 3)   snprintf(local_str, sizeof(local_str), "S: 6");
+        else if (rssi_int < -85 + 3)   snprintf(local_str, sizeof(local_str), "S: 7");
+        else if (rssi_int < -79 + 3)   snprintf(local_str, sizeof(local_str), "S: 8");
+        else if (rssi_int < -73 + 3)   snprintf(local_str, sizeof(local_str), "S: 9");
+        else if (rssi_int < -63 + 5)   snprintf(local_str, sizeof(local_str), "S: 9#ff0000 +10#");
+        else if (rssi_int < -53 + 5)   snprintf(local_str, sizeof(local_str), "S: 9#ff0000 +20#");
+        else if (rssi_int < -43 + 5)   snprintf(local_str, sizeof(local_str), "S: 9#ff0000 +30#");
+        else if (rssi_int < -33 + 5)   snprintf(local_str, sizeof(local_str), "S: 9#ff0000 +40#");
+        else if (rssi_int < -23 + 5)   snprintf(local_str, sizeof(local_str), "S: 9#ff0000 +50#");
+        else                                  snprintf(local_str, sizeof(local_str), "S: 9#ff0000 +60#");
 
-        lv_label_set_text(label1, str);
-        sprintf(str, "RSSI: %.0f dBm", gui_dev.RXArssi);
-        lv_label_set_text(label2, str);
+        lv_label_set_text(label1, local_str);
+
+        snprintf(local_str, sizeof(local_str), "RSSI: %d dBm", rssi_int);
+        lv_label_set_text(label2, local_str);
     }
     else
     {
-        if (gui_dev.TXAswr < 1.4) sprintf(str, "SWR: #00ff00 %.2f#", gui_dev.TXAswr);
-        else if (gui_dev.TXAswr < 2.0) sprintf(str, "SWR: #ffff00 %.2f#", gui_dev.TXAswr);
-        else sprintf(str, "SWR: #ff0000 %.2f#", gui_dev.TXAswr);
-        lv_label_set_text(label1, str);
+        // Убираем %.2f float. Раскладываем SWR на целую часть и сотые доли
+        int swr_main = (int)gui_dev.TXAswr;
+        int swr_frac = (int)((gui_dev.TXAswr - swr_main) * 100.0f);
+        if(swr_frac < 0) swr_frac = -swr_frac;
 
-        sprintf(str, "PWR: %.0f dBm", gui_dev.TXApwr);
-        lv_label_set_text(label2, str);
+        if (gui_dev.TXAswr < 1.4f) {
+            snprintf(local_str, sizeof(local_str), "SWR: #00ff00 %d.%02d#", swr_main, swr_frac);
+        } else if (gui_dev.TXAswr < 2.0f) {
+            snprintf(local_str, sizeof(local_str), "SWR: #ffff00 %d.%02d#", swr_main, swr_frac);
+        } else {
+            snprintf(local_str, sizeof(local_str), "SWR: #ff0000 %d.%02d#", swr_main, swr_frac);
+        }
+        lv_label_set_text(label1, local_str);
+
+        // Убираем %.0f float для PWR
+        int pwr_int = lround(gui_dev.TXApwr);
+        snprintf(local_str, sizeof(local_str), "PWR: %d dBm", pwr_int);
+        lv_label_set_text(label2, local_str);
     }
 }
