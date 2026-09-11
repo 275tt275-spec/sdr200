@@ -11,13 +11,12 @@ entity hf_dpd is
         s_axis_adc_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
         -- Выход I/Q после линеаризации
         m_axis_iq_tdata   : out STD_LOGIC_VECTOR (31 downto 0);
-        -- Данные с ЦАП
-        s_axis_dac_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
         
         -- Управление через конфигурационный интерфейс
         s_axis_cfg_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
         s_axis_cfg_tdest  : in  STD_LOGIC_VECTOR (4 downto 0);
         s_axis_cfg_tvalid : in  STD_LOGIC;
+        txa_on            : in  STD_LOGIC;
         
         -- DDS для DDC
         s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
@@ -32,28 +31,68 @@ entity hf_dpd is
 end hf_dpd;
 
 architecture Structural of hf_dpd is
+
+    component dpd_fb is
+        Port (
+            ref_i : in  STD_LOGIC_VECTOR (15 downto 0);
+            ref_q : in  STD_LOGIC_VECTOR (15 downto 0);
+            adc_fb : in  STD_LOGIC_VECTOR (15 downto 0);
+            s_axis_dds_tdata : in STD_LOGIC_VECTOR (31 downto 0);
+            fb_out_i : out  STD_LOGIC_VECTOR (15 downto 0);
+            fb_out_q : out  STD_LOGIC_VECTOR (15 downto 0);
+            txa_on : in  STD_LOGIC;
+            cfg_clr : in  STD_LOGIC;
+            phase_slow : in  STD_LOGIC;
+            i_corr_amp : in std_logic_vector(17 downto 0);
+            q_corr_amp : in std_logic_vector(17 downto 0);
+            s_axis_cfg_tdata : in STD_LOGIC_VECTOR (7 downto 0);
+            s_axis_cfg_tdest : in STD_LOGIC_VECTOR (1 downto 0);
+            s_axis_cfg_tvalid : in STD_LOGIC;
+            aclk : in  STD_LOGIC
+        );
+    end component dpd_fb;
+
+	component adc2zeroif
+    Port ( 
+        clk : in  STD_LOGIC;
+        ce : in  STD_LOGIC;
+        clr : in  STD_LOGIC;
+        din : in  STD_LOGIC_VECTOR (15 downto 0);
+        cosine : in  STD_LOGIC_VECTOR (15 downto 0);
+        sine : in  STD_LOGIC_VECTOR (15 downto 0);
+        i_amp : in  STD_LOGIC_VECTOR (17 downto 0);
+        q_amp : in  STD_LOGIC_VECTOR (17 downto 0);
+        i_out : out  STD_LOGIC_VECTOR (15 downto 0);
+        q_out : out  STD_LOGIC_VECTOR (15 downto 0)
+    );
+	end component;
     
     -- ========================================================================
     -- 1. ВНУТРЕННИЕ СИГНАЛЫ (решение проблемы с чтением out портов)
     -- ========================================================================
     
     -- Сигналы для DDC
-    signal bb_i, bb_q           : signed(15 downto 0);
-    signal bb_valid             : STD_LOGIC;
-    signal ref_i, ref_q         : signed(15 downto 0);
-    signal ref_valid            : STD_LOGIC;
+    signal bb_i_sig, bb_q_sig   : signed(15 downto 0);
+    signal ref_i_sig, ref_q_sig : signed(15 downto 0);
+    signal ref_i_reg, ref_q_reg : std_logic_vector(15 downto 0);
     signal ddc_ovf              : std_logic_vector(1 downto 0);
     signal error_i, error_q     : signed(31 downto 0) := (others => '0');
     signal error_valid          : STD_LOGIC := '0';
+    signal sine_dds, cosine_dds : std_logic_vector(15 downto 0);
+    signal i_corr_amp, q_corr_amp : std_logic_vector(17 downto 0) := x"7fff" & "00";
+    signal bb_i, bb_q           : std_logic_vector(15 downto 0);
+
     
     -- Сигналы управления
-    signal cfg_delay_ticks      : std_logic_vector(7 downto 0) := x"0c";
+    signal cfg_delay_ticks      : std_logic_vector(7 downto 0) := x"01";
     signal cfg_train_en         : STD_LOGIC := '0';
     signal cfg_hold_coeffs      : STD_LOGIC := '0';
     signal cfg_bypass           : STD_LOGIC := '1';
     signal cfg_address          : INTEGER range 0 to 31;
     signal cfg_data             : STD_LOGIC_VECTOR(31 downto 0);
-    signal cfg_we               : STD_LOGIC;
+    signal cfg_clr              : STD_LOGIC := '0';
+    signal cfg_phase_slow       : STD_LOGIC := '0';
+    signal dpd_fb_cfg_tvalid    : STD_LOGIC := '0';
     
     -- Сигналы для DPD ядра
     signal dpd_i_out, dpd_q_out : signed(15 downto 0);
@@ -61,6 +100,7 @@ architecture Structural of hf_dpd is
     
     -- Буфер для входных данных
     signal iq_i, iq_q           : signed(23 downto 0);
+    signal iq25_i, iq25_q       : signed(24 downto 0);
     
 begin
     
@@ -82,35 +122,43 @@ begin
         end if;
     end process;
     
-    DDC_Inst_ref: entity work.hf_dpd_ddc_block
+    cosine_dds <= s_axis_dds_tdata(15 downto 0);
+    sine_dds <= s_axis_dds_tdata(31 downto 16);	
+    iq25_i <= resize(iq_i, 25) + to_signed(128, 25);
+    iq25_q <= resize(iq_q, 25) + to_signed(128, 25);
+    
+    ref_i_sig <= iq25_i(23 downto 8);
+    ref_q_sig <= iq25_q(23 downto 8);
+    ref_i_reg <= std_logic_vector(ref_i_sig);
+    ref_q_reg <= std_logic_vector(ref_q_sig);
+    
+inst_dpd_fb : dpd_fb
     Port map (
-        aclk              => aclk,
-        aresetn           => aresetn,
-        s_axis_adc_tdata  => s_axis_dac_tdata,
-        s_axis_dds_tdata  => s_axis_dds_tdata,
-        m_axis_bb_i       => ref_i,
-        m_axis_bb_q       => ref_q,
-        m_axis_bb_valid   => ref_valid,
-        ovr               => ddc_ovf(0)
+        ref_i            => ref_i_reg,
+        ref_q            => ref_q_reg,
+        adc_fb           => s_axis_adc_tdata,
+        s_axis_dds_tdata => s_axis_dds_tdata,
+        fb_out_i         => bb_i,
+        fb_out_q         => bb_q,
+        txa_on           => txa_on,
+        cfg_clr          => cfg_clr,
+        phase_slow       => cfg_phase_slow,
+        i_corr_amp       => i_corr_amp,
+        q_corr_amp       => q_corr_amp,
+        s_axis_cfg_tdata => s_axis_cfg_tdata(7 downto 0),
+        s_axis_cfg_tdest => s_axis_cfg_tdest(1 downto 0),
+        s_axis_cfg_tvalid => dpd_fb_cfg_tvalid,
+        aclk             => aclk
     );
-
-    DDC_Inst_fb: entity work.hf_dpd_ddc_block
-    Port map (
-        aclk              => aclk,
-        aresetn           => aresetn,
-        s_axis_adc_tdata  => s_axis_adc_tdata,
-        s_axis_dds_tdata  => s_axis_dds_tdata,
-        m_axis_bb_i       => bb_i,
-        m_axis_bb_q       => bb_q,
-        m_axis_bb_valid   => bb_valid,
-        ovr               => ddc_ovf(1)
-    );
+    
+    bb_i_sig <= signed(bb_i);
+    bb_q_sig <= signed(bb_q);  
     
     DPD_Error_Inst: entity work.dpd_align_and_error_top
     Generic map (
         DATA_WIDTH   => 16,
         ADDR_WIDTH   => 8,    -- 2^8 = 256 тактов максимальной задержки для RAM
-        ALPHA_SHIFT  => 8     -- Коэффициент сглаживания фильтра (1/256)
+        ALPHA_SHIFT  => 2     -- Коэффициент сглаживания фильтра (1/256)
     )
     Port map (
         aclk                 => aclk,
@@ -118,12 +166,12 @@ begin
         cfg_delay_ticks      => cfg_delay_ticks,
         cfg_train_en         => cfg_train_en,
         cfg_hold_coeffs      => cfg_hold_coeffs,
-        s_axis_ref_tdata_i   => ref_i,
-        s_axis_ref_tdata_q   => ref_q,
-        s_axis_ref_tvalid    => ref_valid,
-        s_axis_fb_tdata_i    => bb_i,
-        s_axis_fb_tdata_q    => bb_q,
-        s_axis_fb_tvalid     => bb_valid,
+        s_axis_ref_tdata_i   => ref_i_sig,
+        s_axis_ref_tdata_q   => ref_q_sig,
+        s_axis_ref_tvalid    => '1',
+        s_axis_fb_tdata_i    => bb_i_sig,
+        s_axis_fb_tdata_q    => bb_q_sig,
+        s_axis_fb_tvalid     => '1',
         m_axis_err_i         => error_i,
         m_axis_err_q         => error_q,
         m_axis_err_valid     => error_valid
@@ -152,9 +200,9 @@ begin
             m_axis_iq_q       => dpd_q_out,
             
             -- Сигнал обратной связи
-            s_axis_fb_i       => bb_i,
-            s_axis_fb_q       => bb_q,
-            s_axis_fb_valid   => bb_valid,
+            s_axis_fb_i       => bb_i_sig,
+            s_axis_fb_q       => bb_q_sig,
+            s_axis_fb_valid   => '1',
             
             -- Сигнал ошибки
             error_i           => error_i,
@@ -200,6 +248,8 @@ begin
     -- ========================================================================
     -- 7. БЛОК УПРАВЛЕНИЯ КОНФИГУРАЦИЕЙ
     -- ========================================================================    
+    dpd_fb_cfg_tvalid <= s_axis_cfg_tvalid when s_axis_cfg_tdest(4) = '1' else '0'; 
+    
     process(aclk)
     begin
         if rising_edge(aclk) then
@@ -209,7 +259,6 @@ begin
                 cfg_bypass <= '1';
                 cfg_address <= 0;
                 cfg_data <= (others => '0');
-                cfg_we <= '0';
                 m_cfg_dout <= (others => '0');
             else
                 m_cfg_dout(0) <= dpd_ovf;
@@ -217,16 +266,18 @@ begin
                 m_cfg_dout(2) <= cfg_hold_coeffs;
                 m_cfg_dout(3 downto 2) <= ddc_ovf;
                 
-                if s_axis_cfg_tvalid = '1' then
+                if s_axis_cfg_tvalid = '1' then                
                     case to_integer(unsigned(s_axis_cfg_tdest)) is
                         when 0 => -- Адрес 0: Управление
                             cfg_train_en <= s_axis_cfg_tdata(0);
                             cfg_hold_coeffs <= s_axis_cfg_tdata(1);
-                            cfg_bypass <= s_axis_cfg_tdata(2);
-                            cfg_we <= '1';
-                            
+                            cfg_bypass <= s_axis_cfg_tdata(2);                            
                         when 1 => 
                             cfg_delay_ticks <= s_axis_cfg_tdata(7 downto 0);   
+                        when 7 => 
+				            i_corr_amp <= s_axis_cfg_tdata(17 downto 0);
+			            when 8 =>
+				            q_corr_amp <= s_axis_cfg_tdata(17 downto 0);
       
                         when others =>
                             

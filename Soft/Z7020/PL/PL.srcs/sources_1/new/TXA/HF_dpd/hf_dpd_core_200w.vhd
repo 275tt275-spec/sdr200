@@ -3,9 +3,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use IEEE.MATH_REAL.ALL;
 
-use std.textio.all;
-use ieee.std_logic_textio.all;
-
 entity hf_dpd_core_200w is
     Generic (
         MEMORY_DEPTH    : integer := 3;
@@ -52,8 +49,13 @@ architecture Behavioral of hf_dpd_core_200w is
     type coeff_pair_array_t is array (0 to MEMORY_DEPTH-1) of coeff_pair_t;
     type mult_result_t is array (0 to MEMORY_DEPTH-1) of signed(31 downto 0);
     
+    -- Êîíâåéåğ çàäåğæêè àäğåñîâ ÷òåíèÿ äëÿ ñèíõğîíèçàöèè ñ áëîêîì çàïèñè (íà 32 òàêòà)
+    type addr_delay_pipeline_t is array (0 to 31) of integer range 0 to 255;
+    type addr_delay_matrix_t is array (0 to MEMORY_DEPTH-1) of addr_delay_pipeline_t;
+    signal raddr_pipeline : addr_delay_matrix_t := (others => (others => 0));
+    
 -- ========================================================================
--- 2. ÔÓÍÊÖÈÈ ÈÍÈÖÈÀËÈÇÀÖÈÈ (ÅÙÅ ÓÌÅÍÜØÅÍÍÛÅ ÊÎİÔÔÈÖÈÅÍÒÛ)
+-- 2. ÔÓÍÊÖÈÈ ÈÍÈÖÈÀËÈÇÀÖÈÈ
 -- ========================================================================
 
     function init_lut_real return lut_array_t is
@@ -61,7 +63,7 @@ architecture Behavioral of hf_dpd_core_200w is
     begin
         for m in 0 to MEMORY_DEPTH-1 loop
             for addr in 0 to (2**LUT_ADDR_WIDTH)-1 loop
-                result(m)(addr) := to_signed(410, COEFF_WIDTH);  -- Áûëî 410! Óìåíüøèëè â 10 ğàç
+                result(m)(addr) := to_signed(512, COEFF_WIDTH); 
             end loop;
         end loop;
         return result;
@@ -119,7 +121,6 @@ architecture Behavioral of hf_dpd_core_200w is
     signal i_delayed, q_delayed : signed_array_t := (others => (others => '0'));
     signal i_curr, q_curr       : signed(15 downto 0) := (others => '0');
     signal amp_sq              : signed_array_t := (others => (others => '0'));
-    signal amp_sq_addr         : unsigned(LUT_ADDR_WIDTH-1 downto 0) := (others => '0');
     
     signal lut_real : lut_array_t := init_lut_real;
     signal lut_imag : lut_array_t := init_lut_imag;
@@ -127,30 +128,12 @@ architecture Behavioral of hf_dpd_core_200w is
     signal coeffs : coeff_pair_array_t;
     signal mult_i, mult_q : mult_result_t := (others => (others => '0'));
     signal sum_i, sum_q : signed(31 downto 0) := (others => '0');
-    signal learn_rate : signed(15 downto 0) := to_signed(32, 16);
+    signal learn_rate : signed(15 downto 0) := to_signed(3, 16);
     signal ovf_i, ovf_q : STD_LOGIC := '0';
     signal init_done : STD_LOGIC := '0';
     signal fb_i_delayed, fb_q_delayed : fb_delay_t := (others => (others => '0'));
     
 begin
-    
-    -- ========================================================================
-    -- 4. ÈÍÈÖÈÀËÈÇÀÖÈß ÏĞÈ ÑÁĞÎÑÅ
-    -- ========================================================================
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                for m in 0 to MEMORY_DEPTH-1 loop
-                    for addr in 0 to (2**LUT_ADDR_WIDTH)-1 loop
-                        lut_real(m)(addr) <= to_signed(410, COEFF_WIDTH);  -- Åùå óìåíüøåíî!
-                        lut_imag(m)(addr) <= (others => '0');
-                    end loop;
-                end loop;
-                init_done <= '1';
-            end if;
-        end if;
-    end process;
     
      -- ========================================================================
     -- 5. ÁËÎÊ ÏĞßÌÎÃÎ ÒĞÀÊÒÀ (Ñ ÌÀÑØÒÀÁÈĞÎÂÀÍÈÅÌ ÂÕÎÄÀ)
@@ -190,10 +173,9 @@ begin
     end process;
     
     -- ========================================================================
-    -- 6. ÂÛ×ÈÑËÅÍÈÅ ÊÂÀÄĞÀÒÀ ÀÌÏËÈÒÓÄÛ
+    -- 6. ÂÛ×ÈÑËÅÍÈÅ ÊÂÀÄĞÀÒÀ ÀÌÏËÈÒÓÄÛ (ÈÑÏĞÀÂËÅÍÍÛÉ ÂÀĞÈÀÍÒ)
     -- ========================================================================
     gen_amp_sq: for m in 0 to MEMORY_DEPTH-1 generate
-        signal i_sq, q_sq : signed(31 downto 0);
         signal x_i, x_q : signed(15 downto 0);
     begin
         x_i <= i_curr when m = 0 else i_delayed(m-1);
@@ -201,27 +183,40 @@ begin
         
         process(aclk)
             variable i_sq_safe, q_sq_safe : signed(31 downto 0);
+            variable sum_32               : unsigned(31 downto 0);
+            variable shifted_sum          : unsigned(31 downto 0); -- Âğåìåííàÿ ïåğåìåííàÿ äëÿ ñäâèãà
         begin
             if rising_edge(aclk) then
                 if aresetn = '0' then
                     amp_sq(m) <= (others => '0');
                 else
-                    -- Çàùèòà îò X
                     if is_x(std_logic_vector(x_i)) or is_x(std_logic_vector(x_q)) then
                         amp_sq(m) <= (others => '0');
                     else
                         i_sq_safe := x_i * x_i;
                         q_sq_safe := x_q * x_q;
-                        if is_x(std_logic_vector(i_sq_safe + q_sq_safe)) then
+                        
+                        sum_32 := unsigned(i_sq_safe) + unsigned(q_sq_safe);
+                        
+                        if is_x(std_logic_vector(sum_32)) then
                             amp_sq(m) <= (others => '0');
                         else
-                            amp_sq(m) <= resize((i_sq_safe + q_sq_safe), DATA_WIDTH);
+                            -- 1. Äåëàåì ñäâèã â áåççíàêîâîì âèäå
+                            shifted_sum := shift_right(sum_32, 10);
+                            
+                            -- 2. ßÂÍÀß ÏĞÎÂÅĞÊÀ ÍÀ ÏÅĞÅÏÎËÍÅÍÈÅ (ÍÀÑÛÙÅÍÈÅ)
+                            if shifted_sum > 65535 then
+                                amp_sq(m) <= to_signed(65535, DATA_WIDTH);
+                            else
+                                amp_sq(m) <= signed(resize(shifted_sum, DATA_WIDTH));
+                            end if;
                         end if;
                     end if;
                 end if;
             end if;
         end process;
     end generate;
+
     
    -- ========================================================================
     -- 7. ×ÒÅÍÈÅ ÈÇ LUT Ñ ÏĞÀÂÈËÜÍÎÉ ÀÄĞÅÑÀÖÈÅÉ
@@ -233,12 +228,12 @@ begin
         begin
             if rising_edge(aclk) then
                 if aresetn = '0' then
-                    coeffs(m).real_part <= to_signed(410, COEFF_WIDTH);
+                    coeffs(m).real_part <= to_signed(600, COEFF_WIDTH);
                     coeffs(m).imag_part <= (others => '0');
                 else
                     -- Çàùèòà îò X â àäğåñå
                     if is_x(std_logic_vector(amp_sq(m))) then
-                        coeffs(m).real_part <= to_signed(410, COEFF_WIDTH);
+                        coeffs(m).real_part <= to_signed(600, COEFF_WIDTH);
                         coeffs(m).imag_part <= (others => '0');
                     else
                         -- ========================================================
@@ -254,9 +249,14 @@ begin
                             addr_int := 0;
                         end if;
                         
+                        for k in 31 downto 1 loop
+                            raddr_pipeline(m)(k) <= raddr_pipeline(m)(k-1);
+                        end loop;
+                        raddr_pipeline(m)(0) <= addr_int;
+                        
                         -- Çàùèòà îò X â LUT
                         if is_x(std_logic_vector(lut_real(m)(addr_int))) then
-                            coeffs(m).real_part <= to_signed(410, COEFF_WIDTH);
+                            coeffs(m).real_part <= to_signed(600, COEFF_WIDTH);
                         else
                             coeffs(m).real_part <= lut_real(m)(addr_int);
                         end if;
@@ -496,16 +496,22 @@ begin
         variable safe_real, safe_imag : signed(COEFF_WIDTH-1 downto 0);
         variable err_i_safe, err_q_safe : signed(31 downto 0);
         
-        constant MAX_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(32767, COEFF_WIDTH);
-        constant MIN_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(-32768, COEFF_WIDTH);
-        constant MAX_UPDATE : signed(31 downto 0) := to_signed(640, 32);
-        constant MAX_GRAD : signed(31 downto 0) := to_signed(32768, 32);  -- Áûëî 131072
-        constant MAX_ERROR  : signed(31 downto 0) := to_signed(131072, 32);
-        constant SCALE_FACTOR : integer := 256;  -- Áûëî 4096
+        constant MAX_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(4096, COEFF_WIDTH);
+        constant MIN_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(-4096, COEFF_WIDTH);
+        constant MAX_UPDATE : signed(31 downto 0) := to_signed(64, 32);
+        constant MAX_GRAD : signed(31 downto 0) := to_signed(32767, 32);  -- Áûëî 131072
+        constant MAX_ERROR  : signed(31 downto 0) := to_signed(64535, 32);
+        constant SCALE_FACTOR : integer := 4096;  -- Áûëî 4096
     begin
         if rising_edge(aclk) then
             if aresetn = '0' then
-                null;
+                for m in 0 to MEMORY_DEPTH-1 loop
+                    for addr in 0 to (2**LUT_ADDR_WIDTH)-1 loop
+                        lut_real(m)(addr) <= to_signed(512, COEFF_WIDTH);
+                        lut_imag(m)(addr) <= (others => '0');
+                    end loop;
+                end loop;
+                init_done <= '1';
             elsif cfg_train_en = '1' and cfg_hold_coeffs = '0' and s_axis_fb_valid = '1' then
                 if not is_x(std_logic_vector(amp_sq(0))) and
                    not is_x(std_logic_vector(error_i)) and  -- Èñïîëüçóåì ôèëüòğîâàííóş!
@@ -535,7 +541,8 @@ begin
                            not is_x(std_logic_vector(fb_q_delayed(m))) then
                            
                             -- Âû÷èñëÿåì àäğåñ èíäèâèäóàëüíî äëÿ êàæäîé âåòâè ïàìÿòè!
-                            addr_int := to_integer(unsigned(amp_sq(m)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
+ --                           addr_int := to_integer(unsigned(amp_sq(m)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
+                            addr_int := raddr_pipeline(m)(18); 
                             
                             -- Çàùèòà îò âûõîäà çà ãğàíèöû äëÿ òåêóùåãî addr_int
                             if addr_int >= 2**LUT_ADDR_WIDTH then
@@ -582,7 +589,7 @@ begin
                             
                             -- ×òåíèå èç LUT ñ çàùèòîé
                             if is_x(std_logic_vector(lut_real(m)(addr_int))) then
-                                safe_real := to_signed(410, COEFF_WIDTH);
+                                safe_real := to_signed(600, COEFF_WIDTH);
                             else
                                 safe_real := lut_real(m)(addr_int);
                             end if;
@@ -596,6 +603,8 @@ begin
                             -- Îáíîâëåíèå
                             new_real := safe_real + resize(update_i, COEFF_WIDTH);
                             new_imag := safe_imag + resize(update_q, COEFF_WIDTH);
+                            --new_real := safe_real - resize(update_i, COEFF_WIDTH);
+                            --new_imag := safe_imag - resize(update_q, COEFF_WIDTH);
                             
                             if new_real > MAX_COEFF then
                                 lut_real(m)(addr_int) <= MAX_COEFF;
@@ -618,83 +627,5 @@ begin
             end if;
         end if;
     end process;    
-
--- ========================================================================
--- ÇÀÏÈÑÜ ÎÒËÀÄÎ×ÍÛÕ ÄÀÍÍÛÕ Â ÔÀÉË (Ñ ÏĞÀÂÈËÜÍÛÌ ÎÁÚßÂËÅÍÈÅÌ)
--- ========================================================================
-process(aclk)
-    file log_file : text open write_mode is "debug_data.csv";
-    variable line_out : line;
-    variable time_ns : integer;
-    variable dbg_addr : integer;  -- <-- ÎÁÚßÂËßÅÌ ÏÅĞÅÌÅÍÍÓŞ ÇÄÅÑÜ!
-begin
-    if rising_edge(aclk) then
-        if aresetn = '1' then
-            -- Âğåìÿ â íàíîñåêóíäàõ
-            time_ns := (now / 1 ns);
-            write(line_out, time_ns);
-            write(line_out, string'(";"));
-            
-            -- sum_i è sum_q
-            write(line_out, to_integer(sum_i));
-            write(line_out, string'(";"));
-            write(line_out, to_integer(sum_q));
-            write(line_out, string'(";"));
-            
-            -- error_i è error_q
-            write(line_out, to_integer(error_i));
-            write(line_out, string'(";"));
-            write(line_out, to_integer(error_q));
-            write(line_out, string'(";"));
-            
-            -- Êîıôôèöèåíòû LUT äëÿ àäğåñà 0
-            write(line_out, to_integer(lut_real(0)(0)));
-            write(line_out, string'(";"));
-            write(line_out, to_integer(lut_imag(0)(0)));
-            write(line_out, string'(";"));
-            
-            -- ÒÅÏÅĞÜ ÌÎÆÍÎ ÈÑÏÎËÜÇÎÂÀÒÜ addr_int
-            -- Âû÷èñëÿåì àäğåñ
-            if not is_x(std_logic_vector(amp_sq(0))) then
-                dbg_addr := to_integer(unsigned(amp_sq(0)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
-                if dbg_addr >= 2**LUT_ADDR_WIDTH then
-                    dbg_addr := 2**LUT_ADDR_WIDTH - 1;
-                end if;
-            else
-                dbg_addr := 0;
-            end if;
-            
-            write(line_out, dbg_addr);
-            write(line_out, string'(";"));
-            
-            -- Çíà÷åíèå LUT ïî òåêóùåìó àäğåñó
-            if dbg_addr < 2**LUT_ADDR_WIDTH and dbg_addr >= 0 then
-                write(line_out, to_integer(lut_real(0)(dbg_addr)));
-                write(line_out, string'(";"));
-                write(line_out, to_integer(lut_imag(0)(dbg_addr)));
-            else
-                write(line_out, 0);
-                write(line_out, string'(";"));
-                write(line_out, 0);
-            end if;
-            write(line_out, string'(";"));
-            
-            -- Ôëàãè
-            write(line_out, ovf_i);
-            write(line_out, string'(";"));
-            write(line_out, ovf_q);
-            
-            -- Ôëàãè óñëîâèé
-            write(line_out, string'(";"));
-            write(line_out, cfg_train_en);
-            write(line_out, string'(";"));
-            write(line_out, cfg_hold_coeffs);
-            write(line_out, string'(";"));
-            write(line_out, s_axis_fb_valid);            
-            
-            writeline(log_file, line_out);
-        end if;
-    end if;
-end process;
     
 end Behavioral;

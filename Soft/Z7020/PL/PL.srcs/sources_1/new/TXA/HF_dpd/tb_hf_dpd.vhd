@@ -3,358 +3,320 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use IEEE.MATH_REAL.ALL;
 
--- Библиотеки для работы с файлами
-use std.textio.all;
-use ieee.std_logic_textio.all;
-
 entity tb_hf_dpd is
+-- Тестбенч не имеет портов
 end tb_hf_dpd;
 
 architecture Behavioral of tb_hf_dpd is
-    -- Тактирование и сброс
-    signal aclk          : STD_LOGIC := '0';
-    signal aresetn       : STD_LOGIC := '0';
-    
-    -- AXI Stream вход (I/Q данные)
-    signal s_axis_iq_tdata  : STD_LOGIC_VECTOR(47 downto 0) := (others => '0');
-    
-    -- Вход с АЦП (обратная связь) - РЕАЛЬНЫЙ СИГНАЛ
-    signal s_axis_adc_tdata  : STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
-    signal s_axis_dac_tdata  : STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
-    
-    -- Выход I/Q после линеаризации
-    signal m_axis_iq_tdata   : STD_LOGIC_VECTOR(31 downto 0);
-    
-    -- Управление через конфигурационный интерфейс
-    signal s_axis_cfg_tdata  : STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
-    signal s_axis_cfg_tdest  : STD_LOGIC_VECTOR(4 downto 0) := (others => '0');
+
+    -- Component Under Test
+    component hf_dpd
+        Port ( 
+            s_axis_iq_tdata   : in  STD_LOGIC_VECTOR (47 downto 0);
+            s_axis_adc_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
+            m_axis_iq_tdata   : out STD_LOGIC_VECTOR (31 downto 0);
+            s_axis_cfg_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
+            s_axis_cfg_tdest  : in  STD_LOGIC_VECTOR (4 downto 0);
+            s_axis_cfg_tvalid : in  STD_LOGIC;
+            txa_on            : in  STD_LOGIC;
+            s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
+            m_cfg_dout        : out STD_LOGIC_VECTOR (31 downto 0);
+            aclk              : in  STD_LOGIC;
+            aresetn           : in  STD_LOGIC
+        );
+    end component;
+
+    -- Сигналы связи
+    signal s_axis_iq_tdata   : STD_LOGIC_VECTOR (47 downto 0) := (others => '0');
+    signal s_axis_adc_tdata  : STD_LOGIC_VECTOR (15 downto 0) := (others => '0');
+    signal m_axis_iq_tdata   : STD_LOGIC_VECTOR (31 downto 0);
+    signal s_axis_cfg_tdata  : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
+    signal s_axis_cfg_tdest  : STD_LOGIC_VECTOR (4 downto 0)  := (others => '0');
     signal s_axis_cfg_tvalid : STD_LOGIC := '0';
-    
-    -- DDS для DDC (I/Q сигналы)
-    signal s_axis_dds_tdata  : STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
-    
-    -- Выход конфигурации
-    signal m_cfg_dout        : STD_LOGIC_VECTOR(31 downto 0);
-    
-    -- Сигналы для PA модели
-    signal pa_input_i, pa_input_q : signed(15 downto 0) := (others => '0');
-    signal pa_output_i, pa_output_q : signed(15 downto 0) := (others => '0');
-    signal pa_output_real : signed(15 downto 0) := (others => '0');
-    
-    -- Сигналы для DDS генератора (I/Q)
-    signal dds_phase_acc     : unsigned(31 downto 0) := (others => '0');
-    signal dds_sin           : signed(15 downto 0) := (others => '0');
-    signal dds_cos           : signed(15 downto 0) := (others => '0');
-    
-    -- Сигналы для тестового сигнала (вход DPD)
-    signal test_i_24, test_q_24 : signed(23 downto 0) := (others => '0');
-    signal test_phase_acc    : unsigned(31 downto 0) := (others => '0');
-    
-    -- Константы
-    constant CLK_PERIOD      : time := 8.138 ns; -- 122.88 MHz
-    constant DDS_FREQ        : real := 10.0e6;   -- 10 МГц для DDC
-    constant TEST_FREQ       : real := 5000.0;   -- 5 кГц тестовый сигнал
-    constant SAMPLE_RATE     : real := 122.88e6;
-    constant DDS_PHASE_INC   : unsigned(31 downto 0) := to_unsigned(integer(round(DDS_FREQ / SAMPLE_RATE * 2.0**32)), 32);
-    constant TEST_PHASE_INC  : unsigned(31 downto 0) := to_unsigned(integer(round(TEST_FREQ / SAMPLE_RATE * 2.0**32)), 32);
-    
-    -- Сигналы для логирования
-    signal log_enable  : STD_LOGIC := '0';
-    signal log_counter : integer := 0;
-    
+    signal txa_on            : STD_LOGIC := '0';
+    signal s_axis_dds_tdata  : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
+    signal m_cfg_dout        : STD_LOGIC_VECTOR (31 downto 0);
+    signal aclk              : STD_LOGIC := '0';
+    signal aresetn           : STD_LOGIC := '0';
+
+    -- Константы тактирования и частот
+    constant CLK_PERIOD     : time := 8138 ps; -- 122.88 MHz
+    constant CLK_FREQ       : real := 122880000.0;
+    constant DDS_FREQ       : real := 5000000.0; -- 5 МГц несущая
+    constant IQ_SIGNAL_FREQ : real := 5000.0;    -- 5 кГц полезный сигнал
+    constant TONE1_FREQ     : real := 4000.0;    -- Первый тон: 4 кГц
+    constant TONE2_FREQ     : real := 6000.0;    -- Второй тон: 6 кГц
+
+    -- Сигналы для реализации конвейера задержки в обратной связи (моделирование кабеля/тракта)
+    type delay_array is array (0 to 3) of real;
+    signal loopback_delay_line : delay_array := (others => 0.0);
+
 begin
-    -- ========================================================================
-    -- 1. Генерация тактового сигнала
-    -- ========================================================================
-    process
-    begin
-        aclk <= '0';
-        wait for CLK_PERIOD/2;
-        aclk <= '1';
-        wait for CLK_PERIOD/2;
-    end process;
-    
-    -- ========================================================================
-    -- 2. Тестируемый модуль
-    -- ========================================================================
-    DUT: entity work.hf_dpd
-        Port map (
-            aclk              => aclk,
-            aresetn           => aresetn,
+
+    -- Инициализация UUT
+    uut: hf_dpd
+        port map (
             s_axis_iq_tdata   => s_axis_iq_tdata,
             s_axis_adc_tdata  => s_axis_adc_tdata,
             m_axis_iq_tdata   => m_axis_iq_tdata,
-            s_axis_dac_tdata  => s_axis_dac_tdata,
             s_axis_cfg_tdata  => s_axis_cfg_tdata,
             s_axis_cfg_tdest  => s_axis_cfg_tdest,
             s_axis_cfg_tvalid => s_axis_cfg_tvalid,
+            txa_on            => txa_on,
             s_axis_dds_tdata  => s_axis_dds_tdata,
-            m_cfg_dout        => m_cfg_dout
+            m_cfg_dout        => m_cfg_dout,
+            aclk              => aclk,
+            aresetn           => aresetn
         );
-    
-    -- ========================================================================
-    -- 3. ГЕНЕРАТОР DDS (ДЛЯ DDC)
-    -- ========================================================================
-    process(aclk)
-        variable sin_val, cos_val : real;
-        variable sin_int, cos_int : integer;
+
+    -- Генератор aclk (122.88 МГц)
+    clk_process : process
     begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                dds_phase_acc <= (others => '0');
-                dds_sin <= (others => '0');
-                dds_cos <= (others => '0');
-            else
-                dds_phase_acc <= dds_phase_acc + DDS_PHASE_INC;
-                
-                sin_val := sin(2.0 * MATH_PI * real(to_integer(dds_phase_acc)) / 2.0**32);
-                cos_val := cos(2.0 * MATH_PI * real(to_integer(dds_phase_acc)) / 2.0**32);
-                
-                sin_int := integer(round(sin_val * 32767.0));
-                cos_int := integer(round(cos_val * 32767.0));
-                
-                dds_sin <= to_signed(sin_int, 16);
-                dds_cos <= to_signed(cos_int, 16);
-            end if;
-        end if;
+        aclk <= '0';
+        wait for CLK_PERIOD / 2;
+        aclk <= '1';
+        wait for CLK_PERIOD / 2;
     end process;
-    
-    -- Формат: {Q(15:0), I(15:0)}
-    s_axis_dds_tdata <= std_logic_vector(dds_sin) & std_logic_vector(dds_cos);
-    
-    -- ========================================================================
-    -- 4. ГЕНЕРАТОР ТЕСТОВОГО СИГНАЛА (ВХОД DPD)
-    -- ========================================================================
-    process(aclk)
-        variable sin_val, cos_val : real;
-        variable i_int, q_int : integer;
+
+        -- Процесс генерации сигналов и замкнутая петля обратной связи (Loopback) без переполнения
+    signal_generation_process: process(aclk)
+        variable sample_idx    : integer := 0;
+        variable phase_dds     : real;
+        variable phase_iq      : real;
+        
+        constant AMP_24BIT     : real := 4388000.0; 
+        -- Фазы для двух тонов
+        variable phase_tone1   : real;
+        variable phase_tone2   : real;
+        
+        -- Переменные для генератора (вход)
+        variable i_signal_val  : integer;
+        variable q_signal_val  : integer;
+        
+        -- Переменные DDS
+        variable dds_cos, dds_sin : real;
+        variable dds_cos_int   : integer;
+        variable dds_sin_int   : integer;
+        
+        -- Переменные для разбора выхода m_axis_iq_tdata
+        variable m_iq_i        : signed(15 downto 0);
+        variable m_iq_q        : signed(15 downto 0);
+        
+        -- Переменные нормализованной математики (диапазон от -1.0 до 1.0)
+        variable i_norm        : real;
+        variable q_norm        : real;
+        variable tx_rf_norm    : real;
+        variable fb_rf_norm    : real;
+        
+        -- Переменные для АЦП
+        variable fb_rf_final   : real;
+        variable seed1, seed2  : positive := 98765; -- Для генератора шума
+        variable rand_norm     : real;
+        variable noise         : real;
+        
+        -- Параметры радио-тракта (физически корректные)
+        constant ATTENUATION   : real := 0.8;        -- Затухание в петле (тракт + аттенюатор)
+        constant DISTORTION_K3 : real := 0.15;        -- 5% нелинейных искажений 3-го порядка (PA)
+        constant NOISE_FLOOR   : real := 10.0;        -- Небольшой шум АЦП (в младших разрядах)
+
     begin
         if rising_edge(aclk) then
             if aresetn = '0' then
-                test_phase_acc <= (others => '0');
-                test_i_24 <= (others => '0');
-                test_q_24 <= (others => '0');
+                sample_idx          := 0;
+                s_axis_dds_tdata    <= (others => '0');
+                s_axis_adc_tdata    <= (others => '0');
+                s_axis_iq_tdata     <= (others => '0');
+                loopback_delay_line <= (others => 0.0);
             else
-                test_phase_acc <= test_phase_acc + TEST_PHASE_INC;
+                ----------------------------------------------------------------
+                -- 1. ВХОДНОЙ ДВУТОНАЛЬНОЙ СИГНАЛ (Каждый тон берет половину амплитуды)
+                ----------------------------------------------------------------
+                phase_tone1  := 2.0 * MATH_PI * TONE1_FREQ * real(sample_idx) / CLK_FREQ;
+                phase_tone2  := 2.0 * MATH_PI * TONE2_FREQ * real(sample_idx) / CLK_FREQ;
                 
-                sin_val := sin(2.0 * MATH_PI * real(to_integer(test_phase_acc)) / 2.0**32);
-                cos_val := cos(2.0 * MATH_PI * real(to_integer(test_phase_acc)) / 2.0**32);
+                -- Линейное сложение компонент I и Q для обоих тонов
+                i_signal_val := integer((cos(phase_tone1) * (AMP_24BIT / 2.0)) + (cos(phase_tone2) * (AMP_24BIT / 2.0)));
+                q_signal_val := integer((sin(phase_tone1) * (AMP_24BIT / 2.0)) + (sin(phase_tone2) * (AMP_24BIT / 2.0)));
                 
-                i_int := integer(round(sin_val * 8388607.0));
-                q_int := integer(round(cos_val * 8388607.0));
+                s_axis_iq_tdata(23 downto 0)  <= std_logic_vector(to_signed(i_signal_val, 24));
+                s_axis_iq_tdata(47 downto 24) <= std_logic_vector(to_signed(q_signal_val, 24));
+
+
+                ----------------------------------------------------------------
+                -- 2. ОПОРНЫЙ ГЕНЕРАТОР DDS (5 МГц, 16 бит)
+                ----------------------------------------------------------------
+                phase_dds   := 2.0 * MATH_PI * DDS_FREQ * real(sample_idx) / CLK_FREQ;
+                dds_cos     := cos(phase_dds);
+                dds_sin     := sin(phase_dds);
                 
-                test_i_24 <= to_signed(i_int, 24);
-                test_q_24 <= to_signed(q_int, 24);
-            end if;
-        end if;
-    end process;
-    
-    -- Формат: {Q(23:0), I(23:0)}
-    s_axis_iq_tdata <= std_logic_vector(test_q_24) & std_logic_vector(test_i_24);
-    
-    -- ========================================================================
-    -- 5. МОДЕЛЬ PA (КОМПЛЕКСНЫЙ УСИЛИТЕЛЬ)
-    -- ========================================================================
-    process(aclk)
-        variable amp : real;
-        variable phase_shift : real;
-        variable i_f, q_f : real;
-        variable i_pa, q_pa : real;
-        variable i_out, q_out : integer;
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                pa_output_i <= (others => '0');
-                pa_output_q <= (others => '0');
-                pa_input_i <= (others => '0');
-                pa_input_q <= (others => '0');
-            else
-                pa_input_i <= signed(m_axis_iq_tdata(15 downto 0));
-                pa_input_q <= signed(m_axis_iq_tdata(31 downto 16));
+                dds_cos_int := integer(dds_cos * 32767.0);
+                dds_sin_int := integer(dds_sin * 32767.0);
                 
-                i_f := real(to_integer(pa_input_i)) / 32767.0;
-                q_f := real(to_integer(pa_input_q)) / 32767.0;
-                amp := sqrt(i_f*i_f + q_f*q_f);
+                s_axis_dds_tdata(15 downto 0)  <= std_logic_vector(to_signed(dds_cos_int, 16));
+                s_axis_dds_tdata(31 downto 16) <= std_logic_vector(to_signed(dds_sin_int, 16));
+ --               s_axis_dds_tdata(31 downto 16) <= std_logic_vector(to_signed(-dds_sin_int, 16));
+
+                ----------------------------------------------------------------
+                -- 3. СТАБИЛЬНАЯ ПЕТЛЯ ОБРАТНОЙ СВЯЗИ (НОРМАЛИЗОВАННАЯ)
+                ----------------------------------------------------------------
+                -- Шаг А: Извлекаем 16-битный выход DPD
+                m_iq_i := signed(m_axis_iq_tdata(15 downto 0));
+                m_iq_q := signed(m_axis_iq_tdata(31 downto 16));
                 
-                if amp < 0.01 then
-                    i_pa := i_f;
-                    q_pa := q_f;
+                -- Шаг Б: Переводим в нормализованный вид (-1.0 ... 1.0)
+                i_norm := real(to_integer(m_iq_i)) / 32768.0;
+                q_norm := real(to_integer(m_iq_q)) / 32768.0;
+                
+                -- Шаг В: Модуляция на несущую (ВЧ сигнал на выходе ЦАП, диапазон прибл. -1.0...+1.0)
+               tx_rf_norm := (i_norm * dds_cos) - (q_norm * dds_sin);
+                
+                -- Шаг Г: Вносим искажения усилителя мощности (PA) в нормализованном виде.
+                -- Теперь куб от числа меньше единицы не улетает в бесконечность, а уменьшается!
+                tx_rf_norm := tx_rf_norm - (DISTORTION_K3 * (tx_rf_norm ** 3));
+
+                -- Шаг Д: Линия задержки в кабеле/тракте (на 4 такта)
+                loopback_delay_line(0) <= tx_rf_norm;
+                for k in 1 to 3 loop
+                    loopback_delay_line(k) <= loopback_delay_line(k-1);
+                end loop;
+               fb_rf_norm := loopback_delay_line(3); 
+--                fb_rf_norm := tx_rf_norm;
+                
+                -- Шаг Е: Применяем затухание в канале
+                fb_rf_norm := fb_rf_norm * ATTENUATION;
+                
+                -- Шаг Ж: Денормализация обратно в шкалу 16-битного АЦП (+ добавляем шум)
+                UNIFORM(seed1, seed2, rand_norm);
+                noise        := (rand_norm - 0.5) * NOISE_FLOOR;
+                fb_rf_final  := (fb_rf_norm * 32767.0) + noise;
+                
+                -- Шаг З: Жесткое ограничение (Saturate) для безопасности
+                if fb_rf_final > 32767.0 then
+                    s_axis_adc_tdata <= std_logic_vector(to_signed(32767, 16));
+                elsif fb_rf_final < -32768.0 then
+                    s_axis_adc_tdata <= std_logic_vector(to_signed(-32768, 16));
                 else
-                    i_pa := i_f * (1.0 - 0.3*amp*amp + 0.1*amp*amp*amp*amp);
-                    q_pa := q_f * (1.0 - 0.3*amp*amp + 0.1*amp*amp*amp*amp);
-                    
-                    phase_shift := 0.1 * amp * amp;
-                    i_out := integer(round((i_pa*cos(phase_shift) - q_pa*sin(phase_shift)) * 32767.0));
-                    q_out := integer(round((i_pa*sin(phase_shift) + q_pa*cos(phase_shift)) * 32767.0));
-                    
-                    if i_out > 32767 then i_out := 32767; end if;
-                    if i_out < -32768 then i_out := -32768; end if;
-                    if q_out > 32767 then q_out := 32767; end if;
-                    if q_out < -32768 then q_out := -32768; end if;
-                    
-                    pa_output_i <= to_signed(i_out, 16);
-                    pa_output_q <= to_signed(q_out, 16);
-                end if;
-            end if;
-        end if;
-    end process;
-    
-    -- ========================================================================
-    -- 6. ФОРМИРОВАНИЕ РЕАЛЬНОГО СИГНАЛА ДЛЯ АЦП
-    -- ========================================================================
-    process(aclk)
-        variable i_mult, q_mult : integer;
-        variable real_sample : integer;
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                pa_output_real <= (others => '0');
-            else
-                i_mult := (to_integer(pa_output_i) * to_integer(dds_cos)) / 32767;
-                q_mult := (to_integer(pa_output_q) * to_integer(dds_sin)) / 32767;
-                real_sample := i_mult - q_mult;
-                
-                if real_sample > 32767 then real_sample := 32767; end if;
-                if real_sample < -32768 then real_sample := -32768; end if;
-                
-                pa_output_real <= to_signed(real_sample, 16);
-            end if;
-        end if;
-    end process;
-    
-    -- ========================================================================
-    -- 6.5 ФОРМИРОВАНИЕ ЧИСТОГО РЕАЛЬНОГО СИГНАЛА ДЛЯ ЦАП (БЕЗ ИСКАЖЕНИЙ PA)
-    -- ========================================================================
-    process(aclk)
-        variable dac_i_mult : integer;
-        variable dac_q_mult : integer;
-        variable dac_real_sample : integer;
-        variable dac_input_i : signed(15 downto 0);
-        variable dac_input_q : signed(15 downto 0);
-    begin
-        if rising_edge(aclk) then
-            if aresetn = '0' then
-                s_axis_dac_tdata <= (others => '0');
-            else
-                -- Извлекаем I/Q из выхода DPD (до нелинейного усилителя PA)
-                dac_input_i := signed(s_axis_iq_tdata(23 downto 8));
-                dac_input_q := signed(s_axis_iq_tdata(47 downto 32));
-                
-                -- Переносим спектр вверх на частоту DDS (как в реальном ЦАП)
-                dac_i_mult := (to_integer(dac_input_i) * to_integer(dds_cos)) / 32767;
-                dac_q_mult := (to_integer(dac_input_q) * to_integer(dds_sin)) / 32767;
-                
-                -- Формируем чистый вещественный (RF) сигнал для опорного DDC
-                dac_real_sample := dac_i_mult - dac_q_mult;
-                
-                -- Защита от переполнения разрядности (насыщение до 16 бит)
-                if dac_real_sample > 32767 then 
-                    dac_real_sample := 32767; 
-                elsif dac_real_sample < -32768 then 
-                    dac_real_sample := -32768; 
+                    s_axis_adc_tdata <= std_logic_vector(to_signed(integer(fb_rf_final), 16));
                 end if;
                 
-                s_axis_dac_tdata <= std_logic_vector(to_signed(dac_real_sample, 16));
+                sample_idx := sample_idx + 1;
             end if;
         end if;
     end process;
-    
-    s_axis_adc_tdata <= std_logic_vector(pa_output_real);
-    
-    -- ========================================================================
-    -- 7. КОНФИГУРАЦИЯ
-    -- ========================================================================
-    process
+
+
+        -- Основной тестовый сценарий управления и конфигурации
+    stimulus_process: process
+        -- Переменные для расчета коэффициентов компенсации (аналог Си-функции)
+        constant HW_ADC_SAMPLERATE : real := 122880000.0; -- 122.88 МГц
+        constant MULT_K            : real := 1.0;
+        
+        -- Рассчитаем коэффициенты для частоты DDS несущей (5.0 МГц)
+        variable freq              : real := DDS_FREQ; 
+        variable i_corr_float      : real;
+        variable q_corr_float      : real;
+        
+        variable i_corr_int        : integer;
+        variable q_corr_int        : integer;
     begin
-        -- Сброс
-        aresetn <= '0';
+        ------------------------------------------------------------------------
+        -- МАТЕМАТИЧЕСКИЙ РАСЧЕТ КОЭФФИЦИЕНТОВ (Аналог hw_SetLinerDDSIn)
+        ------------------------------------------------------------------------
+        -- Формула из Си: mult_k * 2048 / (2 * sinf(M_PI * freq / SAMPLERATE))
+        i_corr_float := (MULT_K * 2048.0) / (2.0 * sin(MATH_PI * freq / HW_ADC_SAMPLERATE));
+        q_corr_float := (MULT_K * 2048.0) / (2.0 * cos(MATH_PI * freq / HW_ADC_SAMPLERATE));
+        
+        -- Так как в VHDL регистры имеют разрядность 18 бит (i_corr_amp/q_corr_amp),
+        -- а исходный сброс x"7fff" & "00" сдвигает 16-битное число на 2 бита влево, 
+        -- переведем вещественное число в формат Fixed-Point (умножаем на 4, то есть сдвиг на 2 бита):
+        i_corr_int := integer(i_corr_float);
+        q_corr_int := integer(q_corr_float);
+        
+        ------------------------------------------------------------------------
+        -- ИНИЦИАЛИЗАЦИЯ И СБРОС СХЕМЫ
+        ------------------------------------------------------------------------
+        aresetn           <= '0';
+        txa_on            <= '0';
+        s_axis_cfg_tvalid <= '0';
+        s_axis_cfg_tdata  <= (others => '0');
+        s_axis_cfg_tdest  <= (others => '0');
         wait for 200 ns;
+        
+        -- Снятие сброса и включение передатчика
         aresetn <= '1';
         wait for 100 ns;
-        
-        -- Включаем логирование
-        log_enable <= '1';
-        
-        -- Включение режима обучения
-        s_axis_cfg_tdata <= x"00000001";
-        s_axis_cfg_tdest <= "00000";
-        s_axis_cfg_tvalid <= '1';
-        wait for CLK_PERIOD;
+        txa_on <= '1';
+                
+        ------------------------------------------------------------------------
+        -- ЗАПИСЬ КОЭФФИЦИЕНТОВ ЧЕРЕЗ КОНФИГУРАЦИОННУЮ ШИНУ AXI (ИСПРАВЛЕНО)
+        ------------------------------------------------------------------------
+        -- Ждем стабильного фронта тактов
+        wait until rising_edge(aclk);        
+        -- 1. Запись i_corr_amp (Адрес / tdest = 7)
+        s_axis_cfg_tdest  <= std_logic_vector(to_unsigned(7, 5));
+        s_axis_cfg_tdata  <= (others => '0');
+        s_axis_cfg_tdata(17 downto 0) <= std_logic_vector(to_signed(i_corr_int, 18));
+        s_axis_cfg_tvalid <= '1'; -- Выставляем tvalid одновременно с данными!
+        wait until rising_edge(aclk);    
         s_axis_cfg_tvalid <= '0';
-        wait for CLK_PERIOD;
+        wait for 5 * CLK_PERIOD;  -- Пауза
         
-        s_axis_cfg_tdata <= x"00000000";
-        s_axis_cfg_tdest <= "00001";
-        s_axis_cfg_tvalid <= '1';
-        wait for CLK_PERIOD;
+        -- 2. Запись q_corr_amp (Адрес / tdest = 8)
+        wait until rising_edge(aclk);
+        s_axis_cfg_tdest  <= std_logic_vector(to_unsigned(8, 5));
+        s_axis_cfg_tdata  <= (others => '0');
+        s_axis_cfg_tdata(17 downto 0) <= std_logic_vector(to_signed(q_corr_int, 18));
+        s_axis_cfg_tvalid <= '1'; -- Выставляем одновременно с данными!
+        wait until rising_edge(aclk);     
         s_axis_cfg_tvalid <= '0';
-        wait for CLK_PERIOD;
-        wait for 0.5 ms;
-            
-        -- Ждем завершения теста
-        wait for 1 ms;
+        wait for 5 * CLK_PERIOD;
+
+        wait until rising_edge(aclk);
+        s_axis_cfg_tdest  <= "00000";       -- Адрес 0: Управление
+        s_axis_cfg_tdata  <= x"00000004";   -- train=1, hold=0, bypass=1
+        s_axis_cfg_tvalid <= '1';
+        wait until rising_edge(aclk);
+        s_axis_cfg_tvalid <= '0';
+        -- Работа в Bypass по умолчанию
+ --       wait for 20000 * CLK_PERIOD; 
         
-        -- Выключаем логирование
-        log_enable <= '0';
+           wait until rising_edge(aclk);            
+           s_axis_cfg_tdest  <= "00001";       
+           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(1, 32));   
+           s_axis_cfg_tvalid <= '1';            
+           wait until rising_edge(aclk);            
+           s_axis_cfg_tvalid <= '0';            
+           wait for 20000 * CLK_PERIOD; 
         
-        report "Simulation completed successfully" severity note;
+ --      for i in 0 to 20 loop
+ --           wait until rising_edge(aclk);            
+ --           s_axis_cfg_tdest  <= "00001";       
+ --           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(i * 10, 32));   
+ --           s_axis_cfg_tvalid <= '1';            
+ --           wait until rising_edge(aclk);            
+ --           s_axis_cfg_tvalid <= '0';            
+ --           wait for 20000 * CLK_PERIOD; 
+ --       end loop;
+  
+ --      wait for 20000 * CLK_PERIOD; 
+
+        ------------------------------------------------------------------------
+        -- АКТИВАЦИЯ РЕЖИМА DPD (Выключение Bypass)
+        ------------------------------------------------------------------------
+        wait until rising_edge(aclk);
+        s_axis_cfg_tdest  <= "00000";       -- Адрес 0: Управление
+        s_axis_cfg_tdata  <= x"00000001";   -- train=1, hold=0, bypass=0
+        s_axis_cfg_tvalid <= '1';
+        wait until rising_edge(aclk);wait for CLK_PERIOD;
+        s_axis_cfg_tvalid <= '0';
+        
+        -- Длительная симуляция для наблюдения адаптации с новыми амплитудами
+        wait for 1000000 * CLK_PERIOD;
+
+        -- Завершение работы
+        assert false report "Simulation Finished successfully with Calculated Amploc coefficients!" severity failure;
         wait;
     end process;
-    
-    -- ========================================================================
-    -- 8. ??? ЗАПИСЬ ДАННЫХ В CSV ФАЙЛ ???
-    -- ========================================================================
-    process(aclk)
-        file log_file : text open write_mode is "simulation_data.csv";
-        variable line_out : line;
-        variable time_ns : integer;
-        variable i_val, q_val : integer;
-    begin
-        if rising_edge(aclk) then
-            if log_enable = '1' and aresetn = '1' then
-                -- Счетчик для ограничения количества записей
-                log_counter <= log_counter + 1;
-                
-                -- Записываем каждые 10 тактов (чтобы файл не был слишком большим)
-                if log_counter mod 10 = 0 then
-                    
-                    -- Время в наносекундах (как integer)
-                    time_ns := (now / 1 ns);
-                    write(line_out, time_ns);
-                    write(line_out, string'(";"));
-                    
-                    -- Входной сигнал DPD (I, Q) - 24 бита
-                    i_val := to_integer(signed(s_axis_iq_tdata(23 downto 0)));
-                    q_val := to_integer(signed(s_axis_iq_tdata(47 downto 24)));
-                    write(line_out, i_val);
-                    write(line_out, string'(";"));
-                    write(line_out, q_val);
-                    write(line_out, string'(";"));
-                    
-                    -- Выходной сигнал DPD (I, Q) - 16 бит
-                    i_val := to_integer(signed(m_axis_iq_tdata(15 downto 0)));
-                    q_val := to_integer(signed(m_axis_iq_tdata(31 downto 16)));
-                    write(line_out, i_val);
-                    write(line_out, string'(";"));
-                    write(line_out, q_val);
-                    write(line_out, string'(";"));
-                    
-                    -- Сигнал обратной связи с АЦП
-                    i_val := to_integer(signed(s_axis_adc_tdata));
-                    write(line_out, i_val);
-                    write(line_out, string'(";"));
-                    
-                    -- Статус переполнения
-                    write(line_out, m_cfg_dout(0));
-                    write(line_out, m_cfg_dout(1));
-                    write(line_out, m_cfg_dout(2));
-                    write(line_out, m_cfg_dout(3));
-                    
-                    -- Завершаем строку
-                    writeline(log_file, line_out);
-                end if;
-            end if;
-        end if;
-    end process;
-    
+
+
 end Behavioral;
