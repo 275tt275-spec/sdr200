@@ -23,7 +23,7 @@ entity hf_dpd_core_200w is
         error_i           : in signed(31 downto 0);
         error_q           : in signed(31 downto 0);
         error_valid       : in  STD_LOGIC;
-        cfg_delay_ticks   : in  std_logic_vector(7 downto 0);
+        cfg_delay_ticks   : in  std_logic_vector(5 downto 0); 
         cfg_train_en      : in  STD_LOGIC;
         cfg_hold_coeffs   : in  STD_LOGIC;
         m_ovf             : out STD_LOGIC
@@ -50,7 +50,8 @@ architecture Behavioral of hf_dpd_core_200w is
     type mult_result_t is array (0 to MEMORY_DEPTH-1) of signed(31 downto 0);
     
     -- Конвейер задержки адресов чтения для синхронизации с блоком записи (на 32 такта)
-    type addr_delay_pipeline_t is array (0 to 31) of integer range 0 to 255;
+    constant PIPELINE_DEPTH : integer := 32;    
+    type addr_delay_pipeline_t is array (0 to PIPELINE_DEPTH-1) of integer range 0 to 255;
     type addr_delay_matrix_t is array (0 to MEMORY_DEPTH-1) of addr_delay_pipeline_t;
     signal raddr_pipeline : addr_delay_matrix_t := (others => (others => 0));
     
@@ -92,7 +93,6 @@ architecture Behavioral of hf_dpd_core_200w is
         aresetn              : in  std_logic;
         
         -- Интерфейс конфигурации
-        cfg_delay_ticks      : in  std_logic_vector(ADDR_WIDTH-1 downto 0);
         cfg_train_en         : in  std_logic;
         cfg_hold_coeffs      : in  std_logic;
         
@@ -495,6 +495,7 @@ begin
         variable addr_int : integer;
         variable safe_real, safe_imag : signed(COEFF_WIDTH-1 downto 0);
         variable err_i_safe, err_q_safe : signed(31 downto 0);
+        variable delay_idx  : integer range 0 to PIPELINE_DEPTH-1;
         
         constant MAX_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(4096, COEFF_WIDTH);
         constant MIN_COEFF : signed(COEFF_WIDTH-1 downto 0) := to_signed(-4096, COEFF_WIDTH);
@@ -536,13 +537,18 @@ begin
                         err_q_safe := error_q;
                     end if;
                     
+                    delay_idx := to_integer(unsigned(cfg_delay_ticks)) + 2;
+                    if delay_idx > PIPELINE_DEPTH-1 then
+                        delay_idx := PIPELINE_DEPTH-1;
+                    end if;
+                    
                     for m in 0 to MEMORY_DEPTH-1 loop
                         if not is_x(std_logic_vector(fb_i_delayed(m))) and 
-                           not is_x(std_logic_vector(fb_q_delayed(m))) then
-                           
+                           not is_x(std_logic_vector(fb_q_delayed(m))) then                           
+
                             -- Вычисляем адрес индивидуально для каждой ветви памяти!
  --                           addr_int := to_integer(unsigned(amp_sq(m)(DATA_WIDTH-1 downto DATA_WIDTH-LUT_ADDR_WIDTH)));
-                            addr_int := raddr_pipeline(m)(18); 
+                            addr_int := raddr_pipeline(m)(delay_idx);
                             
                             -- Защита от выхода за границы для текущего addr_int
                             if addr_int >= 2**LUT_ADDR_WIDTH then

@@ -671,6 +671,7 @@ void hw_SetPTT(int on, e_tx_input in)
 		hw_device.TxOn = 1;
 		audio_speaker_volume(0, 0);
 		hw_SetTxMonitor(e_vars->tx_monitor);
+		hw_SetAGC(AGC_NONE);
 #if 0
 		if((e_vars->mode == TRX_MODE_CW) || (in == TX_TUNE))
 			fpga_TXA_Enable(1, 0);
@@ -718,6 +719,7 @@ void hw_SetPTT(int on, e_tx_input in)
 		hw_SetRXAAtt(e_vars->RXAATT);
 		audio_speaker_volume(63, 63);
 		audio_headphone_volume(63, 63);
+		hw_SetAGC(e_vars->AGCType);
 
 //		SendToCore1Uint32(SET_TXA_SET_PS_TURNON, 0);
 //		SendToCore1Uint32(SET_TXA_SET_PS_RESET, 1);

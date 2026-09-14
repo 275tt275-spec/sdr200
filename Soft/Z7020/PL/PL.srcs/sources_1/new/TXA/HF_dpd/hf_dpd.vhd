@@ -52,20 +52,28 @@ architecture Structural of hf_dpd is
         );
     end component dpd_fb;
 
-	component adc2zeroif
-    Port ( 
-        clk : in  STD_LOGIC;
-        ce : in  STD_LOGIC;
-        clr : in  STD_LOGIC;
-        din : in  STD_LOGIC_VECTOR (15 downto 0);
-        cosine : in  STD_LOGIC_VECTOR (15 downto 0);
-        sine : in  STD_LOGIC_VECTOR (15 downto 0);
-        i_amp : in  STD_LOGIC_VECTOR (17 downto 0);
-        q_amp : in  STD_LOGIC_VECTOR (17 downto 0);
-        i_out : out  STD_LOGIC_VECTOR (15 downto 0);
-        q_out : out  STD_LOGIC_VECTOR (15 downto 0)
-    );
-	end component;
+    -- Декларация компонента вычисления ошибки (Error Calculator)
+    component dpd_error_calc is
+        generic (
+            DATA_WIDTH  : integer := 16;
+            ALPHA_SHIFT : integer := 8
+        );
+        port (
+            aclk               : in  std_logic;
+            aresetn            : in  std_logic;
+            s_axis_ref_i       : in  signed(DATA_WIDTH-1 downto 0);
+            s_axis_ref_q       : in  signed(DATA_WIDTH-1 downto 0);
+            s_axis_ref_valid   : in  std_logic;
+            s_axis_fb_i        : in  signed(DATA_WIDTH-1 downto 0);
+            s_axis_fb_q        : in  signed(DATA_WIDTH-1 downto 0);
+            s_axis_fb_valid    : in  std_logic;
+            cfg_train_en       : in  std_logic;
+            cfg_hold_coeffs    : in  std_logic;
+            m_axis_err_i       : out signed(31 downto 0);
+            m_axis_err_q       : out signed(31 downto 0);
+            m_axis_err_valid   : out std_logic
+        );
+    end component;
     
     -- ========================================================================
     -- 1. ВНУТРЕННИЕ СИГНАЛЫ (решение проблемы с чтением out портов)
@@ -152,30 +160,28 @@ inst_dpd_fb : dpd_fb
     );
     
     bb_i_sig <= signed(bb_i);
-    bb_q_sig <= signed(bb_q);  
+    bb_q_sig <= signed(bb_q); 
     
-    DPD_Error_Inst: entity work.dpd_align_and_error_top
-    Generic map (
-        DATA_WIDTH   => 16,
-        ADDR_WIDTH   => 8,    -- 2^8 = 256 тактов максимальной задержки для RAM
-        ALPHA_SHIFT  => 2     -- Коэффициент сглаживания фильтра (1/256)
+    inst_dpd_error_calc : dpd_error_calc
+    generic map (
+        DATA_WIDTH  => 16,
+        ALPHA_SHIFT => 2
     )
-    Port map (
-        aclk                 => aclk,
-        aresetn              => aresetn,
-        cfg_delay_ticks      => cfg_delay_ticks,
-        cfg_train_en         => cfg_train_en,
-        cfg_hold_coeffs      => cfg_hold_coeffs,
-        s_axis_ref_tdata_i   => ref_i_sig,
-        s_axis_ref_tdata_q   => ref_q_sig,
-        s_axis_ref_tvalid    => '1',
-        s_axis_fb_tdata_i    => bb_i_sig,
-        s_axis_fb_tdata_q    => bb_q_sig,
-        s_axis_fb_tvalid     => '1',
-        m_axis_err_i         => error_i,
-        m_axis_err_q         => error_q,
-        m_axis_err_valid     => error_valid
-    );
+    port map (
+        aclk               => aclk,
+        aresetn            => aresetn,
+        s_axis_ref_i       => ref_i_sig,
+        s_axis_ref_q       => ref_q_sig,
+        s_axis_ref_valid   => '1',
+        s_axis_fb_i        => bb_i_sig,
+        s_axis_fb_q        => bb_q_sig,
+        s_axis_fb_valid    => '1',
+        cfg_train_en       => cfg_train_en,
+        cfg_hold_coeffs    => cfg_hold_coeffs,
+        m_axis_err_i       => error_i,
+        m_axis_err_q       => error_q,
+        m_axis_err_valid   => error_valid
+    ); 
     
     -- ========================================================================
     -- 5. ЯДРО DPD
@@ -210,7 +216,7 @@ inst_dpd_fb : dpd_fb
             error_valid       => error_valid,
             
             -- Управление
-            cfg_delay_ticks   => cfg_delay_ticks,
+            cfg_delay_ticks   => cfg_delay_ticks(5 downto 0),
             cfg_train_en      => cfg_train_en,
             cfg_hold_coeffs   => cfg_hold_coeffs,
             

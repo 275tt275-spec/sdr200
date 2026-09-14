@@ -288,16 +288,16 @@ begin
            s_axis_cfg_tvalid <= '0';            
            wait for 20000 * CLK_PERIOD; 
         
- --      for i in 0 to 20 loop
- --           wait until rising_edge(aclk);            
- --           s_axis_cfg_tdest  <= "00001";       
- --           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(i * 10, 32));   
- --           s_axis_cfg_tvalid <= '1';            
- --           wait until rising_edge(aclk);            
- --           s_axis_cfg_tvalid <= '0';            
- --           wait for 20000 * CLK_PERIOD; 
- --       end loop;
-  
+  --     for i in 0 to 29 loop
+  --          wait until rising_edge(aclk);            
+  --          s_axis_cfg_tdest  <= "00001";       
+  --          s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(i, 32));   
+  --          s_axis_cfg_tvalid <= '1';            
+  --          wait until rising_edge(aclk);            
+  --          s_axis_cfg_tvalid <= '0';            
+  --          wait for 20000 * CLK_PERIOD; 
+  --      end loop;
+ 
  --      wait for 20000 * CLK_PERIOD; 
 
         ------------------------------------------------------------------------
