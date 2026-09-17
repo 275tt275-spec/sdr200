@@ -70,7 +70,7 @@ architecture Behavioral of lim_div is
 
 begin
 
-    dividend <= s_axis_dividend_tdata * x"8000";
+    dividend <= s_axis_dividend_tdata(23) & s_axis_dividend_tdata(23 downto 0) & "000000000000000";
 
 div_0 : div_24_16
     PORT MAP (

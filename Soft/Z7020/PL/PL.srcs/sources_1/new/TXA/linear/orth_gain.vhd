@@ -165,10 +165,7 @@ begin
 			sum1 <= (reg3(15) & reg3 & '0') - pc3(35 downto 18); -- +-2 range
 			sum2 <= (reg4(15) & reg4 & '0') + pc4(35 downto 18);
 		end if;
- 		
-		
-	
-	
+
 	end if;
 	
 end process;

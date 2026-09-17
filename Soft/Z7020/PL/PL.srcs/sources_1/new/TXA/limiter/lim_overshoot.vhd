@@ -162,65 +162,48 @@ begin
 end process;
 
 process(aclk)
+    variable max_pair1 : std_logic_vector(15 downto 0);
+    variable max_pair2 : std_logic_vector(15 downto 0);
+    variable max_stage2 : std_logic_vector(15 downto 0);
 begin
-	if rising_edge(aclk) then  
-	   delay_tvalid <= '0';
-	   if cordic_tvalid = '1' then
-	       state <= S0;
-           if magnitude4 < magnitude3 then
-               max <= magnitude3;
-           else
-               max <= magnitude4; 
-           end if;    
-       end if;    
-       if state = S0 then    
-           state <= S1;       
-           if max < magnitude2 then
-               max <= magnitude2;
-           end if;
-       end if;
-       if state = S1 then    
-           state <= S2;      
-           if max < magnitude1 then
-               max <= magnitude1;
-           end if; 
-       end if;
-       if state = S2 then    
-           state <= S3;  
-           if max < magnitude then
-               max <= magnitude;
-          end if;     
-       end if; 
-       if state = S3 then    
-           state <= S4;  
-           if max < limit then
-               corr <= x"0000";
-           else
-               corr <= max - limit; 
-           end if; 
-       end if; 
-       if state = S4 then    
-           state <= S5; 
-           if corr(15) = '1' then
-                corr1 <= x"FFFF"; -- Жесткая сатурация на максимуме
+    if rising_edge(aclk) then
+        delay_tvalid <= '0';
+        
+        if cordic_tvalid = '1' then
+            -- Шаг 1 дерева: Сравниваем пары параллельно
+            if magnitude4 < magnitude3 then max_pair1 := magnitude3; else max_pair1 := magnitude4; end if;
+            if magnitude2 < magnitude1 then max_pair2 := magnitude1; else max_pair2 := magnitude2; end if;
+            
+            -- Шаг 2 дерева: Находим максимум из пар
+            if max_pair1 < max_pair2 then max_stage2 := max_pair2; else max_stage2 := max_pair1; end if;
+            
+            -- Шаг 3: Финальный максимум с учетом текущего отсчета и лимита
+            if max_stage2 < magnitude then max <= magnitude; else max <= max_stage2; end if;
+            
+            -- Переход к вычислению corr
+            if max < limit then
+                corr <= x"0000";
             else
-                -- Если старший бит '0', переполнения нет. 
-                -- Безопасно сдвигаем влево (умножаем на 2)
-                corr1 <= corr(14 downto 0) & '0'; 
+                corr <= max - limit;
             end if;
-       end if;  
-       if state = S5 then    
-           state <= IDLE;  
-           -- Защита знаменателя от переполнения
+            
+            -- Такты сдвига corr1 и denom делаем последовательными регистрами (классический конвейер):
+            if corr(15) = '1' then
+                corr1 <= x"FFFF";
+            else
+                corr1 <= corr(14 downto 0) & '0';
+            end if;
+
             if (x"FFFF" - corr1) < limit then
                 denom <= x"FFFF";
             else
                 denom <= corr1 + limit;
             end if;
-            audio_sync <= delay_out_1;
+            
+            audio_sync   <= delay_out_1;
             delay_tvalid <= '1';
-       end if;                         
-	end if;
+        end if;
+    end if;
 end process;
 
 --    max3 <= magnitude3 when magnitude4 < magnitude3 else magnitude4;

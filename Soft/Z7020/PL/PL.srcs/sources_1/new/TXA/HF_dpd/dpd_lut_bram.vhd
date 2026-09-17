@@ -1,13 +1,9 @@
---------------------------------------------------------------------------------
 -- Модуль: dpd_lut_bram
 -- Назначение: LUT на Block RAM для DPD-ядра (real + imag), с инициализацией
 --             из файла и поддержкой одновременного чтения и записи.
 --
 -- Реализация: Xilinx XPM xpm_memory_sdpram (Simple Dual Port BRAM).
 --             Один BRAM на компоненту (real/imag) на одну ветвь памяти.
---
--- Автор: <ваше имя>
--- Дата:  <дата>
 --------------------------------------------------------------------------------
 
 library IEEE;
@@ -23,7 +19,7 @@ entity dpd_lut_bram is
         COEFF_WIDTH     : integer := 16;   -- разрядность коэффициента
         INIT_FILE_REAL  : string  := "lut_real.mem";
         INIT_FILE_IMAG  : string  := "lut_imag.mem";
-        MEMORY_DEPTH    : integer := 1     -- сколько BRAM-ветвей (обычно MEMORY_DEPTH DPD)
+        MEMORY_DEPTH    : integer := 1     -- сколько BRAM-ветвей
     );
     Port (
         -- Системные
@@ -57,14 +53,23 @@ architecture rtl of dpd_lut_bram is
     signal rd_real_words : word_array_t;
     signal rd_imag_words : word_array_t;
 
+    -- Тип для корректного формирования шины разрешения записи (XPM требует вектор)
+    type wea_array_t is array (0 to MEMORY_DEPTH-1) of std_logic_vector(0 downto 0);
+    signal wea_real_bit : wea_array_t;
+    signal wea_imag_bit : wea_array_t;
+
 begin
 
     ----------------------------------------------------------------------------
-    -- Распаковка входных шин записи в отдельные слова
+    -- Распаковка входных шин записи в отдельные слова и подготовка масок записи
     ----------------------------------------------------------------------------
     gen_unpack : for m in 0 to MEMORY_DEPTH-1 generate
         wr_real_words(m) <= wr_real((m+1)*COEFF_WIDTH-1 downto m*COEFF_WIDTH);
         wr_imag_words(m) <= wr_imag((m+1)*COEFF_WIDTH-1 downto m*COEFF_WIDTH);
+        
+        -- Явно приравниваем бит разрешения к вектору, убирая WARNING 10-3093
+        wea_real_bit(m)(0) <= wr_en(m);
+        wea_imag_bit(m)(0) <= wr_en(m);
     end generate;
 
     ----------------------------------------------------------------------------
@@ -90,23 +95,23 @@ begin
 
             -- Инициализация
             MEMORY_INIT_FILE    => INIT_FILE_REAL,
-            MEMORY_INIT_PARAM   => "",   -- ОБЯЗАТЕЛЬНО пусто, иначе файл игнорируется
+            MEMORY_INIT_PARAM   => "",   
             USE_MEM_INIT        => 1,
 
             -- Порт записи (A)
             WRITE_DATA_WIDTH_A  => COEFF_WIDTH,
-            BYTE_WRITE_WIDTH_A  => COEFF_WIDTH,
+            BYTE_WRITE_WIDTH_A  => COEFF_WIDTH, -- Запись целиком всего слова (16 бит)
             ADDR_WIDTH_A        => LUT_ADDR_WIDTH,
-            WRITE_MODE_A        => "read_first",
 
             -- Порт чтения (B)
             READ_DATA_WIDTH_B   => COEFF_WIDTH,
             ADDR_WIDTH_B        => LUT_ADDR_WIDTH,
             READ_RESET_VALUE_B  => "0",
             READ_LATENCY_B      => 1,
+            WRITE_MODE_B        => "read_first", -- Исправлено: режим ставится на порт B
 
             -- Служебные
-            WAKEUP_TIME         => 0,
+            WAKEUP_TIME         => "0",
             AUTO_SLEEP_TIME     => 0,
             USE_EMBEDDED_CONSTRAINT => 0,
             MEMORY_OPTIMIZATION => "true",
@@ -117,7 +122,7 @@ begin
             -- Порт записи (A)
             clka                => aclk,
             ena                 => '1',
-            wea                 => (others => wr_en(m)),
+            wea                 => wea_real_bit(m), -- Исправлено: статический сигнал без (others)
             addra               => wr_addr,
             dina                => wr_real_words(m),
 
@@ -129,10 +134,10 @@ begin
             regceb              => '1',
             rstb                => '0',
 
-            -- Служебные
-            injectdbiterr       => '0',
-            injectsbiterr       => '0',
-            sleep               => '0',
+            -- Служебные (Исправлены имена портов по спецификации XPM VHDL)
+            injectdbiterra      => '0', 
+            injectsbiterra      => '0',
+            sleep               => '0', -- Исправлено: обязательный порт теперь подключен
             dbiterrb            => open,
             sbiterrb            => open
         );
@@ -158,14 +163,14 @@ begin
             WRITE_DATA_WIDTH_A  => COEFF_WIDTH,
             BYTE_WRITE_WIDTH_A  => COEFF_WIDTH,
             ADDR_WIDTH_A        => LUT_ADDR_WIDTH,
-            WRITE_MODE_A        => "read_first",
 
             READ_DATA_WIDTH_B   => COEFF_WIDTH,
             ADDR_WIDTH_B        => LUT_ADDR_WIDTH,
             READ_RESET_VALUE_B  => "0",
             READ_LATENCY_B      => 1,
+            WRITE_MODE_B        => "read_first",
 
-            WAKEUP_TIME         => 0,
+            WAKEUP_TIME         => "0",
             AUTO_SLEEP_TIME     => 0,
             USE_EMBEDDED_CONSTRAINT => 0,
             MEMORY_OPTIMIZATION => "true",
@@ -175,7 +180,7 @@ begin
         port map (
             clka                => aclk,
             ena                 => '1',
-            wea                 => (others => wr_en(m)),
+            wea                 => wea_imag_bit(m),
             addra               => wr_addr,
             dina                => wr_imag_words(m),
 
@@ -186,9 +191,9 @@ begin
             regceb              => '1',
             rstb                => '0',
 
-            injectdbiterr       => '0',
-            injectsbiterr       => '0',
-            sleep               => '0',
+            injectdbiterra      => '0',
+            injectsbiterra      => '0',
+            sleep               => '0', 
             dbiterrb            => open,
             sbiterrb            => open
         );

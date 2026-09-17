@@ -187,10 +187,10 @@ inst_dpd_fb : dpd_fb
     -- ========================================================================
     -- 5. ßÄÐÎ DPD
     -- ========================================================================
-    DPD_Core_Inst: entity work.hf_dpd_core_200w
+    DPD_Core_Inst: entity work.hf_dpd_core
         Generic map (
-            MEMORY_DEPTH   => 3,
-            LUT_ADDR_WIDTH => 7,
+            MEMORY_DEPTH   => 1,
+            LUT_ADDR_WIDTH => 8,
             DATA_WIDTH     => 16,
             COEFF_WIDTH    => 16,
             ERROR_OFFSET   => 2

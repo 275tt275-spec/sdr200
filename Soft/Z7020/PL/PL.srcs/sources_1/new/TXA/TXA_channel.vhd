@@ -138,6 +138,33 @@ END component ila_1;
     );
     end component linear_dds_iq;
     
+    component hf_dpd is
+    Port ( 
+        -- AXI Stream вход (I/Q данные)
+        s_axis_iq_tdata   : in  STD_LOGIC_VECTOR (47 downto 0);
+        -- Вход с АЦП (обратная связь)
+        s_axis_adc_tdata  : in  STD_LOGIC_VECTOR (15 downto 0);
+        -- Выход I/Q после линеаризации
+        m_axis_iq_tdata   : out STD_LOGIC_VECTOR (31 downto 0);
+        
+        -- Управление через конфигурационный интерфейс
+        s_axis_cfg_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
+        s_axis_cfg_tdest  : in  STD_LOGIC_VECTOR (4 downto 0);
+        s_axis_cfg_tvalid : in  STD_LOGIC;
+        txa_on            : in  STD_LOGIC;
+        
+        -- DDS для DDC
+        s_axis_dds_tdata  : in  STD_LOGIC_VECTOR (31 downto 0);
+        
+        -- Выход конфигурации
+        m_cfg_dout        : out STD_LOGIC_VECTOR (31 downto 0);
+       
+        -- Тактирование и сброс
+        aclk              : in  STD_LOGIC;
+        aresetn           : in  STD_LOGIC
+    );
+    end component hf_dpd;
+    
     component conv16x24 is
     port (
         aclk            : in  std_logic;
@@ -335,6 +362,21 @@ u_linear : linear_dds_iq
         dout_q => linear_out_q,
         m_ovf => linear_ovf
     ); 
+    
+--u_hf_dpd: hf_dpd
+--    Port map ( 
+--        s_axis_iq_tdata   => iq_tdata,
+--        s_axis_adc_tdata  => linear_din2,
+--        m_axis_iq_tdata   => mult_in_tdata,
+--        s_axis_cfg_tdata  => s_axis_cfg_tdata,
+--        s_axis_cfg_tdest  => s_axis_cfg_tdest(4 downto 0),
+--        s_axis_cfg_tvalid => linear_cfg_tvalid,
+--        txa_on            => txa_on,
+--        s_axis_dds_tdata  => dds_tdata,
+--        m_cfg_dout        => open,
+--        aclk              => aclk,
+--        aresetn           => aresetn 
+--    );
 
 dds_0 : dds16a
   PORT MAP (
@@ -346,7 +388,7 @@ dds_0 : dds16a
   );
   
 --  m_dds_tdata <= dds_tdata;
-  mult_in_tdata <= linear_out_q & linear_out_i; 
+    mult_in_tdata <= linear_out_q & linear_out_i; 
 
 --  mult_in_tdata <= linear_in_q(23 downto 8) & linear_in_i(23 downto 8);
 
