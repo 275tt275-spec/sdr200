@@ -44,8 +44,8 @@ architecture Behavioral of tb_hf_dpd is
     constant CLK_FREQ       : real := 122880000.0;
     constant DDS_FREQ       : real := 5000000.0; -- 5 МГц несущая
     constant IQ_SIGNAL_FREQ : real := 5000.0;    -- 5 кГц полезный сигнал
-    constant TONE1_FREQ     : real := 4000.0;    -- Первый тон: 4 кГц
-    constant TONE2_FREQ     : real := 6000.0;    -- Второй тон: 6 кГц
+    constant TONE1_FREQ : real := 4000.0; 
+    constant TONE2_FREQ : real := 6000.0;
 
     -- Сигналы для реализации конвейера задержки в обратной связи (моделирование кабеля/тракта)
     type delay_array is array (0 to 3) of real;
@@ -115,8 +115,8 @@ begin
         variable noise         : real;
         
         -- Параметры радио-тракта (физически корректные)
-        constant ATTENUATION   : real := 0.8;        -- Затухание в петле (тракт + аттенюатор)
-        constant DISTORTION_K3 : real := 0.15;        -- 5% нелинейных искажений 3-го порядка (PA)
+        constant ATTENUATION   : real := 0.6;        -- Затухание в петле (тракт + аттенюатор)
+        constant DISTORTION_K3 : real := 0.05;        -- 5% нелинейных искажений 3-го порядка (PA)
         constant NOISE_FLOOR   : real := 10.0;        -- Небольшой шум АЦП (в младших разрядах)
 
     begin
@@ -138,8 +138,13 @@ begin
                 i_signal_val := integer((cos(phase_tone1) * (AMP_24BIT / 2.0)) + (cos(phase_tone2) * (AMP_24BIT / 2.0)));
                 q_signal_val := integer((sin(phase_tone1) * (AMP_24BIT / 2.0)) + (sin(phase_tone2) * (AMP_24BIT / 2.0)));
                 
-                s_axis_iq_tdata(23 downto 0)  <= std_logic_vector(to_signed(i_signal_val, 24));
-                s_axis_iq_tdata(47 downto 24) <= std_logic_vector(to_signed(q_signal_val, 24));
+                if sample_idx > 10000 and sample_idx < 11000 then
+                    s_axis_iq_tdata(23 downto 0) <= std_logic_vector(to_signed(16384, 24));
+                    s_axis_iq_tdata(47 downto 24) <= std_logic_vector(to_signed(q_signal_val, 24));
+                else
+                    s_axis_iq_tdata(23 downto 0)  <= std_logic_vector(to_signed(i_signal_val, 24));
+                    s_axis_iq_tdata(47 downto 24) <= std_logic_vector(to_signed(q_signal_val, 24));
+                end if;
 
 
                 ----------------------------------------------------------------
@@ -282,7 +287,7 @@ begin
         
            wait until rising_edge(aclk);            
            s_axis_cfg_tdest  <= "00001";       
-           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(1, 32));   
+           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(18, 32));   
            s_axis_cfg_tvalid <= '1';            
            wait until rising_edge(aclk);            
            s_axis_cfg_tvalid <= '0';            

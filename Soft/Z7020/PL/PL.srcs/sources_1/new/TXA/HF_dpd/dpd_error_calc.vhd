@@ -18,6 +18,7 @@ entity dpd_error_calc is
         s_axis_fb_valid    : in  STD_LOGIC;
         cfg_train_en       : in  STD_LOGIC;
         cfg_hold_coeffs    : in  STD_LOGIC;
+        cfg_delay_cycles   : in  std_logic_vector(4 downto 0); 
         m_axis_err_i       : out signed(31 downto 0);
         m_axis_err_q       : out signed(31 downto 0);
         m_axis_err_valid   : out STD_LOGIC
@@ -25,6 +26,17 @@ entity dpd_error_calc is
 end dpd_error_calc;
 
 architecture Behavioral of dpd_error_calc is
+
+    -- Максимальный размер буфера задержки (32 ячейки, от 0 до 31 такта)
+    constant BUFFER_DEPTH  : integer := 32;
+    
+    type ram_buffer_t is array (0 to BUFFER_DEPTH-1) of signed(DATA_WIDTH-1 downto 0);
+    signal ram_pipe_i      : ram_buffer_t := (others => (others => '0'));
+    signal ram_pipe_q      : ram_buffer_t := (others => (others => '0'));
+    
+    -- Указатели адресов для циклического буфера
+    signal wr_addr         : unsigned(4 downto 0) := (others => '0');
+    signal rd_addr         : unsigned(4 downto 0) := (others => '0');
 
     -- Регистры для фиксации опорного сигнала, пока мы ждем обратную связь
     signal ref_hold_i      : signed(DATA_WIDTH-1 downto 0) := (others => '0');
@@ -42,12 +54,19 @@ architecture Behavioral of dpd_error_calc is
 
 begin
 
+   -- Вычисление адреса чтения на лету на основе текущей программной задержки
+   process(wr_addr, cfg_delay_cycles)
+   begin
+       rd_addr <= wr_addr - unsigned(cfg_delay_cycles);
+   end process;
+
    process(aclk)
         variable diff_i : signed(31 downto 0);
         variable diff_q : signed(31 downto 0);
     begin
         if rising_edge(aclk) then
             if aresetn = '0' then
+                wr_addr       <= (others => '0');
                 ref_hold_i    <= (others => '0');
                 ref_hold_q    <= (others => '0');
                 raw_err_i     <= (others => '0');
@@ -57,14 +76,18 @@ begin
                 filter_acc_q  <= (others => '0');
                 filter_valid  <= '0';
             else
-                -- Шаг 1: Защелкиваем опорный сигнал, когда он выходит из линии задержки
+                -- Шаг 1: Запись в циклический буфер RAM по стробу valid
                 if s_axis_ref_valid = '1' then
-                    ref_hold_i <= s_axis_ref_i;
-                    ref_hold_q <= s_axis_ref_q;
+                    ram_pipe_i(to_integer(wr_addr)) <= s_axis_ref_i;
+                    ram_pipe_q(to_integer(wr_addr)) <= s_axis_ref_q;
+                    wr_addr <= wr_addr + 1; -- Инкремент адреса записи (автоматически сбрасывается в 0 при 31)
                 end if;
+                
+                -- Чтение из буфера с учетом динамического смещения rd_addr
+                ref_hold_i <= ram_pipe_i(to_integer(rd_addr));
+                ref_hold_q <= ram_pipe_q(to_integer(rd_addr));
 
-                -- Шаг 2: Считаем ошибку СТРОГО в момент прихода строба обратной связи
-                -- Мы используем сохраненный ранее ref_hold и текущий s_axis_fb
+                -- Шаг 2: Счет ошибки в момент прихода строба обратной связи
                 if s_axis_fb_valid = '1' then
                     raw_err_i     <= resize(ref_hold_i, 32) - resize(s_axis_fb_i, 32);
                     raw_err_q     <= resize(ref_hold_q, 32) - resize(s_axis_fb_q, 32);
@@ -74,15 +97,12 @@ begin
                 end if;
 
                 -- Этап 2: Экспоненциальный сглаживающий фильтр (EMA)
-                -- Срабатывает на следующий такт после raw_err_valid
                 if raw_err_valid = '1' then
                     if cfg_train_en = '1' and cfg_hold_coeffs = '0' then
                         
-                        -- Разность между новым отсчетом ошибки и текущим состоянием фильтра
                         diff_i := raw_err_i - filter_acc_i;
                         diff_q := raw_err_q - filter_acc_q;
                         
-                        -- Обновление аккумулятора фильтра со сдвигом (делением на 2^ALPHA_SHIFT)
                         filter_acc_i <= filter_acc_i + shift_right(diff_i, ALPHA_SHIFT);
                         filter_acc_q <= filter_acc_q + shift_right(diff_q, ALPHA_SHIFT);
                         

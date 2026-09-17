@@ -69,6 +69,7 @@ architecture Structural of hf_dpd is
             s_axis_fb_valid    : in  std_logic;
             cfg_train_en       : in  std_logic;
             cfg_hold_coeffs    : in  std_logic;
+            cfg_delay_cycles   : in  std_logic_vector(4 downto 0); 
             m_axis_err_i       : out signed(31 downto 0);
             m_axis_err_q       : out signed(31 downto 0);
             m_axis_err_valid   : out std_logic
@@ -89,10 +90,9 @@ architecture Structural of hf_dpd is
     signal sine_dds, cosine_dds : std_logic_vector(15 downto 0);
     signal i_corr_amp, q_corr_amp : std_logic_vector(17 downto 0) := x"7fff" & "00";
     signal bb_i, bb_q           : std_logic_vector(15 downto 0);
-
     
     -- Сигналы управления
-    signal cfg_delay_ticks      : std_logic_vector(7 downto 0) := x"01";
+    signal cfg_delay_ticks      : std_logic_vector(4 downto 0) := "10010";
     signal cfg_train_en         : STD_LOGIC := '0';
     signal cfg_hold_coeffs      : STD_LOGIC := '0';
     signal cfg_bypass           : STD_LOGIC := '1';
@@ -165,7 +165,7 @@ inst_dpd_fb : dpd_fb
     inst_dpd_error_calc : dpd_error_calc
     generic map (
         DATA_WIDTH  => 16,
-        ALPHA_SHIFT => 2
+        ALPHA_SHIFT => 1
     )
     port map (
         aclk               => aclk,
@@ -178,6 +178,7 @@ inst_dpd_fb : dpd_fb
         s_axis_fb_valid    => '1',
         cfg_train_en       => cfg_train_en,
         cfg_hold_coeffs    => cfg_hold_coeffs,
+        cfg_delay_cycles   => cfg_delay_ticks,     
         m_axis_err_i       => error_i,
         m_axis_err_q       => error_q,
         m_axis_err_valid   => error_valid
@@ -189,9 +190,10 @@ inst_dpd_fb : dpd_fb
     DPD_Core_Inst: entity work.hf_dpd_core_200w
         Generic map (
             MEMORY_DEPTH   => 3,
-            LUT_ADDR_WIDTH => 8,
+            LUT_ADDR_WIDTH => 7,
             DATA_WIDTH     => 16,
-            COEFF_WIDTH    => 16
+            COEFF_WIDTH    => 16,
+            ERROR_OFFSET   => 2
         )
         Port map (
             aclk              => aclk,
@@ -216,7 +218,7 @@ inst_dpd_fb : dpd_fb
             error_valid       => error_valid,
             
             -- Управление
-            cfg_delay_ticks   => cfg_delay_ticks(5 downto 0),
+            cfg_delay_ticks   => cfg_delay_ticks,
             cfg_train_en      => cfg_train_en,
             cfg_hold_coeffs   => cfg_hold_coeffs,
             
@@ -279,7 +281,7 @@ inst_dpd_fb : dpd_fb
                             cfg_hold_coeffs <= s_axis_cfg_tdata(1);
                             cfg_bypass <= s_axis_cfg_tdata(2);                            
                         when 1 => 
-                            cfg_delay_ticks <= s_axis_cfg_tdata(7 downto 0);   
+                            cfg_delay_ticks <= s_axis_cfg_tdata(4 downto 0);   
                         when 7 => 
 				            i_corr_amp <= s_axis_cfg_tdata(17 downto 0);
 			            when 8 =>
