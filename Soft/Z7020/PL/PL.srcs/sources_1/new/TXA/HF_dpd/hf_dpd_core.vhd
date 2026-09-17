@@ -24,6 +24,7 @@ entity hf_dpd_core is
         error_i           : in signed(31 downto 0);
         error_q           : in signed(31 downto 0);
         error_valid       : in  STD_LOGIC;
+        cfg_learn_rate    : in  std_logic_vector(15 downto 0);
         cfg_delay_ticks   : in  std_logic_vector(4 downto 0); 
         cfg_train_en      : in  STD_LOGIC;
         cfg_hold_coeffs   : in  STD_LOGIC;
@@ -136,7 +137,7 @@ architecture Behavioral of hf_dpd_core is
     signal coeffs : coeff_pair_array_t;
     signal mult_i, mult_q : mult_result_t := (others => (others => '0'));
     signal sum_i, sum_q : signed(31 downto 0) := (others => '0');
-    signal learn_rate : signed(15 downto 0) := to_signed(4, 16);
+    signal learn_rate : signed(15 downto 0);
     signal ovf_i, ovf_q : STD_LOGIC := '0';
     signal init_done : STD_LOGIC := '0';
     signal fb_i_delayed, fb_q_delayed : fb_delay_t := (others => (others => '0'));
@@ -250,7 +251,7 @@ begin
     begin
         if rising_edge(aclk) then
             if aresetn = '0' then
-                coeffs(m).real_part <= to_signed(7100, COEFF_WIDTH);
+                coeffs(m).real_part <= to_signed(16384, COEFF_WIDTH);
                 coeffs(m).imag_part <= (others => '0');
                 raddr_pipeline(m)   <= (others => (others => '0'));
             else
@@ -463,12 +464,23 @@ end process;
             end if;
         end if;
     end process;
+    
+    learn_rate <= resize(signed(cfg_learn_rate), 16);
 
 -- ========================================================================
 -- 12. АППАРАТНО ОПТИМИЗИРОВАННЫЙ БЛОК ОБНОВЛЕНИЯ LUT (ZYNQ-7020 COMPLIANT)
 -- ========================================================================
 -- Адаптирован для работы с внешним Block RAM (через порты bram_wr_...)
 process(aclk)
+    -- Локальный массив-аккумулятор для ВСЕХ 256 адресов и всех ветвей памяти.
+    -- Позволяет мгновенно извлекать и обновлять веса при любой динамике адреса.
+    type lut_cache_t is array (0 to 2**LUT_ADDR_WIDTH-1) of signed(COEFF_WIDTH-1 downto 0);
+    type lut_cache_matrix_t is array (0 to MEMORY_DEPTH-1) of lut_cache_t;
+    
+    variable shadow_matrix_real   : lut_cache_matrix_t := (others => (others => to_signed(16384, COEFF_WIDTH)));
+    variable shadow_matrix_imag   : lut_cache_matrix_t := (others => (others => (others => '0')));
+    variable local_init_done      : std_logic := '0';
+
     variable grad_i, grad_q       : signed(31 downto 0);
     variable update_i, update_q   : signed(31 downto 0);
     variable new_real, new_imag   : signed(COEFF_WIDTH-1 downto 0);
@@ -506,6 +518,17 @@ begin
             bram_wr_real <= (others => '0');
             bram_wr_imag <= (others => '0');
         else
+            -- Первичная инициализация локального кэша стартовыми значениями при выходе из сброса
+            if local_init_done = '0' then
+                for addr in 0 to (2**LUT_ADDR_WIDTH)-1 loop
+                    for m in 0 to MEMORY_DEPTH-1 loop
+                        shadow_matrix_real(m)(addr) := to_signed(16384, COEFF_WIDTH);
+                        shadow_matrix_imag(m)(addr) := (others => '0');
+                    end loop;
+                end loop;
+                local_init_done := '1';
+            end if;
+        
             -- По умолчанию запись в BRAM выключена
             v_wr_en   := (others => '0');
             v_wr_addr := (others => '0');
@@ -548,7 +571,7 @@ begin
                 end if;
 
                 v_wr_addr := std_logic_vector(to_unsigned(addr_int, LUT_ADDR_WIDTH));
-                
+
                 -- Цикл адаптации весов полинома памяти
                 for m in 0 to MEMORY_DEPTH-1 loop                        
 
@@ -558,9 +581,17 @@ begin
                     prod_qi := fb_q_delayed(m) * err_i_16;
                     prod_iq := fb_i_delayed(m) * err_q_16;
 
-                    -- 3. МАСШТАБИРОВАНИЕ ГРАДИЕНТА
-                    shift_i := shift_right(prod_ii, 12) + shift_right(prod_qq, 12);
-                    shift_q := shift_right(prod_qi, 12) - shift_right(prod_iq, 12);
+                    -- 3. МАСШТАБИРОВАНИЕ ГРАДИЕНТА С ПРАВИЛЬНЫМ СДВИГОМ (14 БИТ)
+                    if addr_int > 18 then
+                        shift_i := shift_right(prod_ii, 14) + shift_right(prod_qq, 14);
+                        shift_q := shift_right(prod_qi, 14) - shift_right(prod_iq, 14);
+                    elsif addr_int > 7 then
+                        shift_i := shift_right(prod_ii, 13) + shift_right(prod_qq, 13);
+                        shift_q := shift_right(prod_qi, 13) - shift_right(prod_iq, 13);  
+                    else
+                        shift_i := shift_right(prod_ii, 11) + shift_right(prod_qq, 11);
+                        shift_q := shift_right(prod_qi, 11) - shift_right(prod_iq, 11);  
+                    end if;  
 
                     grad_i := shift_i;
                     grad_q := shift_q;
@@ -577,7 +608,7 @@ begin
                     elsif grad_q < -MAX_GRAD then
                         grad_q := -MAX_GRAD;
                     end if;
-                    
+                                        
                     -- Шаг адаптации LMS
                     update_i := resize(((grad_i * learn_rate) + 16384) / 32768, 32);
                     update_q := resize(((grad_q * learn_rate) + 16384) / 32768, 32);
@@ -596,8 +627,12 @@ begin
                     
                     -- Извлечение текущего коэффициента, который сейчас находится на выходе BRAM
                     -- (Он зафиксирован в coeffs(m) благодаря конвейеру чтения)
-                    safe_real := coeffs(m).real_part;
-                    safe_imag := coeffs(m).imag_part;
+--                   safe_real := coeffs(m).real_part;
+--                    safe_imag := coeffs(m).imag_part;
+                    
+                    -- Читаем предыдущее состояние ИЗ ПОЛНОЦЕННОЙ МАТРИЦЫ КЭША по текущему адресу записи
+                    safe_real := shadow_matrix_real(m)(addr_int);
+                    safe_imag := shadow_matrix_imag(m)(addr_int);
                     
                     new_real := safe_real + resize(update_i, COEFF_WIDTH);
                     new_imag := safe_imag + resize(update_q, COEFF_WIDTH);
@@ -614,6 +649,10 @@ begin
                     elsif new_imag < MIN_COEFF then
                         new_imag := MIN_COEFF;
                     end if;
+                    
+                    -- Обновляем значение прямо в матрице локального кэша
+                    shadow_matrix_real(m)(addr_int) := new_real;
+                    shadow_matrix_imag(m)(addr_int) := new_imag;
 
                     -- Упаковываем вычисленные значения в соответствующие слайсы переменных шины записи
                     v_wr_real((m+1)*COEFF_WIDTH-1 downto m*COEFF_WIDTH) := std_logic_vector(new_real);

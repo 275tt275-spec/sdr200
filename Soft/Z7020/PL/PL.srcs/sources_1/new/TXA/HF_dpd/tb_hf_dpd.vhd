@@ -44,7 +44,7 @@ architecture Behavioral of tb_hf_dpd is
     constant CLK_FREQ       : real := 122880000.0;
     constant DDS_FREQ       : real := 5000000.0; -- 5 МГц несущая
     constant IQ_SIGNAL_FREQ : real := 5000.0;    -- 5 кГц полезный сигнал
-    constant TONE1_FREQ : real := 6000.0; 
+    constant TONE1_FREQ : real := 4000.0; 
     constant TONE2_FREQ : real := 6000.0;
 
     -- Сигналы для реализации конвейера задержки в обратной связи (моделирование кабеля/тракта)
@@ -115,8 +115,8 @@ begin
         variable noise         : real;
         
         -- Параметры радио-тракта (физически корректные)
-        constant ATTENUATION   : real := 0.95;        -- Затухание в петле (тракт + аттенюатор)
-        constant DISTORTION_K3 : real := 0.05;        -- 5% нелинейных искажений 3-го порядка (PA)
+        constant ATTENUATION   : real := 0.8;        -- Затухание в петле (тракт + аттенюатор)
+        constant DISTORTION_K3 : real := 0.00;        -- 5% нелинейных искажений 3-го порядка (PA)
         constant NOISE_FLOOR   : real := 10.0;        -- Небольшой шум АЦП (в младших разрядах)
 
     begin
@@ -287,10 +287,16 @@ begin
         
            wait until rising_edge(aclk);            
            s_axis_cfg_tdest  <= "00001";       
-           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(25, 32));   
+           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(18, 32));   
            s_axis_cfg_tvalid <= '1';            
            wait until rising_edge(aclk);            
-           s_axis_cfg_tvalid <= '0';            
+           s_axis_cfg_tvalid <= '0';         
+           wait until rising_edge(aclk);            
+           s_axis_cfg_tdest  <= "00010";       
+           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(64, 32));   
+           s_axis_cfg_tvalid <= '1';            
+           wait until rising_edge(aclk);            
+           s_axis_cfg_tvalid <= '0';     
            wait for 20000 * CLK_PERIOD; 
         
   --     for i in 0 to 29 loop

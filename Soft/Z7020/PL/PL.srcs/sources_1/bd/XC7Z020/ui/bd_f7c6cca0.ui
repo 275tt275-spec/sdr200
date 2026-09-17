@@ -1,7 +1,7 @@
 {
    "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"1.58695",
-   "Default View_TopLeft":"1479,1099",
+   "Default View_ScaleFactor":"0.717936",
+   "Default View_TopLeft":"653,596",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0
 #  -string -flagsOSRD
@@ -56,19 +56,19 @@ preplace inst axi_uartlite_debug -pg 1 -lvl 6 -x 2230 -y 990 -defaultsOSRD
 preplace inst xlconstant_0 -pg 1 -lvl 6 -x 2230 -y 860 -defaultsOSRD
 preplace inst xlconcat_0 -pg 1 -lvl 3 -x 1090 -y 1170 -defaultsOSRD
 preplace inst zynq_lvds_tx_0 -pg 1 -lvl 6 -x 2230 -y 1480 -defaultsOSRD
-preplace netloc ADC0_OUT_N_1 1 0 5 -80J 150 420J 370 NJ 370 NJ 370 1650J
-preplace netloc ADC0_OUT_P_1 1 0 5 -40J 370 400J 440 NJ 440 NJ 440 1660J
-preplace netloc ADC1_OUT_N_1 1 0 5 -60J 380 390J 450 NJ 450 NJ 450 1630J
-preplace netloc ADC1_OUT_P_1 1 0 5 -70J 160 410J 460 NJ 460 NJ 460 1620J
+preplace netloc ADC0_OUT_N_1 1 0 5 -80J 150 430J 370 NJ 370 NJ 370 1650J
+preplace netloc ADC0_OUT_P_1 1 0 5 -40J 370 410J 440 NJ 440 NJ 440 1660J
+preplace netloc ADC1_OUT_N_1 1 0 5 -60J 380 400J 450 NJ 450 NJ 450 1630J
+preplace netloc ADC1_OUT_P_1 1 0 5 -70J 160 420J 460 NJ 460 NJ 460 1620J
 preplace netloc CAT_DTR_1 1 0 5 -70J 500 NJ 500 NJ 500 NJ 500 1580J
 preplace netloc CAT_RTC_1 1 0 5 -40J 510 NJ 510 NJ 510 1270J 740 1640J
 preplace netloc CW_KEY_1 1 0 5 -60J 520 NJ 520 NJ 520 NJ 520 1570J
 preplace netloc DAC_DCO_N_1 1 0 5 NJ 450 370J 470 NJ 470 NJ 470 1610J
 preplace netloc DAC_DCO_P_1 1 0 5 NJ 420 NJ 420 NJ 420 NJ 420 1640J
-preplace netloc ENET0_EXT_INTIN_1 1 0 2 -90J 130 450J
+preplace netloc ENET0_EXT_INTIN_1 1 0 2 -90J 130 460J
 preplace netloc M00_ARESETN_1 1 2 4 910 560 1260 750 NJ 750 2070
 preplace netloc PTT_1 1 0 5 -90J 530 NJ 530 NJ 530 NJ 530 1560J
-preplace netloc SDR_0_aclk_122 1 1 5 450 660 920 570 1250 760 NJ 760 2000
+preplace netloc SDR_0_aclk_122 1 1 5 460 660 920 570 1250 760 NJ 760 2000
 preplace netloc SDR_1_DAC_DCI_N 1 5 2 2000J 60 2410J
 preplace netloc SDR_1_DAC_DCI_P 1 5 2 NJ 460 2420J
 preplace netloc SDR_1_DAC_D_N 1 5 2 NJ 480 2410J
@@ -80,15 +80,15 @@ preplace netloc SDR_1_i2s_mclk 1 5 2 NJ 520 2420J
 preplace netloc SDR_1_i2s_wclk 1 5 2 2000J 540 NJ
 preplace netloc TX_FAIL_1 1 0 5 -20J 540 NJ 540 NJ 540 NJ 540 1550J
 preplace netloc axi_fifo_wb_interrupt 1 2 5 930 550 NJ 550 1540J 710 2050J 600 2390
-preplace netloc axi_intc_0_irq 1 1 4 450 400 NJ 400 NJ 400 1530
+preplace netloc axi_intc_0_irq 1 1 4 460 400 NJ 400 NJ 400 1530
 preplace netloc axi_uartlite_0_interrupt 1 2 5 940 1250 NJ 1250 NJ 1250 NJ 1250 2390
 preplace netloc axi_uartlite_1_interrupt 1 2 5 950 1090 NJ 1090 NJ 1090 NJ 1090 2390
 preplace netloc axi_uartlite_2_tx 1 6 1 NJ 1000
 preplace netloc i2s_din_1 1 0 5 NJ 480 NJ 480 NJ 480 NJ 480 1590J
-preplace netloc processing_system7_0_FCLK_CLK0 1 0 3 20 120 440 350 870
-preplace netloc processing_system7_0_FCLK_CLK1 1 2 4 890J 70 NJ 70 NJ 70 2030
-preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 5 30 140 430J 340 930 270 NJ 270 NJ
-preplace netloc rst_ps7_0_200M_peripheral_aresetn 1 1 2 380 670 890
+preplace netloc processing_system7_0_FCLK_CLK0 1 0 3 20 120 450 350 860
+preplace netloc processing_system7_0_FCLK_CLK1 1 2 4 880J 70 NJ 70 NJ 70 2030
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 0 5 30 140 440J 340 920 270 NJ 270 NJ
+preplace netloc rst_ps7_0_200M_peripheral_aresetn 1 1 2 390 670 890
 preplace netloc util_vector_logic_0_Res 1 5 1 2020 250n
 preplace netloc xlconcat_0_dout 1 3 1 1270 910n
 preplace netloc xlconstant_0_dout 1 6 1 2390 860n
@@ -112,11 +112,11 @@ preplace netloc axi_uartlite_0_UART 1 6 1 NJ 1320
 preplace netloc axi_uartlite_1_UART 1 6 1 NJ 1160
 preplace netloc gmii_to_rgmii_0_MDIO_PHY 1 6 1 2390J 110n
 preplace netloc gmii_to_rgmii_0_RGMII 1 6 1 NJ 140
-preplace netloc processing_system7_0_DDR 1 2 5 870J 30 NJ 30 NJ 30 NJ 30 NJ
-preplace netloc processing_system7_0_FIXED_IO 1 2 5 880J 50 NJ 50 NJ 50 NJ 50 2420J
+preplace netloc processing_system7_0_DDR 1 2 5 860J 30 NJ 30 NJ 30 NJ 30 NJ
+preplace netloc processing_system7_0_FIXED_IO 1 2 5 870J 50 NJ 50 NJ 50 NJ 50 2420J
 preplace netloc processing_system7_0_GMII_ETHERNET_0 1 2 4 NJ 60 NJ 60 NJ 60 1990
 preplace netloc processing_system7_0_MDIO_ETHERNET_0 1 2 4 NJ 80 NJ 80 NJ 80 2040
-preplace netloc processing_system7_0_M_AXI_GP0 1 2 1 900 160n
+preplace netloc processing_system7_0_M_AXI_GP0 1 2 1 890 160n
 levelinfo -pg 1 -110 200 660 1090 1400 1830 2230 2470
 pagesize -pg 1 -db -bbox -sgen -290 0 2630 1570
 "

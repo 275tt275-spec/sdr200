@@ -93,6 +93,7 @@ architecture Structural of hf_dpd is
     
     -- Сигналы управления
     signal cfg_delay_ticks      : std_logic_vector(4 downto 0) := "10010";
+    signal cfg_learn_rate       : std_logic_vector(15 downto 0) := x"0002";
     signal cfg_train_en         : STD_LOGIC := '0';
     signal cfg_hold_coeffs      : STD_LOGIC := '0';
     signal cfg_bypass           : STD_LOGIC := '1';
@@ -165,7 +166,7 @@ inst_dpd_fb : dpd_fb
     inst_dpd_error_calc : dpd_error_calc
     generic map (
         DATA_WIDTH  => 16,
-        ALPHA_SHIFT => 1
+        ALPHA_SHIFT => 2
     )
     port map (
         aclk               => aclk,
@@ -218,6 +219,7 @@ inst_dpd_fb : dpd_fb
             error_valid       => error_valid,
             
             -- Управление
+            cfg_learn_rate    => cfg_learn_rate,
             cfg_delay_ticks   => cfg_delay_ticks,
             cfg_train_en      => cfg_train_en,
             cfg_hold_coeffs   => cfg_hold_coeffs,
@@ -281,7 +283,9 @@ inst_dpd_fb : dpd_fb
                             cfg_hold_coeffs <= s_axis_cfg_tdata(1);
                             cfg_bypass <= s_axis_cfg_tdata(2);                            
                         when 1 => 
-                            cfg_delay_ticks <= s_axis_cfg_tdata(4 downto 0);   
+                            cfg_delay_ticks <= s_axis_cfg_tdata(4 downto 0);
+                        when 2 =>      
+                            cfg_learn_rate <= s_axis_cfg_tdata(15 downto 0); 
                         when 7 => 
 				            i_corr_amp <= s_axis_cfg_tdata(17 downto 0);
 			            when 8 =>
