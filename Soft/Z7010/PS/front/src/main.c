@@ -23,9 +23,12 @@
 #include "xstatus.h"
 #include "sleep.h"
 #include "vga.h"
+#include "fft.h"
 
 #define GUI_THREAD_STACKSIZE 		2048 * 8
+#define FIFO_THREAD_STACKSIZE 		2048
 #define GUI_PRIORITY				2
+#define FIFO_PRIORITY				tskIDLE_PRIORITY
 #define GPIO_DEVICE_ID				XPAR_XGPIOPS_0_DEVICE_ID
 
 #define GPIO_EMIO_OFFSET			54
@@ -135,6 +138,13 @@ int main( void )
 					NULL, 						/* The task parameter is not used, so set to NULL. */
 					GUI_PRIORITY,			/* The task runs at the idle priority. */
 					NULL );
+
+	xTaskCreate( 	fft_thread,
+			( const char * ) "FFT Scheduler", 		/* Text name for the task, provided to assist debugging only. */
+			FIFO_THREAD_STACKSIZE, 	/* The stack allocated to the task. */
+			NULL, 						/* The task parameter is not used, so set to NULL. */
+			FIFO_PRIORITY,			/* The task runs at the idle priority. */
+			NULL );
 
 
 	/* Start the tasks and timer running. */

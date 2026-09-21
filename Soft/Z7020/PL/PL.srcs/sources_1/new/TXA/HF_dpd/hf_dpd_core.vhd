@@ -580,18 +580,21 @@ begin
                     prod_qq := fb_q_delayed(m) * err_q_16;
                     prod_qi := fb_q_delayed(m) * err_i_16;
                     prod_iq := fb_i_delayed(m) * err_q_16;
+                    
+                    shift_i := prod_ii + prod_qq;
+                    shift_q := prod_qi - prod_iq;
 
                     -- 3. ÌÀÑØÒÀÁÈÐÎÂÀÍÈÅ ÃÐÀÄÈÅÍÒÀ Ñ ÏÐÀÂÈËÜÍÛÌ ÑÄÂÈÃÎÌ (14 ÁÈÒ)
                     if addr_int > 18 then
-                        shift_i := shift_right(prod_ii, 14) + shift_right(prod_qq, 14);
-                        shift_q := shift_right(prod_qi, 14) - shift_right(prod_iq, 14);
+                        shift_i := shift_right(shift_i, 14);
+                        shift_q := shift_right(shift_q, 14);
                     elsif addr_int > 7 then
-                        shift_i := shift_right(prod_ii, 13) + shift_right(prod_qq, 13);
-                        shift_q := shift_right(prod_qi, 13) - shift_right(prod_iq, 13);  
+                        shift_i := shift_right(shift_i, 13);
+                        shift_q := shift_right(shift_q, 13);
                     else
-                        shift_i := shift_right(prod_ii, 11) + shift_right(prod_qq, 11);
-                        shift_q := shift_right(prod_qi, 11) - shift_right(prod_iq, 11);  
-                    end if;  
+                        shift_i := shift_right(shift_i, 11);
+                        shift_q := shift_right(shift_q, 11);
+                    end if; 
 
                     grad_i := shift_i;
                     grad_q := shift_q;

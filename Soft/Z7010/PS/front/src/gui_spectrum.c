@@ -1,4 +1,5 @@
 ﻿#include <stdio.h>
+#include <math.h>
 
 #include "lvgl.h"
 #include "gui_spectrum.h"
@@ -114,7 +115,7 @@ void gui_spectrum_init(lv_obj_t* scr, lv_coord_t x, lv_coord_t y, lv_coord_t w, 
     }
     if (waterfallsize > 3)
         hor_lines = hor_lines_small;
-    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, -50, 50);
+    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
     lv_obj_set_style_pad_all(chart, 0, LV_PART_MAIN);
     lv_chart_set_type(chart, LV_CHART_TYPE_LINE);
     lv_obj_clear_flag(chart, LV_OBJ_FLAG_SCROLLABLE);
@@ -200,7 +201,54 @@ void gui_spectrum_init(lv_obj_t* scr, lv_coord_t x, lv_coord_t y, lv_coord_t w, 
 
 void gui_spectrum_load_data(int32_t* data)
 {
+#if 0
     lv_memcpy(data_set, data, sizeof(data_set));
+#else
+    // Максимально возможное значение модуля для 16-битного знакового числа:
+    // sqrt(32768^2 + 32768^2) примерно равно 46340.95
+    const float MAX_MAGNITUDE = 46340.95f;
+#define SPECTRUM_POINTS ARRAY_SIZE(data_set)
+
+    for (uint32_t i = 0; i < SPECTRUM_POINTS; i++)
+    {
+        // 1. Извлекаем RE и IM (младшие и старшие 16 бит).
+        // Явное приведение к int16_t восстанавливает знак (двоичный дополнительный код)
+        int16_t re = (int16_t)(data[i] & 0xFFFF);
+        int16_t im = (int16_t)((data[i] >> 16) & 0xFFFF);
+
+        // 2. Вычисляем линейную амплитуду (модуль комплексного вектора)
+        float magnitude = sqrtf((float)re * re + (float)im * im);
+
+        // 3. Переводим в дБ относительно максимально возможного уровня (dBFS)
+        // Если сигнал равен 0, log10f вернет минус бесконечность. Защищаем код с помощью малого смещения (+1.0f).
+        float dbfs = 20.0f * log10f((magnitude / MAX_MAGNITUDE) + 0.00001f);
+
+        // Переменная dbfs теперь лежит в диапазоне примерно от -100.0f (тишина) до 0.0f (максимум)
+
+        // 4. Масштабируем под Y-ось LVGL (переводим диапазон [-100, 0] в диапазон)
+//        float visual_db = dbfs + 100.0f;
+        float visual_db = -dbfs;
+
+        // 5. Ограничиваем значения сверху и снизу (защита от выбросов)
+        if (visual_db < 0.0f)
+        	visual_db = 0.0f;
+        if (visual_db > 100.0f)
+        	visual_db = 100.0f;
+
+        // 6. Округляем и сохраняем в массив типа lv_coord_t
+        data_set[i] = (lv_coord_t)roundf(visual_db);
+
+        // 7. Логика удержания пиков (Peak Hold)
+        if (data_set[i] > data_set_peak[i]) {
+            data_set_peak[i] = data_set[i]; // Пик мгновенно взлетает вверх
+        } else {
+            // Медленное сползание пика вниз для красивого эффекта (decay)
+            if (data_set_peak[i] > 0) {
+                data_set_peak[i] -= 1;
+            }
+        }
+    }
+#endif
 }
 
 void gui_spectrum_set_pos(int32_t offset)
@@ -255,7 +303,7 @@ void gui_spectrum_draw_display()
     // Принудительно заставляем график обновиться на экране
     lv_chart_refresh(chart);
 
-    gui_wf_Draw(gui_dev.waterfallgain);
+//    gui_wf_Draw(gui_dev.waterfallgain);
 }
 
 void gui_spectrum_set_signal_strength(double strength)

@@ -332,8 +332,8 @@ async_fifo_inst : fifo_serin
     -- Читаем из FIFO, если оно не пустое И приемник AXI-Stream готов принимать данные.
     -- (Возврат m_axis_tready в логику обязателен для предотвращения потери данных,
     -- если последующий IP-блок, например FFT, временно выставит tready = '0').
---    fifo_rden <= '1' when (fifo_empty = '0' and (m_axis_tready = '1' or fifo_rden_reg = '0')) else '0';
-    fifo_rden <= '1' when fifo_empty = '0' and fifo_rden_reg = '0' else '0';
+    fifo_rden <= '1' when (fifo_empty = '0' and (m_axis_tready = '1' or fifo_rden_reg = '0')) else '0';
+--    fifo_rden <= '1' when fifo_empty = '0' and fifo_rden_reg = '0' else '0';
 
     process(aclk)
     begin
@@ -382,6 +382,11 @@ async_fifo_inst : fifo_serin
                     m_axis_config_tvalid <= '1';
                     -- ТОЧНОЕ 24-битное слово: Прямое FFT + Размер 2048 (11 в степени)
                     m_axis_config_tdata  <= X"000017";   
+                    
+--                    m_axis_config_tdata <= (others => '0'); -- Обнуляем все PAD-биты автоматически        
+--                    m_axis_config_tdata(4 downto 0)  <= "01011";         -- NFFT = 11 (для 2048 точек)
+--                    m_axis_config_tdata(8)           <= '1';             -- FWD_INV = 1 (Прямое FFT)
+--                    m_axis_config_tdata(21 downto 10) <= "010101010101";  -- SCALE_SCH (Вариант 1)  
                     -- Если ядро подтвердило прием (tready = '1')
                     if m_axis_config_tready = '1' then
                         m_axis_config_tvalid <= '0';

@@ -115,8 +115,8 @@ begin
         variable noise         : real;
         
         -- Параметры радио-тракта (физически корректные)
-        constant ATTENUATION   : real := 0.8;        -- Затухание в петле (тракт + аттенюатор)
-        constant DISTORTION_K3 : real := 0.00;        -- 5% нелинейных искажений 3-го порядка (PA)
+        constant ATTENUATION   : real := 0.9;        -- Затухание в петле (тракт + аттенюатор)
+        constant DISTORTION_K3 : real := 0.15;        -- 5% нелинейных искажений 3-го порядка (PA)
         constant NOISE_FLOOR   : real := 10.0;        -- Небольшой шум АЦП (в младших разрядах)
 
     begin
@@ -293,7 +293,7 @@ begin
            s_axis_cfg_tvalid <= '0';         
            wait until rising_edge(aclk);            
            s_axis_cfg_tdest  <= "00010";       
-           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(64, 32));   
+           s_axis_cfg_tdata  <= std_logic_vector(to_unsigned(32, 32));   
            s_axis_cfg_tvalid <= '1';            
            wait until rising_edge(aclk);            
            s_axis_cfg_tvalid <= '0';     

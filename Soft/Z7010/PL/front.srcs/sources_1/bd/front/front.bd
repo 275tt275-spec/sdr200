@@ -3167,7 +3167,7 @@
       },
       "zynq_lvds_rx_0": {
         "vlnv": "xilinx.com:module_ref:zynq_lvds_rx:1.0",
-        "ip_revision": "1788593971",
+        "ip_revision": "1789758958",
         "xci_name": "front_zynq_lvds_rx_0_0",
         "xci_path": "ip\\front_zynq_lvds_rx_0_0\\front_zynq_lvds_rx_0_0.xci",
         "inst_hier_path": "zynq_lvds_rx_0",
@@ -3478,7 +3478,7 @@
             "value": "5"
           },
           "C_RX_FIFO_PF_THRESHOLD": {
-            "value": "2049"
+            "value": "2048"
           },
           "C_USE_TX_CTRL": {
             "value": "0"
@@ -3780,13 +3780,13 @@
           "ps7_0_axi_periph/ACLK",
           "ps7_0_axi_periph/S00_ACLK",
           "ps7_0_axi_periph/M00_ACLK",
-          "zynq_lvds_rx_0/aclk",
           "system_ila_0/clk",
           "xfft_0/aclk",
           "axi_fifo_mm_s_0/s_axi_aclk",
           "ps7_0_axi_periph/M01_ACLK",
           "ps7_0_axi_periph/M02_ACLK",
-          "Zedboard_AXI_VGA_1/s_axi_aclk"
+          "Zedboard_AXI_VGA_1/s_axi_aclk",
+          "zynq_lvds_rx_0/aclk"
         ]
       },
       "processing_system7_0_FCLK_CLK1": {
@@ -3823,12 +3823,12 @@
           "ps7_0_axi_periph/ARESETN",
           "ps7_0_axi_periph/S00_ARESETN",
           "ps7_0_axi_periph/M00_ARESETN",
-          "zynq_lvds_rx_0/aresetn",
           "system_ila_0/resetn",
           "axi_fifo_mm_s_0/s_axi_aresetn",
           "ps7_0_axi_periph/M01_ARESETN",
           "ps7_0_axi_periph/M02_ARESETN",
-          "Zedboard_AXI_VGA_1/s_axi_aresetn"
+          "Zedboard_AXI_VGA_1/s_axi_aresetn",
+          "zynq_lvds_rx_0/aresetn"
         ]
       }
     },
@@ -3840,18 +3840,17 @@
               "SEG_Zedboard_AXI_VGA_1_reg0": {
                 "address_block": "/Zedboard_AXI_VGA_1/s_axi/reg0",
                 "offset": "0x40000000",
-                "range": "64K",
-                "lock_type": "local"
+                "range": "64M"
               },
               "SEG_axi_fifo_mm_s_0_Mem0": {
                 "address_block": "/axi_fifo_mm_s_0/S_AXI/Mem0",
-                "offset": "0x43C00000",
+                "offset": "0x44000000",
                 "range": "64K",
                 "offset_high_param": "C_HIGHADDR"
               },
               "SEG_axi_fifo_mm_s_0_Mem1": {
                 "address_block": "/axi_fifo_mm_s_0/S_AXI_FULL/Mem1",
-                "offset": "0x43C10000",
+                "offset": "0x44010000",
                 "range": "64K",
                 "offset_base_param": "C_AXI4_BASEADDR",
                 "offset_high_param": "C_AXI4_HIGHADDR"

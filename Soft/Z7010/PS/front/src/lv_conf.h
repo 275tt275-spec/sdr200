@@ -19,6 +19,8 @@
 
 #include <stdint.h>
 
+#define LV_USE_OS  LV_OS_FREERTOS
+
 /*====================
    COLOR SETTINGS
  *====================*/

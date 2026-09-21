@@ -25,6 +25,8 @@ void gui_spectrum_set_waterfall_size(int waterfallsize);
 void gui_spectrum_set_cursor_mode(int mode);
 void gui_spectrum_set_freq(uint32_t freq);
 
+void gui_spectrum_update_data(uint32_t* data);
+
 #ifdef __cplusplus
 }
 #endif

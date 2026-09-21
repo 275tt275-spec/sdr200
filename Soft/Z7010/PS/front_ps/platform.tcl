@@ -102,3 +102,12 @@ bsp write
 bsp reload
 catch {bsp regenerate}
 platform generate -domains standalone_ps7_cortexa9_0 
+platform active {front_ps}
+platform config -updatehw {D:/projects/sdr200/Soft/Z7010/PL/front_wrapper.xsa}
+platform clean
+platform generate
+domain active {freertos10_xilinx_domain}
+bsp reload
+platform config -updatehw {D:/projects/sdr200/Soft/Z7010/PL/front_wrapper.xsa}
+platform clean
+platform generate

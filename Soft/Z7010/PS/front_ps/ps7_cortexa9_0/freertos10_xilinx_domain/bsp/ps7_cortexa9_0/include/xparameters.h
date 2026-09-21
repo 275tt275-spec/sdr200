@@ -85,7 +85,7 @@
 
 /* Peripheral Definitions for peripheral ZEDBOARD_AXI_VGA_1 */
 #define XPAR_ZEDBOARD_AXI_VGA_1_BASEADDR 0x40000000
-#define XPAR_ZEDBOARD_AXI_VGA_1_HIGHADDR 0x7FFFFFFF
+#define XPAR_ZEDBOARD_AXI_VGA_1_HIGHADDR 0x43FFFFFF
 
 
 /* Peripheral Definitions for peripheral PS7_AFI_0 */
@@ -180,7 +180,7 @@
 
 /* Canonical Definitions for peripheral ZEDBOARD_AXI_VGA_1 */
 #define XPAR_ZEDBOARD_AXI_VGA_0_BASEADDR 0x40000000
-#define XPAR_ZEDBOARD_AXI_VGA_0_HIGHADDR 0x7FFFFFFF
+#define XPAR_ZEDBOARD_AXI_VGA_0_HIGHADDR 0x43FFFFFF
 
 
 
@@ -260,6 +260,29 @@
 /******************************************************************/
 
 /* Definition for input Clock */
+/* Definitions for driver LLFIFO */
+#define XPAR_XLLFIFO_NUM_INSTANCES 1U
+
+/* Definitions for peripheral AXI_FIFO_MM_S_0 */
+#define XPAR_AXI_FIFO_MM_S_0_DEVICE_ID 0U
+#define XPAR_AXI_FIFO_MM_S_0_BASEADDR 0x44000000U
+#define XPAR_AXI_FIFO_MM_S_0_HIGHADDR 0x4400FFFFU
+#define XPAR_AXI_FIFO_MM_S_0_AXI4_BASEADDR 0x44010000U
+#define XPAR_AXI_FIFO_MM_S_0_AXI4_HIGHADDR 0x4401FFFFU
+#define XPAR_AXI_FIFO_MM_S_0_DATA_INTERFACE_TYPE 1U
+
+/* Canonical definitions for peripheral AXI_FIFO_MM_S_0 */
+#define XPAR_AXI_FIFO_0_DEVICE_ID 0U
+#define XPAR_AXI_FIFO_0_BASEADDR 0x44000000U
+#define XPAR_AXI_FIFO_0_HIGHADDR 0x4400FFFFU
+#define XPAR_AXI_FIFO_0_AXI4_BASEADDR 0x44010000U
+#define XPAR_AXI_FIFO_0_AXI4_HIGHADDR 0x4401FFFFU
+#define XPAR_AXI_FIFO_0_DATA_INTERFACE_TYPE 1U
+
+
+
+/******************************************************************/
+
 /* Definitions for Fabric interrupts connected to ps7_scugic_0 */
 #define XPAR_FABRIC_ZEDBOARD_AXI_VGA_1_FRM_CPT_IRQ_INTR 61U
 

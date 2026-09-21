@@ -11,7 +11,13 @@ static lv_obj_t* button[LEFT_BUTTONS] = { NULL };
 static lv_group_t* buttongroup = NULL;
 int ibuttons = 0;
 
-static char str[80];
+static const char chTUNE[] = "TUNE";
+static const char chAM[] = "AM";
+static const char chLSB[] = "LSB";
+static const char chUSB[] = "USB";
+static const char chCW[] = "CW";
+static const char chFM[] = "FM";
+static const char chDIG[] = "DIG";
 
 static void bar_button_handler(lv_event_t* e);
 
@@ -38,6 +44,7 @@ void gui_left_bar_init(lv_obj_t* o_parent, lv_group_t* button_group, int mode, l
 #endif
     int ibutton_x = 0, ibutton_y = 0;
     int i = 0;
+    char* pStr = (char*)chUSB;
 
     barview = o_parent;
     lv_style_init(&style_btn);
@@ -70,49 +77,49 @@ void gui_left_bar_init(lv_obj_t* o_parent, lv_group_t* button_group, int mode, l
         switch (i)
         {
         case 0:
+        	pStr = (char*)chTUNE;
             lv_obj_add_flag(button[i], LV_OBJ_FLAG_CHECKABLE);
             lv_obj_set_user_data(button[i], NULL);
-            strcpy(str, "TUNE");
             //if (SdrDevices.get_tx_channels(default_radio) == 0)
             //	lv_obj_add_flag(button[i], LV_OBJ_FLAG_HIDDEN);
             break;
         case 1:
-            strcpy(str, "AM");
+        	pStr = (char*)chAM;
             lv_obj_add_flag(button[i], LV_OBJ_FLAG_CHECKABLE);
             lv_obj_set_user_data(button[i], (void*)(long)i);
             //if (mode == mode_usb)
             //	lv_obj_add_state(button[i], LV_STATE_CHECKED);
             break;
         case 2:
-            strcpy(str, "LSB");
+        	pStr = (char*)chLSB;
             lv_obj_add_flag(button[i], LV_OBJ_FLAG_CHECKABLE);
             lv_obj_set_user_data(button[i], (void*)(long)i);
             //if (mode == mode_lsb)
             //	lv_obj_add_state(button[i], LV_STATE_CHECKED);
             break;
         case 3:
+        	pStr = (char*)chUSB;
             lv_obj_add_flag(button[i], LV_OBJ_FLAG_CHECKABLE);
             lv_obj_set_user_data(button[i], (void*)(long)i);
-            strcpy(str, "USB");
             //if (mode == mode_am)
             //	lv_obj_add_state(button[i], LV_STATE_CHECKED);
             break;
         case 4:
-            strcpy(str, "CW");
+        	pStr = (char*)chCW;
             lv_obj_add_flag(button[i], LV_OBJ_FLAG_CHECKABLE);
             lv_obj_set_user_data(button[i], (void*)(long)i);
             //if (mode == mode_narrowband_fm)
             //	lv_obj_add_state(button[i], LV_STATE_CHECKED);
             break;
         case 5:
-            strcpy(str, "FM");
+        	pStr = (char*)chFM;
             lv_obj_add_flag(button[i], LV_OBJ_FLAG_CHECKABLE);
             lv_obj_set_user_data(button[i], (void*)(long)i);
             //if (mode == mode_cw)
             //	lv_obj_add_state(button[i], LV_STATE_CHECKED);
             break;
         case 6:
-            strcpy(str, "DIG");
+        	pStr = (char*)chDIG;
             lv_obj_add_flag(button[i], LV_OBJ_FLAG_CHECKABLE);
             lv_obj_set_user_data(button[i], (void*)(long)i);
             ///if (mode == modefreedv)
@@ -120,7 +127,7 @@ void gui_left_bar_init(lv_obj_t* o_parent, lv_group_t* button_group, int mode, l
             //lv_obj_add_state(button[i], LV_STATE_DISABLED);
             break;
         }
-        lv_label_set_text(lv_label, str);
+        lv_label_set_text(lv_label, pStr);
         lv_obj_center(lv_label);
 
         ibutton_y++;

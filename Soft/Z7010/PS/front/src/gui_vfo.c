@@ -4,6 +4,7 @@
 #include "lvgl.h"
 #include "gui_parts.h"
 #include "gui_vfo.h"
+#include "gui_meter.h"
 
 static lv_group_t* keyboardgroup;
 static lv_style_t tuner_style;
@@ -189,15 +190,15 @@ void gui_vfo_init(lv_obj_t* scr, int x, int y, int w, int h, lv_group_t* keyboar
 
 void gui_vfo_set(int vfo, long long freq, int vfo_rx, int vfo_mode_no, int vfo_band, int vfo_band_index)
 {
-    char str[30];
+    char str[64];
 
     if (freq > 100000000LU)
     {
-        sprintf(str, "%3ld.%03ld.%02ld", (long)(freq / 1000000), (long)((freq / 1000) % 1000), (long)((freq / 10) % 100));
+        snprintf(str, sizeof(str), "%3ld.%03ld.%02ld", (long)(freq / 1000000), (long)((freq / 1000) % 1000), (long)((freq / 10) % 100));
     }
     else
     {
-        sprintf(str, "%3ld.%03ld.%03ld", (long)(freq / 1000000), (long)((freq / 1000) % 1000), (long)((freq) % 1000));
+        snprintf(str, sizeof(str), "%3ld.%03ld.%03ld", (long)(freq / 1000000), (long)((freq / 1000) % 1000), (long)((freq) % 1000));
     }
 
     lv_obj_t* vfo_frequency = gui_dev.active_vfo ? gui_vfo[1].vfo_frequency : gui_vfo[0].vfo_frequency;
@@ -205,7 +206,7 @@ void gui_vfo_set(int vfo, long long freq, int vfo_rx, int vfo_mode_no, int vfo_b
     lv_obj_set_style_text_color(vfo_frequency, lv_palette_main(LV_PALETTE_YELLOW), 0);
     lv_obj_set_style_text_color(vfo_frequency, lv_color_hex(0x90A4AE), 0);
 
-    sprintf(str, "%d %s", vfo_band, str_band);
+    snprintf(str, sizeof(str), "%d %s", vfo_band, str_band);
     if (gui_dev.active_vfo)
         lv_label_set_text(band_label2, str);
     else

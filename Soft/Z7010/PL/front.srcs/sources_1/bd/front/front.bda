@@ -209,7 +209,7 @@
             "V4": {
                 "VT": "AC",
                 "BA": "0x40000000",
-                "HA": "0x4000FFFF",
+                "HA": "0x43FFFFFF",
                 "BP": "C_BASEADDR",
                 "HP": "C_HIGHADDR",
                 "MA": "Data",
@@ -222,13 +222,12 @@
                 "SS": "reg0",
                 "SV": "xilinx.com:module_ref:Zedboard_AXI_VGA:1.0",
                 "TM": "both",
-                "TU": "register",
-                "LT": "local"
+                "TU": "register"
             },
             "V5": {
                 "VT": "AC",
-                "BA": "0x43C00000",
-                "HA": "0x43C0FFFF",
+                "BA": "0x44000000",
+                "HA": "0x4400FFFF",
                 "BP": "C_BASEADDR",
                 "HP": "C_HIGHADDR",
                 "MA": "Data",
@@ -245,8 +244,8 @@
             },
             "V6": {
                 "VT": "AC",
-                "BA": "0x43C10000",
-                "HA": "0x43C1FFFF",
+                "BA": "0x44010000",
+                "HA": "0x4401FFFF",
                 "BP": "C_AXI4_BASEADDR",
                 "HP": "C_AXI4_HIGHADDR",
                 "MA": "Data",

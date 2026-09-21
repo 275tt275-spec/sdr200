@@ -109,13 +109,13 @@ void gui_thread(void *p)
         // Инкремент lv_tick_inc(10) УДАЛЕН. LVGL теперь сам берет время из my_tick_get_ms
 
 		static uint32_t rssi_counter = 0;
-	    if(++rssi_counter >= 10)
-	    { // Каждые 500 мс
+	    if(++rssi_counter >= 20)
+	    {
 	        rssi_counter = 0;
 	        int randomNum = rand() % 100;
 	        gui_set_rssi((float)randomNum - 100);
 	        gui_set_vfo(0, freq++);
-//	        gui_tick();
+	        gui_tick();
 	    }
 	}
 }

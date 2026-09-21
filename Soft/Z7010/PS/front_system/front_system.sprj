@@ -12,5 +12,8 @@
     <configBuildOptions xsi:type="systemproject:SystemOptions">
       <applications name="front" domainName="freertos10_xilinx_domain" domainPrettyName="freertos10_xilinx_domain" appBuildConfig="Release"/>
     </configBuildOptions>
+    <lastBuildOptions xsi:type="systemproject:SystemOptions">
+      <applications name="front" domainName="freertos10_xilinx_domain" domainPrettyName="freertos10_xilinx_domain" appBuildConfig="Release"/>
+    </lastBuildOptions>
   </configuration>
 </systemproject:SystemProject>
