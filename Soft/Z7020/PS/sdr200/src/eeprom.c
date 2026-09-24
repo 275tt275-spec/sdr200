@@ -512,24 +512,23 @@ static void eeprom_set_const(void)
 
 	int points = sizeof(rxa_default) / sizeof(rxa_default[0]);
 	e_const->rxa_cnt = points;
-	points = sizeof(txafbV_default) / sizeof(txafbV_default[0]);
-	e_const->txafbV_cnt = points;
-	points = sizeof(txafbC_default) / sizeof(txafbC_default[0]);
-	e_const->txafbC_cnt = points;
+	for(int nPos = 0; nPos < points; nPos++)
+	{
+		e_const->rxa_att[nPos] = rxa_default[nPos];
+	}
+
 	points = sizeof(txa_default) / sizeof(txa_default[0]);
 	e_const->txa_cnt = points;
 	for(int nPos = 0; nPos < points; nPos++)
 	{
-		e_const->rxa_att[nPos] = rxa_default[nPos];
 		e_const->txa_att[nPos] = txa_default[nPos];
-		e_const->txafbC_att[nPos] = txafbC_default[nPos];
-		e_const->txafbV_att[nPos] = txafbV_default[nPos];
 	}
 
-	points = sizeof(e_const->iqc) / sizeof(e_const->iqc[0]);
+	points = sizeof(adc_default) / sizeof(adc_default[0]);
+	e_const->adc_cnt = points;
 	for(int nPos = 0; nPos < points; nPos++)
 	{
-		memcpy(&e_const->iqc[nPos], &iqc_default, sizeof(iqc_default));
+		e_const->adc[nPos] = adc_default[nPos];
 	}
 }
 
@@ -602,58 +601,68 @@ uint8_t eeprom_txa_att(uint32_t freq)
 	return value;
 }
 
-uint8_t eeprom_txafbV_att(uint32_t freq)
+void eeprom_get_adc(s_eeprom_adc* adc)
 {
-	uint8_t value = 0;
-	float dValue;
 	int nPos;
-	for(nPos = 0; nPos < e_const->txafbV_cnt; nPos ++)
+	for(nPos = 0; nPos < e_const->adc_cnt; nPos ++)
 	{
-		if(e_const->txafbV_att[nPos].freq > freq)
+		if(e_const->adc[nPos].freq > adc->freq)
 			break;
 	}
 
-	if((nPos > 0) && (nPos < e_const->txafbV_cnt))
+	if((nPos > 0) && (nPos < e_const->adc_cnt))
 	{
-		float startAtt = e_const->txafbV_att[nPos - 1].att;
-		float startFreq = e_const->txafbV_att[nPos - 1].freq;
-		float dFreq = (float)e_const->txafbV_att[nPos].freq - startFreq;
-		float dAtt = (float)e_const->txafbV_att[nPos].att - startAtt;
-		dValue = startAtt + ((freq - startFreq) * dAtt / dFreq);
-		if(dValue > 63) dValue = 63;
-		value = (uint8_t)(dValue + 0.5);
+		float startFreq = e_const->adc[nPos - 1].freq;
+		float dFreq = (float)e_const->adc[nPos].freq - startFreq;
+		float start_attV = e_const->adc[nPos - 1].attV;
+		float start_attC = e_const->adc[nPos - 1].attC;
+		float start_gain = e_const->adc[nPos - 1].gain;
+		float start_phase = e_const->adc[nPos - 1].phase;
+		float start_dc_offset1 = e_const->adc[nPos - 1].dc_offset1;
+		float start_dc_offset2 = e_const->adc[nPos - 1].dc_offset2;
+
+		float attV = (float)e_const->adc[nPos].attV - start_attV;
+		float attC = (float)e_const->adc[nPos].attV - start_attC;
+		float gain = (float)e_const->adc[nPos].attV - start_gain;
+		float phase = (float)e_const->adc[nPos].attV - start_phase;
+		float dc_offset1 = (float)e_const->adc[nPos].attV - start_dc_offset1;
+		float dc_offset2 = (float)e_const->adc[nPos].attV - start_dc_offset2;
+
+		float freqCorr = (adc->freq - startFreq) / dFreq;
+
+		attV = start_attV + (freqCorr * attV);
+		attC = start_attC + (freqCorr * attC);
+		gain = start_gain + (freqCorr * gain);
+		phase = start_phase + (freqCorr * phase);
+		dc_offset1 = start_dc_offset1 + (freqCorr * dc_offset1);
+		dc_offset2 = start_dc_offset2 + (freqCorr * dc_offset2);
+
+		adc->attV = (uint8_t)(attV + 0.5);
+		adc->attC = (uint8_t)(attC + 0.5);
+		adc->gain = (uint16_t)(gain + 0.5);
+		adc->phase = (uint16_t)(phase + 0.5);
+		adc->dc_offset1 = (uint16_t)(dc_offset1 + 0.5);
+		adc->dc_offset2 = (uint16_t)(dc_offset2 + 0.5);
+	}
+	else if(nPos == 0)
+	{
+		adc->attV = e_const->adc[0].attV;
+		adc->attC = e_const->adc[0].attC;
+		adc->gain = e_const->adc[0].gain;
+		adc->phase = e_const->adc[0].phase;
+		adc->dc_offset1 = e_const->adc[0].dc_offset1;
+		adc->dc_offset2 = e_const->adc[0].dc_offset2;
+	}
+	else
+	{
+		adc->attV = e_const->adc[e_const->adc_cnt - 1].attV;
+		adc->attC = e_const->adc[e_const->adc_cnt - 1].attC;
+		adc->gain = e_const->adc[e_const->adc_cnt - 1].gain;
+		adc->phase = e_const->adc[e_const->adc_cnt - 1].phase;
+		adc->dc_offset1 = e_const->adc[e_const->adc_cnt - 1].dc_offset1;
+		adc->dc_offset2 = e_const->adc[e_const->adc_cnt - 1].dc_offset2;
 	}
 
-	return value;
-}
-
-
-uint8_t eeprom_txafbC_att(uint32_t freq)
-{
-	uint8_t value = 0;
-	float dValue;
-	int nPos;
-	for(nPos = 0; nPos < e_const->txafbC_cnt; nPos ++)
-	{
-		if(e_const->txafbC_att[nPos].freq > freq)
-			break;
-	}
-
-	if((nPos > 0) && (nPos < e_const->txafbC_cnt))
-	{
-		float startAtt = e_const->txafbC_att[nPos - 1].att;
-		float startFreq = e_const->txafbC_att[nPos - 1].freq;
-		float dFreq = (float)e_const->txafbC_att[nPos].freq - startFreq;
-		float dAtt = (float)e_const->txafbC_att[nPos].att - startAtt;
-		dValue = startAtt + ((freq - startFreq) * dAtt / dFreq);
-		if(dValue > 63) dValue = 63;
-		value = (uint8_t)(dValue + 0.5);
-	}
-
-	return value;
-}
-
-s_eeprom_iqc* eeprom_get_iqc(int pos)
-{
-	return &e_const->iqc[pos];
+	if(adc->attV > 63) adc->attV = 63;
+	if(adc->attC > 63) adc->attC = 63;
 }

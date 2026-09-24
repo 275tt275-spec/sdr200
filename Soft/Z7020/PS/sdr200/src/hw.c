@@ -747,7 +747,7 @@ void hw_SetTXAPower(float dBm)
 {
 	uint8_t attV, attC, attMin;
 	int deltaPWR;
-
+	s_eeprom_adc adc;
 	uint8_t value = 63;
 
     sprintf(hw_device.InternalSend, "RT%02d;", value);
@@ -756,14 +756,15 @@ void hw_SetTXAPower(float dBm)
 	value = (uint8_t)((53 - dBm) * 2);
 	if(isTuneMode == 1) value = TXA_TUNE_PWR;
 	if(value > 63) value = 63;
+	adc.freq = e_vars->vfoA;
+	eeprom_get_adc(&adc);
 
 	deltaPWR = 2 * (53 - e_vars->RFPower);
-	attV = eeprom_txafbV_att(e_vars->vfoA);
-	attC = eeprom_txafbC_att(e_vars->vfoA);
-	attMin = (attV < attC) ? attV : attC;
+
+	attMin = (adc.attV < adc.attC) ? adc.attV : adc.attC;
 	if(deltaPWR > attMin) deltaPWR = attMin;
-	attV = attV - deltaPWR;
-	attC = attC - deltaPWR;
+	attV = adc.attV - deltaPWR;
+	attC = adc.attC - deltaPWR;
 	hw_SetFBAtt(attV, attC);
 
     sprintf(hw_device.InternalSend, "RT%02d;", value);

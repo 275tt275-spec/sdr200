@@ -18,18 +18,6 @@
 #define EEPROM_VARS_LENGHT	2048
 #define EEPROM_FREQ_POINTS	128
 
-typedef struct tag_eeprom_iqc_ints
-{
-	float pm[4];
-	float pc[4];
-	float ps[4];
-} s_eeprom_iqc_ints;
-
-typedef struct tag_eeprom_iqc
-{
-	s_eeprom_iqc_ints ints[16];
-} s_eeprom_iqc;
-
 typedef struct tag_eeprom_message
 {
 	uint8_t type;
@@ -44,17 +32,25 @@ typedef struct tag_eeprom_freq
 	uint8_t att;
 } s_eeprom_freq;
 
+typedef struct tag_eeprom_adc
+{
+	uint32_t freq;
+	uint8_t attV;
+	uint8_t attC;
+	uint16_t gain;
+	uint16_t phase;
+	uint16_t dc_offset1;
+	uint16_t dc_offset2;
+} s_eeprom_adc;
+
 typedef struct tag_eeprom_const
 {
 	uint32_t rxa_cnt;
 	s_eeprom_freq rxa_att[EEPROM_FREQ_POINTS];
 	uint8_t txa_cnt;
 	s_eeprom_freq txa_att[EEPROM_FREQ_POINTS];
-	uint8_t txafbV_cnt;
-	s_eeprom_freq txafbV_att[EEPROM_FREQ_POINTS];
-	uint8_t txafbC_cnt;
-	s_eeprom_freq txafbC_att[EEPROM_FREQ_POINTS];
-	s_eeprom_iqc iqc[12];
+	uint8_t adc_cnt;
+	s_eeprom_adc adc[EEPROM_FREQ_POINTS];
 } s_eeprom_const;
 
 typedef struct tag_eeprom_vars
@@ -86,8 +82,6 @@ void eeprom_read_vars(void);
 void eeprom_vars_changed(void);
 uint8_t eeprom_rxa_att(uint32_t freq);
 uint8_t eeprom_txa_att(uint32_t freq);
-uint8_t eeprom_txafbV_att(uint32_t freq);
-uint8_t eeprom_txafbC_att(uint32_t freq);
-s_eeprom_iqc* eeprom_get_iqc(int pos);
+void eeprom_get_adc(s_eeprom_adc* adc);
 
 #endif /* SRC_EEPROM_H_ */

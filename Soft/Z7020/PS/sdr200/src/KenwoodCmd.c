@@ -1180,9 +1180,12 @@ char* kenwood_RcvCmd(char* in)
     {
         if(len == 2)                /* Read */
         {
+        	s_eeprom_adc adc;
+        	adc.freq = vars.m_freq_tx;
         	int deltaPWR = 2 * (53 - e_vars->RFPower);
-        	uint8_t txafbV = eeprom_txafbV_att(vars.m_freq_tx);
-        	uint8_t txafbC = eeprom_txafbC_att(vars.m_freq_tx);
+        	eeprom_get_adc(&adc);
+        	uint8_t txafbV = adc.attV;
+        	uint8_t txafbC = adc.attC;
         	uint8_t attMin = (txafbV < txafbC) ? txafbV : txafbC;
         	if(deltaPWR > attMin) deltaPWR = attMin;
         	txafbV = txafbV - deltaPWR;
@@ -1190,7 +1193,6 @@ char* kenwood_RcvCmd(char* in)
 
         	uint8_t rxa_att = eeprom_rxa_att(vars.m_freq_tx);
         	uint8_t txa_att = eeprom_txa_att(vars.m_freq_tx);
-
 
             sprintf(m_out, "SY%03d%03d%03d%03d;",
             		rxa_att, txa_att, txafbV, txafbC);
