@@ -54,7 +54,25 @@ end TXA;
 
 architecture Behavioral of TXA is
 
-component TXA_channel is
+--component TXA_channel is
+--    Port ( 
+--        m_daci_tdata : out STD_LOGIC_VECTOR (15 downto 0);
+--        m_dacq_tdata : out STD_LOGIC_VECTOR (15 downto 0);
+--        s_axis_audio_tdata : in STD_LOGIC_VECTOR (23 downto 0);
+--        s_axis_audio_tvalid : in STD_LOGIC;
+--        s_adc_data_rx0 : in std_logic_vector(15 downto 0);
+--        s_adc_data_rx1 : in std_logic_vector(15 downto 0);
+--        s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
+--        s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
+--        s_axis_cfg_tvalid : in STD_LOGIC;
+--        cfg_data_out : out STD_LOGIC_VECTOR (31 downto 0);
+----        m_dds_tdata : out STD_LOGIC_VECTOR(31 DOWNTO 0);
+--        aresetn : in std_logic;
+--        aclk : in std_logic
+--    );
+--    end component TXA_channel;
+    
+    component TXA_channel16 is
     Port ( 
         m_daci_tdata : out STD_LOGIC_VECTOR (15 downto 0);
         m_dacq_tdata : out STD_LOGIC_VECTOR (15 downto 0);
@@ -66,11 +84,10 @@ component TXA_channel is
         s_axis_cfg_tdest : in STD_LOGIC_VECTOR (7 downto 0);
         s_axis_cfg_tvalid : in STD_LOGIC;
         cfg_data_out : out STD_LOGIC_VECTOR (31 downto 0);
---        m_dds_tdata : out STD_LOGIC_VECTOR(31 DOWNTO 0);
         aresetn : in std_logic;
         aclk : in std_logic
     );
-    end component TXA_channel;
+    end component TXA_channel16;
     
 --component swr_2ch is
 --    Port ( 
@@ -112,7 +129,7 @@ begin
 --    cfg_wr_txa <= cfg_wr when cfg_addra(8) = '0' else '0';
 --    cfg_wr_swr <= cfg_wr when cfg_addra(8) = '1' else '0';
 
-TXA_channel_0 : TXA_channel
+TXA_channel_0 : TXA_channel16
     port map ( 
         m_daci_tdata => daci_tdata,
         m_dacq_tdata => dacq_tdata,

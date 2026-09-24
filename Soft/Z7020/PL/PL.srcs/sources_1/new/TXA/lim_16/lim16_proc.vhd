@@ -244,7 +244,7 @@ u_in_gain : gain16_24_lim
         G_DATA_IN_WIDTH  => 24,
         G_GAIN_WIDTH     => 16,
         G_DATA_OUT_WIDTH => 16,
-        G_SHIFT_BITS     => 20
+        G_SHIFT_BITS     => 21
     )
     port map(
         aclk             => aclk,

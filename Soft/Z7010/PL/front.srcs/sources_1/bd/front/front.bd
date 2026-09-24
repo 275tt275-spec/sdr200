@@ -7,8 +7,7 @@
       "name": "front",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2023.2.2",
-      "validated": "true"
+      "tool_version": "2023.2"
     },
     "design_tree": {
       "processing_system7_0": "",
@@ -251,10 +250,6 @@
         "type": "rst",
         "direction": "IO",
         "parameters": {
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
           "POLARITY": {
             "value": "ACTIVE_HIGH"
           }
@@ -315,24 +310,8 @@
         "type": "clk",
         "direction": "I",
         "parameters": {
-          "CLK_DOMAIN": {
-            "value": "front_lvds_clk_p",
-            "value_src": "default"
-          },
           "FREQ_HZ": {
             "value": "100000000"
-          },
-          "FREQ_TOLERANCE_HZ": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "PHASE": {
-            "value": "0.0",
-            "value_src": "default"
           }
         }
       },
@@ -340,24 +319,8 @@
         "type": "clk",
         "direction": "I",
         "parameters": {
-          "CLK_DOMAIN": {
-            "value": "front_lvds_clk_n",
-            "value_src": "default"
-          },
           "FREQ_HZ": {
             "value": "100000000"
-          },
-          "FREQ_TOLERANCE_HZ": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "PHASE": {
-            "value": "0.0",
-            "value_src": "default"
           }
         }
       },
@@ -1181,15 +1144,6 @@
           "PCW_S_AXI_HP0_ID_WIDTH": {
             "value": "6"
           },
-          "PCW_S_AXI_HP1_DATA_WIDTH": {
-            "value": "64"
-          },
-          "PCW_S_AXI_HP2_DATA_WIDTH": {
-            "value": "64"
-          },
-          "PCW_S_AXI_HP3_DATA_WIDTH": {
-            "value": "64"
-          },
           "PCW_TPIU_PERIPHERAL_CLKSRC": {
             "value": "External"
           },
@@ -1835,7 +1789,7 @@
             "components": {
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "front_auto_pc_0",
                 "xci_path": "ip\\front_auto_pc_0\\front_auto_pc_0.xci",
                 "inst_hier_path": "axi_mem_intercon/s00_couplers/auto_pc",
@@ -1859,7 +1813,7 @@
               },
               "auto_us": {
                 "vlnv": "xilinx.com:ip:axi_dwidth_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "front_auto_us_0",
                 "xci_path": "ip\\front_auto_us_0\\front_auto_us_0.xci",
                 "inst_hier_path": "axi_mem_intercon/s00_couplers/auto_us",
@@ -2082,7 +2036,7 @@
         "components": {
           "xbar": {
             "vlnv": "xilinx.com:ip:axi_crossbar:2.1",
-            "ip_revision": "31",
+            "ip_revision": "30",
             "xci_name": "front_xbar_0",
             "xci_path": "ip\\front_xbar_0\\front_xbar_0.xci",
             "inst_hier_path": "ps7_0_axi_periph/xbar",
@@ -2159,7 +2113,7 @@
             "components": {
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "front_auto_pc_3",
                 "xci_path": "ip\\front_auto_pc_3\\front_auto_pc_3.xci",
                 "inst_hier_path": "ps7_0_axi_periph/s00_couplers/auto_pc",
@@ -2261,7 +2215,7 @@
             "components": {
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "front_auto_pc_1",
                 "xci_path": "ip\\front_auto_pc_1\\front_auto_pc_1.xci",
                 "inst_hier_path": "ps7_0_axi_periph/m00_couplers/auto_pc",
@@ -2363,7 +2317,7 @@
             "components": {
               "auto_pc": {
                 "vlnv": "xilinx.com:ip:axi_protocol_converter:2.1",
-                "ip_revision": "30",
+                "ip_revision": "29",
                 "xci_name": "front_auto_pc_2",
                 "xci_path": "ip\\front_auto_pc_2\\front_auto_pc_2.xci",
                 "inst_hier_path": "ps7_0_axi_periph/m01_couplers/auto_pc",
@@ -3167,7 +3121,7 @@
       },
       "zynq_lvds_rx_0": {
         "vlnv": "xilinx.com:module_ref:zynq_lvds_rx:1.0",
-        "ip_revision": "1789758958",
+        "ip_revision": "1",
         "xci_name": "front_zynq_lvds_rx_0_0",
         "xci_path": "ip\\front_zynq_lvds_rx_0_0\\front_zynq_lvds_rx_0_0.xci",
         "inst_hier_path": "zynq_lvds_rx_0",
@@ -3213,14 +3167,6 @@
               "HAS_TLAST": {
                 "value": "1",
                 "value_src": "constant"
-              },
-              "FREQ_HZ": {
-                "value": "1e+08",
-                "value_src": "user_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "front_processing_system7_0_0_FCLK_CLK0",
-                "value_src": "default_prop"
               }
             },
             "port_maps": {
@@ -3280,14 +3226,6 @@
               "HAS_TLAST": {
                 "value": "1",
                 "value_src": "constant"
-              },
-              "FREQ_HZ": {
-                "value": "1e+08",
-                "value_src": "user_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "front_processing_system7_0_0_FCLK_CLK0",
-                "value_src": "default_prop"
               }
             },
             "port_maps": {
@@ -3315,31 +3253,11 @@
         "ports": {
           "lvds_clk_p": {
             "type": "clk",
-            "direction": "I",
-            "parameters": {
-              "FREQ_HZ": {
-                "value": "100000000",
-                "value_src": "user_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "front_lvds_clk_p",
-                "value_src": "default_prop"
-              }
-            }
+            "direction": "I"
           },
           "lvds_clk_n": {
             "type": "clk",
-            "direction": "I",
-            "parameters": {
-              "FREQ_HZ": {
-                "value": "100000000",
-                "value_src": "user_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "front_lvds_clk_n",
-                "value_src": "default_prop"
-              }
-            }
+            "direction": "I"
           },
           "lvds_data_p": {
             "direction": "I"
@@ -3354,14 +3272,6 @@
               "ASSOCIATED_BUSIF": {
                 "value": "m_axis:m_axis_config",
                 "value_src": "constant"
-              },
-              "FREQ_HZ": {
-                "value": "1e+08",
-                "value_src": "user_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "front_processing_system7_0_0_FCLK_CLK0",
-                "value_src": "default_prop"
               }
             }
           },
@@ -3379,7 +3289,7 @@
       },
       "system_ila_0": {
         "vlnv": "xilinx.com:ip:system_ila:1.1",
-        "ip_revision": "16",
+        "ip_revision": "15",
         "xci_name": "front_system_ila_0_0",
         "xci_path": "ip\\front_system_ila_0_0\\front_system_ila_0_0.xci",
         "inst_hier_path": "system_ila_0",
@@ -3439,7 +3349,7 @@
       },
       "xfft_0": {
         "vlnv": "xilinx.com:ip:xfft:9.1",
-        "ip_revision": "11",
+        "ip_revision": "10",
         "xci_name": "front_xfft_0_0",
         "xci_path": "ip\\front_xfft_0_0\\front_xfft_0_0.xci",
         "inst_hier_path": "xfft_0",
@@ -3463,7 +3373,7 @@
       },
       "axi_fifo_mm_s_0": {
         "vlnv": "xilinx.com:ip:axi_fifo_mm_s:4.3",
-        "ip_revision": "2",
+        "ip_revision": "1",
         "xci_name": "front_axi_fifo_mm_s_0_0",
         "xci_path": "ip\\front_axi_fifo_mm_s_0_0\\front_axi_fifo_mm_s_0_0.xci",
         "inst_hier_path": "axi_fifo_mm_s_0",
@@ -3478,7 +3388,7 @@
             "value": "5"
           },
           "C_RX_FIFO_PF_THRESHOLD": {
-            "value": "2048"
+            "value": "2049"
           },
           "C_USE_TX_CTRL": {
             "value": "0"

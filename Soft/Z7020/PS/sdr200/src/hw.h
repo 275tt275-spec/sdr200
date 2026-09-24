@@ -78,7 +78,8 @@ typedef struct tag_hw_device {
 	int TestMode;
 	TaskHandle_t xVrefTask;
 	EventGroupHandle_t xVrefEvents;
-	int lin;
+	int lin_enable;
+	uint32_t TXA_gain;
 } s_hw_device;
 
 extern s_hw_device hw_device;

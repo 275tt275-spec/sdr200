@@ -40,18 +40,6 @@ component fir_audio_0 IS
     );
     end component fir_audio_0;
     
-    component filter_gain is
-     Port ( 
-       aclk : in  STD_LOGIC;     
-       s_axis_tdata : in STD_LOGIC_VECTOR (63 downto 0);
-       s_axis_tvalid : in STD_LOGIC;
-       m_axis_tdata : out STD_LOGIC_VECTOR (47 downto 0);
-       m_axis_tvalid : out STD_LOGIC;
-       gain_correct : in STD_LOGIC_VECTOR (2 downto 0);
-       overflow : out STD_LOGIC
-    );
-    end component filter_gain;
-    
     -- Внутренние сигналы
     signal gain_correct      : std_logic_vector(2 downto 0) := "001";
     signal fir_out_tdata     : std_logic_vector(31 downto 0);

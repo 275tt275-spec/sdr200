@@ -163,28 +163,17 @@ inline uint32_t fpga_RXA_GetRSSI(void)
 	return fpga_read(FPGA_RXA_GET);
 }
 
-void fpga_TXA_Enable(int enable, int iqCan)
+void fpga_TXA_Enable(int enable)
 {
 #if 1
 	if(enable == 1)
 	{
-		if(iqCan == 1)
-		{
-			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_ADC1);
-			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW | FPGA_TXA_CTRL_IQ | FPGA_TXA_CTRL_ADC1);
-		}
-		else
-		{
-			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_ADC1);
-			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW | FPGA_TXA_CTRL_ADC1);
-		}
+		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_ADC1);
+		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ON | FPGA_TXA_CTRL_HW | FPGA_TXA_CTRL_ADC1);
 	}
 	else
 	{
-		if(iqCan == 1)
-			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_IQ | FPGA_TXA_CTRL_ADC1);
-		else
-			fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ADC1);
+		fpga_write(FPGA_TXA_CTRL, FPGA_TXA_CTRL_ADC1);
 	}
 #else
 	if(enable == 1)
@@ -255,7 +244,7 @@ inline void fpga_TXA_AUDIOGAIN(uint32_t value)
 
 inline void fpga_TXA_ResamplerGain(uint32_t value)
 {
-	fpga_write(FPGA_TXA_RESAMPLER_G, value);
+	fpga_write(FPGA_TXA_GAIN, value);
 }
 
 void fpga_GetSWR(s_swr* swr)
@@ -297,24 +286,24 @@ void fpga_LIM_FIR(const uint32_t* p)
 
 void fpga_LinearReset(void)
 {
-    uint32_t lin_ctrl = 0;
-    lin_ctrl = FPGA_LINER_CLR;
-    fpga_write(FPGA_LIN_CTRL, lin_ctrl);
-    lin_ctrl = 0;
-    fpga_write(FPGA_LIN_CTRL, lin_ctrl);
+    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_CLR);
+    fpga_write(FPGA_LIN_CTRL, 0);
 }
 
 void fpga_LinearEnable(s_linear* lin, int enable)
 {
-    uint32_t lin_ctrl = FPGA_LINER_CLR;
-    fpga_write(FPGA_LIN_CTRL, lin_ctrl);
+    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_CLR);
 
     if(enable == 1)
-        lin_ctrl = FPGA_LINER_ON |FPGA_LINER_AGC;
+    {
+        fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON);
+		vTaskDelay(pdMS_TO_TICKS( LINEAR_SET_DELAY ));
+	    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON | FPGA_LINER_AGC | FPGA_LIN_PHASE_SLOW);
+    }
     else
-        lin_ctrl = 0;
-
-    fpga_write(FPGA_LIN_CTRL, lin_ctrl);
+    {
+        fpga_write(FPGA_LIN_CTRL, 0);
+    }
 }
 
 void fpga_LinearInit(s_linear* lin)
@@ -370,7 +359,7 @@ void fpga_GetMaxValues(s_max_values* data)
 	data->dac = fpga_read(FPGA_TXA_DAC_ABS);
 	data->iq = fpga_read(FPGA_TXA_FLOAT_ABS);
 
-	fpga_write(FPGA_TXA_RESET_MAX, 0);
+	fpga_write(FPGA_TXA_RESET_OVER, 0);
 }
 
 inline uint32_t fpga_SetStatus(void)

@@ -73,7 +73,8 @@ void hw_Init(void)
 	hw_device.attMB2 = 255;
 	hw_device.txaCorr = 255;
 	hw_device.TestMode = 0;
-	hw_device.lin = 0;
+	hw_device.lin_enable = 0;
+	hw_device.TXA_gain = 32767;
 
 	linear.adc_shift = 0;
 	linear.agc_k = 5;
@@ -239,9 +240,9 @@ void hw_Start(void)
 
 	fpga_LIM_Set(&limiter);
 
-	fpga_TXA_ResamplerGain(65535);
+	fpga_TXA_ResamplerGain(hw_device.TXA_gain);
 
-	SendToCore1(SET_TXA_PS_RESTORE_CORR, sizeof(s_eeprom_iqc), eeprom_get_iqc(0));
+//	SendToCore1(SET_TXA_PS_RESTORE_CORR, sizeof(s_eeprom_iqc), eeprom_get_iqc(0));
 
 	hw_SetPTT(0, TX_INPUT);
 }
@@ -678,14 +679,13 @@ void hw_SetPTT(int on, e_tx_input in)
 		else
 			fpga_TXA_Enable(1, 1);
 #else
-		fpga_TXA_Enable(1, 0);
+		fpga_TXA_Enable(1);
 #endif
-		if(hw_device.lin == 1)
+		if(hw_device.lin_enable == 1)
 		{
 			SendToCore1Uint32(SET_TXA_SET_PS_TURNON, 1);
 			SendToCore1Uint32(SET_TXA_SET_PS_MOX, 1);
 
-			vTaskDelay(pdMS_TO_TICKS( LINEAR_SET_DELAY ));
 			fpga_LinearEnable(&linear, 1);
 
 			SendToCore1Uint32(SET_TXA_SET_PS_MANCAL, 1);
@@ -711,7 +711,7 @@ void hw_SetPTT(int on, e_tx_input in)
 
 		SendToCore1Uint32(SET_TXA_SET_PS_MOX, 0);
 #else
-		fpga_TXA_Enable(0, 0);
+		fpga_TXA_Enable(0);
 #endif
 		fpga_LinearEnable(&linear, 0);
 		hw_device.TxOn = 0;
@@ -963,7 +963,7 @@ void hw_SetSpeechInOut(uint8_t in, uint8_t out)
 
 inline void hw_SetLiner(int en)
 {
-	hw_device.lin = en;
+	hw_device.lin_enable = en;
 	if(hw_device.TxOn)
 	{
 		fpga_LinearEnable(&linear, en);

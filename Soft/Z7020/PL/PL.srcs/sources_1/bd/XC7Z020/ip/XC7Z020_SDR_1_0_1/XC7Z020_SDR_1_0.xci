@@ -144,6 +144,14 @@
             "CLK": [ { "physical_name": "aclk_122" } ]
           }
         },
+        "i2s": {
+          "vlnv": "xilinx.com:user:i2s:1.0",
+          "abstraction_type": "xilinx.com:user:i2s_rtl:1.0",
+          "mode": "slave",
+          "port_maps": {
+            "MCLK": [ { "physical_name": "i2s_mclk" } ]
+          }
+        },
         "m_axis_ser0": {
           "vlnv": "xilinx.com:interface:axis:1.0",
           "abstraction_type": "xilinx.com:interface:axis_rtl:1.0",

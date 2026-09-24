@@ -78,8 +78,8 @@ begin
     
     read_from_file: process
     variable indata: integer;
-    file data_in: inputFile_t open read_mode is "D:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\2tone.raw";
-    file data_out: inputFile_t open write_mode is "D:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\audio_out.raw";
+    file data_in: inputFile_t open read_mode is "E:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\300.raw";
+    file data_out: inputFile_t open write_mode is "E:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\audio_out.raw";
     begin        
         s_axis_audio_tvalid <= '0';
         wait for CLK_PERIOD;
@@ -99,7 +99,7 @@ begin
         if endfile(data_in) then
             report "end of file -- looping back to start of file";
             file_close(data_in);
-            file_close(data_out);
+ --           file_close(data_out);
             file_open(data_in,"E:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\300.raw");
         end if;
     end process;
@@ -133,9 +133,9 @@ begin
         send_cfg("000", x"00003FFF");
         
         -- 1: lim_limit (По умолчанию x"0800")
-        send_cfg("001", x"00000800");
+        send_cfg("001", x"00000400");
         
-        -- 2: lim_out_gain (По умолчанию "00" & x"1FFF")
+        -- 2: lim_out_gain (По умолчанию "00" & x"3FFF")
         send_cfg("010", x"00003FFF");
         
         -- 3: phase_step DDS (По умолчанию x"1D9A" -> 1850 Hz)

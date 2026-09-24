@@ -11,6 +11,9 @@
 /* ADDR 10 bits * 4 */
 /* write */
 #define FPGA_HW_RESET 		0x0000  /* Global Reset */
+#define FPGA_ADC_SET 		0x0001  /* ADC1 phase = 0x0000, ADC0 gain = 0x7FFF */
+#define FPGA_ADC_DC 		0x0002  /* ADC1 dc offset, ADC0 dc offset */
+
 #define FPGA_RXA_DDS_NR 	0x0100  /* DDS NR */
 #define FPGA_RXA_MOD 		0x0101  /* MODULATION */
 #define FPGA_RXA_LSB 		0x0102  /* J3E LSB */
@@ -18,18 +21,13 @@
 #define FPGA_RXA_FOS_GAIN 	0x0104  /* FOS GAIN CORRECT */
 #define FPGA_RXA_OFFSET		0x0105  /* A1A TONE J3E OFFSET */
 #define FPGA_RXA_DDS_WB 	0x0106  /* DDS WB */
-//#define FPGA_RXA_RF_GAIN    0x0107  /* (0 - 32768, gain 1.0 = 256) */
-//#define FPGA_RXA_AGC_TYPE   0x0108  /*  */
-//#define FPGA_RXA_AGC_LEVEL  0x0109  /*  */
-//#define FPGA_RXA_AGC_STEP	0x010A  /*  */
-//#define FPGA_RXA_AGC_FAST	0x010B  /*  */
-#define FPGA_RXA_AUDIO_LP	0x010E  /*  */
-#define FPGA_RXA_AUDIO_HP	0x010F  /*  */
+#define FPGA_RXA_AUDIO_LP	0x010E  /* AUDIO LP FILTER */
+#define FPGA_RXA_AUDIO_HP	0x010F  /* AUDIO HP FILTER */
 #define FPGA_RXA_AUDIO_CORR	0x0110	/* correct out audio filter (0, 1, 2, 3*/
 
 /* -- 0x0120-0x012F  AGC */
 #define FPGA_RXA_RF_GAIN	0x0120
-#define FPGA_RXA_AGC_ON		0x0121
+#define FPGA_RXA_AGC_ON		0x0121 /* AGC ON bit 0 */
 #define FPGA_RXA_AGC_MAX	0x0122
 #define FPGA_RXA_AGC_MAX2	0x0123
 #define FPGA_RXA_AGC_MIN	0x0124
@@ -42,9 +40,8 @@
 #define FPGA_TXA_CTRL_ON 	( 1 << 0 ) /* txa on(0) */
 #define FPGA_TXA_CTRL_HW 	( 1 << 1 ) /* txa hw on(1) */
 #define FPGA_TXA_CTRL_ADC1 	( 1 << 2 ) /* adc1 inversion*/
-#define FPGA_TXA_CTRL_IQ 	( 1 << 31 ) /* iq data select(31)  */
-#define FPGA_TXA_RESAMPLER_G	0x0203  /* txa resampler out gain */
-#define FPGA_TXA_RESET_MAX	0x0204  /* reset max values */
+#define FPGA_TXA_GAIN	    0x0203  /* txa resampler out gain */
+#define FPGA_TXA_RESET_OVER	0x0204  /* reset overflow reg */
 
 // 0x022_  /* limiter */
 #define FPGA_LIM_IN 		0x0220 /* lim_in_gain default "00" & x"3FFF" */
@@ -85,7 +82,6 @@
 #define FPGA_LINER_ON               (1UL << 1)
 #define FPGA_LINER_AGC              (1UL << 2)
 #define FPGA_LIN_PHASE_SLOW	        (1UL << 3)
-
 
 // 0x02A_  /* linear phase block */
 // PHASE BLOCK
@@ -205,7 +201,7 @@ void fpga_RXA_LP(const uint32_t* p);
 void fpga_RXA_HP(const uint32_t* p);
 void fpga_RXA_AudioCorrect(uint8_t value);
 uint32_t fpga_RXA_GetRSSI(void);
-void fpga_TXA_Enable(int enable, int iqCan);
+void fpga_TXA_Enable(int enable);
 void fpga_TXA_DDS(uint32_t value);
 void fpga_TXA_OFFSET(uint32_t value);
 void fpga_TXA_CTRL(uint32_t value);
