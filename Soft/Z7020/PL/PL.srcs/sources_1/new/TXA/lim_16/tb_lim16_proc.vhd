@@ -78,8 +78,8 @@ begin
     
     read_from_file: process
     variable indata: integer;
-    file data_in: inputFile_t open read_mode is "E:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\300.raw";
-    file data_out: inputFile_t open write_mode is "E:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\audio_out.raw";
+    file data_in: inputFile_t open read_mode is "D:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\noise.raw";
+    file data_out: inputFile_t open write_mode is "D:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\audio_out.raw";
     begin        
         s_axis_audio_tvalid <= '0';
         wait for CLK_PERIOD;
@@ -100,7 +100,7 @@ begin
             report "end of file -- looping back to start of file";
             file_close(data_in);
  --           file_close(data_out);
-            file_open(data_in,"E:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\300.raw");
+            file_open(data_in,"D:\Projects\sdr200\Soft\Z7020\PL\PL.srcs\sources_1\new\TXA\limiter\noise.raw");
         end if;
     end process;
 
@@ -136,13 +136,13 @@ begin
         send_cfg("001", x"00000400");
         
         -- 2: lim_out_gain (По умолчанию "00" & x"3FFF")
-        send_cfg("010", x"00003FFF");
+        send_cfg("010", x"00005000");
         
         -- 3: phase_step DDS (По умолчанию x"1D9A" -> 1850 Hz)
         send_cfg("011", x"00001D9A");
         
         -- 4: limit_overshoot (По умолчанию x"3000")
-        send_cfg("100", x"00002800");
+        send_cfg("100", x"00001100");
         
 --        wait for CLK_PERIOD * 20;
 --

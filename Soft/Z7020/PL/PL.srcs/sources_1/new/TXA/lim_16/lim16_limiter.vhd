@@ -56,13 +56,16 @@ architecture Behavioral of lim16_limiter is
     END COMPONENT  lim16_lpf_fir;
     
     component lim16_div is
+    generic (
+        G_BIT_HIGH : integer := 17  -- Позиция старшего (знакового) бита выходного окна (задается снаружи)
+    );
     Port ( 
         s_axis_divisor_tvalid : IN STD_LOGIC;
         s_axis_divisor_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         s_axis_dividend_tvalid : IN STD_LOGIC;
         s_axis_dividend_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         m_axis_dout_tvalid : OUT STD_LOGIC;
-        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0);
+        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
         out_over : OUT STD_LOGIC;
         aclk : in STD_LOGIC
     );
@@ -80,8 +83,8 @@ architecture Behavioral of lim16_limiter is
     signal divin_tvalid   : std_logic := '0';  
     signal divisor        : std_logic_vector(15 downto 0) := x"0001";  
     signal divisor_reg    : std_logic_vector(15 downto 0) := x"0001";  
-    signal divout_0       : std_logic_vector(23 downto 0); 
-    signal divout_1       : std_logic_vector(23 downto 0); 
+    signal divout_0       : std_logic_vector(15 downto 0); 
+    signal divout_1       : std_logic_vector(15 downto 0); 
     signal divout_valid_0 : std_logic;
     signal divout_valid_1 : std_logic;
     signal div_over_0     : std_logic;
@@ -90,7 +93,7 @@ architecture Behavioral of lim16_limiter is
     signal fir_in_tvalid  : std_logic;
     signal fir_out_tdata  : std_logic_vector(79 downto 0);
     signal fir_out_tvalid : std_logic;
-    signal inv_div0, inv_div1 : signed(23 downto 0);
+    signal inv_div0, inv_div1 : signed(15 downto 0);
 
     -----------------------------------------------------------------
     -- Сигналы для конвейера Округления и Насыщения (Rounding & Saturation)
@@ -98,8 +101,8 @@ architecture Behavioral of lim16_limiter is
     -- Выделенные из FIR 40-битные знаковые каналы А и Б
     signal fir_a_raw, fir_b_raw     : signed(39 downto 0);
     
-    constant GAIN_SHIFT : integer := 13;     
-    constant C_ROUND_VAL : signed(39 downto 0) := x"0000000400";
+    constant GAIN_SHIFT : integer := 5;     
+    constant C_ROUND_VAL : signed(39 downto 0) := shift_left(to_signed(1, 40), 23 - GAIN_SHIFT);
     signal fir_a_round, fir_b_round : signed(39 downto 0) := (others => '0');
     signal fir_valid_pipe1          : std_logic := '0';
     
@@ -144,6 +147,9 @@ end process;
     
     -- Блок деления для канала А (выделяем верхние 16 бит - Q)
     div_0 : lim16_div
+    generic map (
+        G_BIT_HIGH => 17
+    )
     PORT MAP (
         s_axis_divisor_tvalid  => divin_tvalid,
         s_axis_divisor_tdata   => divisor,
@@ -157,6 +163,9 @@ end process;
     
     -- Блок деления для канала Б (выделяем нижние 16 бит - I)
     div_1 : lim16_div
+    generic map (
+        G_BIT_HIGH => 17
+    )
     PORT MAP (
         s_axis_divisor_tvalid  => divin_tvalid,
         s_axis_divisor_tdata   => divisor,
@@ -173,7 +182,7 @@ end process;
     inv_div0 <= -signed(divout_0);
     inv_div1 <= -signed(divout_1);
     -- Склеиваем по 16 старших бит из каждого инвертированного канала
-    fir_in_tdata <= std_logic_vector(inv_div0(23 downto 8)) & std_logic_vector(inv_div1(23 downto 8));
+    fir_in_tdata <= std_logic_vector(inv_div0) & std_logic_vector(inv_div1);
     fir_in_tvalid <= divout_valid_0;
     
     -- Фиксация первичного переполнения на входе фильтра
@@ -212,10 +221,19 @@ end process;
         if rising_edge(aclk) then
             -----------------------------------------------------------------
             -- СТАДИЯ 1: Конвейерное округление (Rounding)
-            -- Прибавляем единицу в вес 8-го бита (C_ROUND_VAL = x"1000" в терминах 40 бит)
             -----------------------------------------------------------------
-            fir_a_round     <= fir_a_raw + C_ROUND_VAL;
-            fir_b_round     <= fir_b_raw + C_ROUND_VAL;
+            if fir_a_raw(39) = '0' then
+                fir_a_round <= fir_a_raw + C_ROUND_VAL;
+            else
+                fir_a_round <= fir_a_raw - C_ROUND_VAL;
+            end if;
+
+            if fir_b_raw(39) = '0' then
+                fir_b_round <= fir_b_raw + C_ROUND_VAL;
+            else
+                fir_b_round <= fir_b_raw - C_ROUND_VAL;
+            end if;
+
             fir_valid_pipe1 <= fir_out_tvalid;
 
             -----------------------------------------------------------------
@@ -232,7 +250,7 @@ end process;
                 -- ИСПРАВЛЕННЫЙ ЦИКЛ КАНАЛА А: 
                 -- При GAIN_SHIFT = 7 полезный срез равен (32 downto 17). Значит, 32-й бит - знаковый.
                 -- Проверяем биты расширения строго ВЫШЕ старшего полезного бита (от 39 до 33)
-                for i in 39 downto (39 - GAIN_SHIFT + 1) loop
+                for i in 39 downto (39 - GAIN_SHIFT) loop
                     if fir_a_round(i) /= fir_a_round(39) then
                         overflow_a := true;
                     end if;
@@ -252,7 +270,7 @@ end process;
 
                 -- ИСПРАВЛЕННЫЙ ЦИКЛ КАНАЛА Б:
                 -- Проверяем биты знакового расширения строго выше полезного 32-го бита (от 39 до 33)
-                for i in 39 downto (39 - GAIN_SHIFT + 1) loop
+                for i in 39 downto (39 - GAIN_SHIFT) loop
                     if fir_b_round(i) /= fir_b_round(39) then
                         overflow_b := true;
                     end if;

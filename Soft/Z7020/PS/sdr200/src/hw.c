@@ -91,9 +91,9 @@ void hw_Init(void)
 
 	limiter.in_gain = 0x37FF;
 //	limiter.out_gain = 0x2b00;
-	limiter.out_gain = 0x4D00;
-	limiter.limit = 0x0C00;
-	limiter.overshoot = 0x2080;
+	limiter.out_gain = 0x5000;
+	limiter.limit = 0x0500;
+	limiter.overshoot = 0x1000;
 	limiter.dds_phase = 0x1D9A;
 
 	SpiConfig = XSpiPs_LookupConfig(SPI_DEVICE_ID);

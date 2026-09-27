@@ -105,7 +105,7 @@ END COMPONENT  lim16_lpf_fir;
     signal firout_tvalid         : STD_LOGIC;
     
     -- Сигналы генератора псевдослучайной последовательности (LFSR)
-    signal lfsr_reg              : STD_LOGIC_VECTOR(15 downto 0) := x"A5A5"; 
+    signal lfsr_reg              : STD_LOGIC_VECTOR(31 downto 0) := x"A5A5A5A5";
     signal ctrl_tdata            : STD_LOGIC_VECTOR(7 downto 0)  := (others => '0');
 
     -----------------------------------------------------------------
@@ -144,8 +144,7 @@ begin
             dds_config_tvalid_reg <= '0';
         end if;
         
-        -- Классический полином LFSR x^16 + x^14 + x^13 + x^11 + 1
-        lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(2) xor lfsr_reg(3) xor lfsr_reg(5)) & lfsr_reg(15 downto 1);
+        lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(1) xor lfsr_reg(2) xor lfsr_reg(22)) & lfsr_reg(31 downto 1);
     end if;
 end process;
 
@@ -213,8 +212,18 @@ end process;
             -- СТАДИЯ 1: Математическое округление (Rounding)
             -- Прибавляем единицу в 12-й бит для округления сетки (28 downto 13)
             -----------------------------------------------------------------
-            fir_i_round     <= fir_i_raw + C_ROUND_VAL;
-            fir_q_round     <= fir_q_raw + C_ROUND_VAL;
+            if fir_i_raw(39) = '0' then
+                fir_i_round <= fir_i_raw + C_ROUND_VAL;
+            else
+                fir_i_round <= fir_i_raw - C_ROUND_VAL;
+            end if;
+
+            if fir_q_raw(39) = '0' then
+                fir_q_round <= fir_q_raw + C_ROUND_VAL;
+            else
+                fir_q_round <= fir_q_raw - C_ROUND_VAL;
+            end if;
+            
             fir_valid_pipe1 <= firout_tvalid;
 
             -----------------------------------------------------------------

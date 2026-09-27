@@ -75,13 +75,16 @@ component lim16_translate_cordic
     END COMPONENT  lim16_lpf_fir;
 
     component lim16_div is
+    generic (
+        G_BIT_HIGH : integer := 17  -- Позиция старшего (знакового) бита выходного окна (задается снаружи)
+    );
     Port ( 
         s_axis_divisor_tvalid : IN STD_LOGIC;
         s_axis_divisor_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         s_axis_dividend_tvalid : IN STD_LOGIC;
         s_axis_dividend_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         m_axis_dout_tvalid : OUT STD_LOGIC;
-        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(23 DOWNTO 0);
+        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
         out_over : OUT STD_LOGIC;
         aclk : in STD_LOGIC
     );
@@ -100,8 +103,8 @@ component lim16_translate_cordic
     signal corr            : std_logic_vector(15 downto 0) := x"0000";
     signal corr1           : std_logic_vector(15 downto 0) := x"0000";
     signal denom           : std_logic_vector(15 downto 0) := x"0001";
-    signal divout_0        : std_logic_vector(23 downto 0); 
-    signal divout_1        : std_logic_vector(23 downto 0); 
+    signal divout_0        : std_logic_vector(15 downto 0); 
+    signal divout_1        : std_logic_vector(15 downto 0); 
     signal divout_valid_0  : std_logic;
     signal divout_valid_1  : std_logic;
     signal div_over_0      : std_logic;
@@ -113,21 +116,15 @@ component lim16_translate_cordic
     signal fir_out_tdata   : std_logic_vector(79 downto 0);
     signal fir_out_tvalid  : std_logic;
     signal delay_tvalid    : std_logic := '0';
-    
-        -- Регистры для округления результатов деления (24 бита)
-    signal divout_0_round     : signed(23 downto 0) := (others => '0');
-    signal divout_1_round     : signed(23 downto 0) := (others => '0');
-    signal divout_valid_pipe  : std_logic := '0';
-    signal div_over_pipe      : std_logic := '0';
-    
+        
     -----------------------------------------------------------------
     -- Сигналы для конвейера Округления и Насыщения (Rounding & Saturation)
     -----------------------------------------------------------------
     -- Выделенные из FIR 40-битные знаковые каналы А и Б
     signal fir_a_raw, fir_b_raw     : signed(39 downto 0);
     
-    constant GAIN_SHIFT : integer := 14;     
-    constant C_ROUND_VAL : signed(39 downto 0) := x"0000000200";
+    constant GAIN_SHIFT : integer := 6;     
+    constant C_ROUND_VAL : signed(39 downto 0) := shift_left(to_signed(1, 40), 23 - GAIN_SHIFT);
     signal fir_a_round, fir_b_round : signed(39 downto 0) := (others => '0');
     signal fir_valid_pipe1          : std_logic := '0';
     
@@ -221,6 +218,9 @@ begin
 end process;
     
 div_0 : lim16_div
+    generic map (
+        G_BIT_HIGH => 16
+    )
     PORT MAP (
         s_axis_divisor_tvalid  => delay_tvalid,
         s_axis_divisor_tdata   => denom,
@@ -233,6 +233,9 @@ div_0 : lim16_div
     );
     
 div_1 : lim16_div
+    generic map (
+        G_BIT_HIGH => 16
+    )
     PORT MAP (
         s_axis_divisor_tvalid  => delay_tvalid,
         s_axis_divisor_tdata   => denom,
@@ -243,26 +246,10 @@ div_1 : lim16_div
         out_over               => div_over_1,
         aclk                   => aclk
     );
-    
-process(aclk)
-begin
-    if rising_edge(aclk) then
-        -- Конвейерное округление: прибавляем '1' в 7-й бит (вес 128)
-        -- Операция автоматически оптимизируется синтезатором внутри FPGA
-        if divout_valid_0 = '1' then
-            divout_0_round <= signed(divout_0) + to_signed(128, 24);
-            divout_1_round <= signed(divout_1) + to_signed(128, 24);
-        end if;
-        
-        -- Продвигаем валид и флаг переполнения по конвейеру на 1 такт
-        divout_valid_pipe <= divout_valid_0;
-        div_over_pipe     <= div_over_0 or div_over_1;
-    end if;
-end process;
-
-    fir_in_tdata  <= std_logic_vector(divout_0_round(23 downto 8)) & std_logic_vector(divout_1_round(23 downto 8));
-    fir_in_tvalid <= divout_valid_pipe;
-    over(0)       <= div_over_pipe;
+  
+    fir_in_tdata  <= divout_0 & divout_1;
+    fir_in_tvalid <= divout_valid_0;
+    over(0)       <= div_over_0 or div_over_1;
      
 fir_0 : lim16_lpf_fir
     PORT MAP (
@@ -295,10 +282,19 @@ fir_0 : lim16_lpf_fir
         if rising_edge(aclk) then
             -----------------------------------------------------------------
             -- СТАДИЯ 1: Конвейерное округление (Rounding)
-            -- Прибавляем единицу в вес 8-го бита (C_ROUND_VAL = x"1000" в терминах 40 бит)
             -----------------------------------------------------------------
-            fir_a_round     <= fir_a_raw + C_ROUND_VAL;
-            fir_b_round     <= fir_b_raw + C_ROUND_VAL;
+            if fir_a_raw(39) = '0' then
+                fir_a_round <= fir_a_raw + C_ROUND_VAL;
+            else
+                fir_a_round <= fir_a_raw - C_ROUND_VAL;
+            end if;
+
+            if fir_b_raw(39) = '0' then
+                fir_b_round <= fir_b_raw + C_ROUND_VAL;
+            else
+                fir_b_round <= fir_b_raw - C_ROUND_VAL;
+            end if;
+
             fir_valid_pipe1 <= fir_out_tvalid;
 
             -----------------------------------------------------------------
@@ -315,7 +311,7 @@ fir_0 : lim16_lpf_fir
                 -- ИСПРАВЛЕННЫЙ ЦИКЛ КАНАЛА А: 
                 -- При GAIN_SHIFT = 7 полезный срез равен (32 downto 17). Значит, 32-й бит - знаковый.
                 -- Проверяем биты расширения строго ВЫШЕ старшего полезного бита (от 39 до 33)
-                for i in 39 downto (39 - GAIN_SHIFT + 1) loop
+                for i in 39 downto (39 - GAIN_SHIFT) loop
                     if fir_a_round(i) /= fir_a_round(39) then
                         overflow_a := true;
                     end if;
@@ -335,7 +331,7 @@ fir_0 : lim16_lpf_fir
 
                 -- ИСПРАВЛЕННЫЙ ЦИКЛ КАНАЛА Б:
                 -- Проверяем биты знакового расширения строго выше полезного 32-го бита (от 39 до 33)
-                for i in 39 downto (39 - GAIN_SHIFT + 1) loop
+                for i in 39 downto (39 - GAIN_SHIFT) loop
                     if fir_b_round(i) /= fir_b_round(39) then
                         overflow_b := true;
                     end if;
