@@ -1,8 +1,7 @@
-/*StationVT*/
+//arch = zynq; split = false; format = BIN
 the_ROM_image:
 {
-  [bootloader]<StationVT/boot/fsbl.elf>
-   <bitstream> 
-  <elf,ps7_cortexa9_0>
-  <elf,ps7_cortexa9_1>
+	[bootloader]D:\projects\sdr200\Soft\Z7020\PS\StationVT\export\StationVT\sw\StationVT\boot\fsbl.elf
+	D:\projects\sdr200\Soft\Z7020\PL\PL.runs\impl_1\XC7Z020_wrapper.bit
+	D:\projects\sdr200\Soft\Z7020\PS\sdr200\Debug\sdr200.elf
 }

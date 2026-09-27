@@ -37,7 +37,6 @@ public:
 	afx_msg void OnBnClickedButtonKset();
 	CComboBox m_wndFBV;
 	CComboBox m_wndFBC;
-	CComboBox m_wndShift;
 	afx_msg void OnClickedCheckOn();
 	UINT_PTR m_nTimer;
 	BOOL	m_isTune;

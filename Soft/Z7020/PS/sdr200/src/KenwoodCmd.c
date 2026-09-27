@@ -540,15 +540,18 @@ char* kenwood_RcvCmd(char* in)
     }
     else if(memcmp(in, "AT", 2) == 0) /* Set FB ATT current */
     {
-        if(len >= 5)                /* Write */
+        if(len >= 10)                /* Write */
         {
         	uint8_t attV, attC;
+        	uint16_t phase;
             char value[4];
             memcpy(value, &in[2], 3); value[3] = 0;
             attV = (uint8_t)atoi(value);
             memcpy(value, &in[5], 3); value[3] = 0;
             attC = (uint8_t)atoi(value);
-            hw_SetFBAtt(attV, attC);
+            memcpy(value, &in[8], 5); value[6] = 0;
+            phase = (uint16_t)atoi(value);
+            hw_SetFBAtt(attV, attC, phase);
         }
     }
     else if(memcmp(in, "AU", 2) == 0) /* Set ATU */
@@ -756,21 +759,17 @@ char* kenwood_RcvCmd(char* in)
         if(len >= 23)                /* Write */
         {
             char value[6];
-            uint8_t shift;
             uint32_t dci, dcq, gi, gq;
-            value[1] = 0;
-            memcpy(value, &in[2], 1);
-            shift = (uint8_t)(atoi(value));
             value[6] = 0;
-            memcpy(value, &in[3], 5);
+            memcpy(value, &in[2], 5);
             dci = (uint32_t)(atoi(value));
-            memcpy(value, &in[8], 5);
+            memcpy(value, &in[7], 5);
             dcq = (uint32_t)(atoi(value));
-            memcpy(value, &in[13], 5);
+            memcpy(value, &in[12], 5);
             gi = (uint32_t)(atoi(value));
-            memcpy(value, &in[18], 5);
+            memcpy(value, &in[17], 5);
             gq = (uint32_t)(atoi(value));
-            hw_SetLinerCorrect(shift, dci, dcq, gi, gq);
+            hw_SetLinerCorrect(dci, dcq, gi, gq);
         }
     }
     else if(memcmp(in, "LI", 2) == 0) /* Set linear */
@@ -1202,10 +1201,8 @@ char* kenwood_RcvCmd(char* in)
     {
         if(len == 2)                /* Read */
         {
-        	s_max_values values;
-        	hw_GetMaxValues(&values);
-            sprintf(m_out, "SZ%08d%08d%08d%08d%08d;",
-            		values.over, values.audio, values.lin, values.dac, values.iq);
+        	uint32_t over = hw_GetMaxValues();
+            sprintf(m_out, "SZ%08lu;", over);
         }
     }
     else if(memcmp(in, "TE", 2) == 0) /* Set test mode all attenuation in 0 */

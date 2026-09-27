@@ -622,11 +622,11 @@ void eeprom_get_adc(s_eeprom_adc* adc)
 		float start_dc_offset2 = e_const->adc[nPos - 1].dc_offset2;
 
 		float attV = (float)e_const->adc[nPos].attV - start_attV;
-		float attC = (float)e_const->adc[nPos].attV - start_attC;
-		float gain = (float)e_const->adc[nPos].attV - start_gain;
-		float phase = (float)e_const->adc[nPos].attV - start_phase;
-		float dc_offset1 = (float)e_const->adc[nPos].attV - start_dc_offset1;
-		float dc_offset2 = (float)e_const->adc[nPos].attV - start_dc_offset2;
+		float attC = (float)e_const->adc[nPos].attC - start_attC;
+		float gain = (float)e_const->adc[nPos].gain - start_gain;
+		float phase = (float)e_const->adc[nPos].phase - start_phase;
+		float dc_offset1 = (float)e_const->adc[nPos].dc_offset1 - start_dc_offset1;
+		float dc_offset2 = (float)e_const->adc[nPos].dc_offset2 - start_dc_offset2;
 
 		float freqCorr = (adc->freq - startFreq) / dFreq;
 

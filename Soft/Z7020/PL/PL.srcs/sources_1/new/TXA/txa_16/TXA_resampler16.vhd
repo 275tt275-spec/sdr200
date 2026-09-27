@@ -169,8 +169,21 @@ begin
                 i_cic_val := signed(cic_out_tdata_0(76 downto 0));
                 q_cic_val := signed(cic_out_tdata_1(76 downto 0));
 
-                i_cic_ext := resize(i_cic_val, 78) + CIC_ROUND_CONST;
-                q_cic_ext := resize(q_cic_val, 78) + CIC_ROUND_CONST;
+                if i_cic_val(76) = '0' then
+                    -- Положительное число: прибавляем половинку
+                    i_cic_ext := resize(i_cic_val, 78) + CIC_ROUND_CONST;
+                else
+                    -- Отрицательное число: вычитаем половинку
+                    i_cic_ext := resize(i_cic_val, 78) - CIC_ROUND_CONST;
+                end if;
+                
+                if q_cic_val(76) = '0' then
+                    -- Положительное число: прибавляем половинку
+                    q_cic_ext := resize(q_cic_val, 78) + CIC_ROUND_CONST;
+                else
+                    -- Отрицательное число: вычитаем половинку
+                    q_cic_ext := resize(q_cic_val, 78) - CIC_ROUND_CONST;
+                end if;
                 
                 cic_pre_round_i <= i_cic_ext(76 downto 53);
                 cic_pre_round_q <= q_cic_ext(76 downto 53);
@@ -193,7 +206,6 @@ begin
                 i_out_reg <= "10" & x"0000"; -- Отрицательное насыщение (x"20000")
                 ovf_i     := '1';
             else
-                -- ИСПРАВЛЕНО: Забираем идеальный по амплитуде диапазон 18 бит
                 i_out_reg <= std_logic_vector(i_round(36 downto 19));
             end if;
 

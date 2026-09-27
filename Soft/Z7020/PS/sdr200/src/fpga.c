@@ -242,6 +242,11 @@ inline void fpga_TXA_AUDIOGAIN(uint32_t value)
 	fpga_write(FPGA_TXA_AUDIO_GAIN, value);
 }
 
+inline void fpga_TXA_AudioShift(uint32_t value)
+{
+	fpga_write(FPGA_TXA_AUDIO_SHIFT, value);
+}
+
 inline void fpga_TXA_ResamplerGain(uint32_t value)
 {
 	fpga_write(FPGA_TXA_GAIN, value);
@@ -298,7 +303,8 @@ void fpga_LinearEnable(s_linear* lin, int enable)
     {
         fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON);
 		vTaskDelay(pdMS_TO_TICKS( LINEAR_SET_DELAY ));
-	    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON | FPGA_LINER_AGC | FPGA_LIN_PHASE_SLOW);
+//	    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON | FPGA_LINER_AGC | FPGA_LIN_PHASE_SLOW);
+	    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON | FPGA_LIN_PHASE_SLOW);
     }
     else
     {
@@ -311,7 +317,6 @@ void fpga_LinearInit(s_linear* lin)
 	fpga_LinearReset();
 	fpga_write(FPGA_LIN_AGC_K, lin->agc_k);
 	fpga_write(FPGA_LIN_PHASE_K, lin->phase_k);
-	fpga_LinearSetShift(lin);
     fpga_LinearSetCoeff(lin);
 }
 
@@ -339,11 +344,6 @@ void fpga_LinearSetIQPhi(s_linear* lin)
 	fpga_write(FPGA_LIN_PHI_COS, lin->phi_cos);
 }
 
-inline void fpga_LinearSetShift(s_linear* lin)
-{
-	fpga_write(FPGA_LIN_ADC_SHIFT, lin->adc_shift);
-}
-
 void fpga_LinearSetCoeff(s_linear* lin)
 {
     fpga_write(FPGA_LIN_CORR_KPROP, lin->prop);
@@ -351,20 +351,22 @@ void fpga_LinearSetCoeff(s_linear* lin)
     fpga_write(FPGA_LIN_CORR_KSTAB, lin->stab);
 }
 
-void fpga_GetMaxValues(s_max_values* data)
+uint32_t fpga_GetMaxValues(void)
 {
-	data->over = fpga_read(FPGA_TXA_OVER);
-	data->audio = fpga_read(FPGA_TXA_AUDIO_ABS);
-	data->lin = fpga_read(FPGA_TXA_LINDIN_ABS);
-	data->dac = fpga_read(FPGA_TXA_DAC_ABS);
-	data->iq = fpga_read(FPGA_TXA_FLOAT_ABS);
-
+	uint32_t ret = fpga_read(FPGA_TXA_OVER);
 	fpga_write(FPGA_TXA_RESET_OVER, 0);
+	return ret;
 }
 
 inline uint32_t fpga_SetStatus(void)
 {
 	return fpga_read(FPGA_HW_CTRL);
+}
+
+void fpga_SetADC(s_adc* adc)
+{
+	fpga_write(FPGA_ADC_SET, (adc->adc1_phase << 16) | adc->adc0_gain);
+//	fpga_write(FPGA_ADC_DC, (adc->adc1_dc << 16) | adc->adc0_dc);
 }
 
 inline void fpga_write(uint16_t addr, uint32_t value)

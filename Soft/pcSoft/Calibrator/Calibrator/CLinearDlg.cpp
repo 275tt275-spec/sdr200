@@ -49,7 +49,6 @@ void CLinearDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COMBO_FBV, m_wndFBV);
 	DDX_Control(pDX, IDC_COMBO_FBC, m_wndFBC);
-	DDX_Control(pDX, IDC_COMBO_SHIFT, m_wndShift);
 }
 
 
@@ -127,21 +126,15 @@ BOOL CLinearDlg::OnInitDialog()
 		m_wndFBC.AddString(str);
 	}
 
-	for (int n = 0; n < 8; n++)
-	{
-		str.Format(L"%d", n);
-		m_wndShift.AddString(str);
-	}
-
 	m_wndFBV.SetCurSel(0);
 	m_wndFBC.SetCurSel(0);
-	m_wndShift.SetCurSel(0);
 
 	SetDlgItemInt(IDC_EDIT_DCI, 0);
 	SetDlgItemInt(IDC_EDIT_DCQ, 0);
 	SetDlgItemInt(IDC_EDIT_GAINI, 32767);
 	SetDlgItemInt(IDC_EDIT_GAINQ, 32767);
 	SetDlgItemInt(IDC_EDIT_PHI, 0);
+	SetDlgItemInt(IDC_EDIT_PHASE, 0);
 
 	m_isTune = FALSE;
 	m_nTimer = SetTimer(1, 1000, 0);
@@ -154,7 +147,8 @@ void CLinearDlg::OnSelchangeComboFbv()
 {
 	int attV = m_wndFBV.GetCurSel();
 	int attC = m_wndFBC.GetCurSel();
-	snprintf(send_rxa, 64, "AT%03d%03d;", attV, attC);
+	int phase = GetDlgItemInt(IDC_EDIT_PHASE);
+	snprintf(send_rxa, 64, "AT%03d%03d%05d;", attV, attC, phase);
 	com_send(send_rxa);
 }
 
@@ -162,7 +156,8 @@ void CLinearDlg::OnSelchangeComboFbc()
 {
 	int attV = m_wndFBV.GetCurSel();
 	int attC = m_wndFBC.GetCurSel();
-	snprintf(send_rxa, 64, "AT%03d%03d;", attV, attC);
+	int phase = GetDlgItemInt(IDC_EDIT_PHASE);
+	snprintf(send_rxa, 64, "AT%03d%03d%05d;", attV, attC, phase);
 	com_send(send_rxa);
 }
 
@@ -173,13 +168,12 @@ void CLinearDlg::OnSelchangeComboShift()
 
 void CLinearDlg::OnBnClickedButtonCset()
 {
-	int shift = m_wndShift.GetCurSel();
 	int dci = GetDlgItemInt(IDC_EDIT_DCI);
 	int dcq = GetDlgItemInt(IDC_EDIT_DCQ);
 	int gi = GetDlgItemInt(IDC_EDIT_GAINI);
 	int gq = GetDlgItemInt(IDC_EDIT_GAINQ);
 	int phi = GetDlgItemInt(IDC_EDIT_PHI);
-	snprintf(send_rxa, 64, "LA%01d%05d%05d%05d%05d;", shift, dci, dcq, gi, gq);
+	snprintf(send_rxa, 64, "LA%05d%05d%05d%05d;", dci, dcq, gi, gq);
 	com_send(send_rxa);
 }
 
@@ -210,26 +204,29 @@ void CLinearDlg::OnTimer(UINT_PTR nIDEvent)
 	if (m_nTimer == nIDEvent)
 	{
 		CString str, strT;
+		uint32_t overflags;
 
 		snprintf(send_rxa, 64, "SW;");
 		com_send_read(send_rxa, rcv_rxa, 33);
-		sscanf(rcv_rxa, "SW%05d%05d%05d%05d%05d%05d;",
-			&m_swr.inc, &m_swr.ref, &m_swr.magA, &m_swr.magB, &m_swr.angA, &m_swr.angB);
 
-		strT.Format(L"inc = %d, ref = %d, magA = %d, magB = %d\n",
-			m_swr.inc, m_swr.ref, m_swr.magA, m_swr.magB);
+		sscanf(rcv_rxa, "SW%05d%05d%05d%05d;",
+			&m_swr.magA, &m_swr.magB, &m_swr.angA, &m_swr.angB);
+
+		float angleA = (float)(int16_t)m_swr.angA * 180 / 16384;
+		float angleB = (float)(int16_t)m_swr.angB * 180 / 16384;
+		float delta_phi = angleB - angleA;  // FIXME:
+
+		strT.Format(L"magA = %d, magB = %d, angA = %d, angB = %d, delta_phi = %.2f\n",
+			m_swr.magA, m_swr.magB, m_swr.angA, m_swr.angB, delta_phi);
 		str += strT;
 
 		snprintf(send_rxa, 64, "SZ;");
 		com_send_read(send_rxa, rcv_rxa, 43);
-		sscanf(rcv_rxa, "SZ%08d%08d%08d%08d%08d;",
-			&values.over, &values.audio, &values.lin, &values.dac, &values.iq);
+		sscanf(rcv_rxa, "SZ%08d;", &overflags);
 
-		strT.Format(L"resampler = %d, lim: fi = %d, fq = %d, mi = %d, mq = %d\n",
-			(values.over >> 8) & 1,
-			(values.over >> 3) & 1, (values.over >> 2) & 1, (values.over >> 1) & 1, (values.over >> 0) & 1);
-		str += strT;
-		strT.Format(L"audio = %d, lin = %d, dac = %d, iq = %d\n", values.audio, values.lin, values.dac, values.iq);
+		strT.Format(L"FOS = %d, audio = %d, resampler = %d, limiter = %d, linear = %d\n",
+			(overflags >> 14) & 1, (overflags >> 12) & 1,
+			(overflags >> 11) & 1, (overflags >> 4) & 0x7F, overflags & 0xFF);
 		str += strT;
 
 		SetDlgItemText(IDC_REMARK, str);

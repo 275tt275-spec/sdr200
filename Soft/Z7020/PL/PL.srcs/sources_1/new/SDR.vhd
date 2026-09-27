@@ -30,6 +30,8 @@
 -- 0x0204  /* reset max values */
 -- 0x020e  data in i
 -- 0x020f  data in q
+-- 0x021E  audio inpit reserved
+-- 0x021F  audio inpit gain shift
 -- 0x022_  limiter
 -- 0x024_  modulator
 -- 0x0240  MODULATION
@@ -44,15 +46,14 @@
 -- 0x028_  linear cmd
 -- 0x02A_  linear phase block
 
+-- 0x001E  
+-- 0x001F  audio inpit gain offset
+
 -- 0x0300  write cic shift to swr
 
 -- read
 -- 0x00__  HW_ctrl
 -- 0x0200  over bits ( ovf_out)
--- 0x0201  audio_max
--- 0x0202  lin_din_max
--- 0x0203  dac_tdata_max
--- 0x0204  float_out_max
 -- 0x03__   SWR
 -- 0x0301  magnitude 16 bit chan A & 16 bit chan B (absolute)
 -- 0x0300  angle 16 bit chan A & 16 bit chan B (signed) 

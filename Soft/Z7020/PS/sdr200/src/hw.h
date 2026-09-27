@@ -80,6 +80,7 @@ typedef struct tag_hw_device {
 	EventGroupHandle_t xVrefEvents;
 	int lin_enable;
 	uint32_t TXA_gain;
+	uint32_t TXA_AudioShift;
 } s_hw_device;
 
 extern s_hw_device hw_device;
@@ -99,7 +100,7 @@ void hw_SetRFGain(uint8_t value); /* 0 - 100*/
 void hw_SetAFGain(uint8_t value); /* 0 - 255*/
 void hw_SetAGC(e_agc_type type);
 void hw_SetPTT(int on, e_tx_input in);
-void hw_SetFBAtt(uint8_t valueV, uint8_t valueC);
+void hw_SetFBAtt(uint8_t valueV, uint8_t valueC, uint16_t phase);
 
 void hw_SetAttMB1(uint8_t value);
 void hw_SetAttMB2(uint8_t value);
@@ -113,7 +114,7 @@ void hw_SetATUBypass(int set);
 void hw_SetATU(uint8_t dir, uint8_t maskL, uint8_t maskC);
 void hw_GetSWR(s_swr* swr);
 void hw_StartTune(uint32_t freq);
-void hw_GetMaxValues(s_max_values* data);
+uint32_t hw_GetMaxValues(void);
 void hw_SetTxMonitor(uint8_t value);
 
 void hw_SetSpeech(int en);
@@ -121,7 +122,7 @@ void hw_SetSpeechInOut(uint8_t in, uint8_t out);
 
 void hw_SetLiner(int en);
 void hw_SetLinerDDSIn(double freq);
-void hw_SetLinerCorrect(uint8_t shift, uint32_t dci, uint32_t dcq, uint32_t gi, uint32_t gq);
+void hw_SetLinerCorrect(uint32_t dci, uint32_t dcq, uint32_t gi, uint32_t gq);
 void hw_SetLinerCoeff(uint32_t kDiff, uint32_t kStab, uint32_t kProp);
 
 void hw_iic_write(uint16_t SlaveAddr, uint8_t* data, size_t len);

@@ -28,14 +28,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.std_logic_signed.all;
 use IEEE.NUMERIC_STD.ALL;
-
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity TXA_modulator16 is
     Port ( 
@@ -115,7 +108,7 @@ architecture Behavioral of TXA_modulator16 is
     signal lsb_select : std_logic := '0';
     signal a3e_mod : std_logic := '0';
     signal fos_cfg_tvalid : std_logic := '0';
-    signal lfsr_reg : std_logic_vector(15 downto 0) := x"A5A5"; -- —тартовое число (не 0)
+    signal lfsr_reg : std_logic_vector(31 downto 0) := x"A5A5A5A5"; -- 32-битный стартовый регистр
     signal ctrl_tdata : std_logic_vector(7 downto 0);
     signal j3e_data_valid_reg : std_logic := '0';
     signal ovr_reg : STD_LOGIC_VECTOR (2 downto 0) := (others => '0');
@@ -159,13 +152,16 @@ begin
     if rising_edge(aclk) then
         -- «адержка валидности ровно на 1 такт - в строгом соответствии с audio_data!
         audio_data_valid <= s_axis_audio_tvalid; 
-        lfsr_reg         <= (lfsr_reg(0) xor lfsr_reg(2) xor lfsr_reg(3) xor lfsr_reg(5)) & lfsr_reg(15 downto 1);  
+        lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(1) xor lfsr_reg(2) xor lfsr_reg(22)) & lfsr_reg(31 downto 1);
         
         ovr_reg(1)       <= '0'; -- »сключаем неопределенность 'U' на незадействованном бите
-
-        -- ѕр€мое знаковое умножение 16x18 дает ровно 34 бита (размерности теперь строго совпадают)
-        mult_res    := signed(s_axis_audio_tdata) * signed(audio_gain);
-        res_rounded := mult_res + round_add;
+        mult_res := signed(s_axis_audio_tdata) * signed(audio_gain);
+        -- —имметричное округление (Sign-Magnitude) по знаку текущего mult_res
+        if mult_res(33) = '0' then
+            res_rounded := mult_res + round_add;
+        else
+            res_rounded := mult_res - round_add;
+        end if;    
 
         -- ѕроверка переполнени€ по старшим битам (33 downto 30 вместо прежних 41 downto 38)
         if (res_rounded(33 downto 30) = "1111") or (res_rounded(33 downto 30) = "0000") then
@@ -221,7 +217,7 @@ end process;
     a3e_mod <= '1' when modulation = "01" else '0';
     -- audio_data должен быть симметричен относительно 0
     -- A3E_envelope Ч это всегда положительна€ величина (несуща€ + звук)
-    A3E_envelope <= carrier_level + audio_data; 
+    A3E_envelope <= std_logic_vector(signed(carrier_level) + signed(audio_data));
     iq_in_tdata <= A3E_envelope & x"0000" when (a3e_mod = '1') else j3e_data;                                      
     
     fos_in_tdata <= x"4000" & x"4000" when modulation = "10" else iq_in_tdata; -- CW

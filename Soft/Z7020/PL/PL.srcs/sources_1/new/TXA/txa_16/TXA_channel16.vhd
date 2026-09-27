@@ -38,9 +38,21 @@ architecture Behavioral of TXA_channel16 is
         probe1 : IN STD_LOGIC_VECTOR(17 DOWNTO 0);
         probe2 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         probe3 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-        probe4 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
+        probe4 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe5 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+        probe6 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        probe7 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
     );
     end component ila_2;
+    
+    component ila_3 IS
+    PORT (
+        clk : IN STD_LOGIC; 
+        probe0 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe1 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe2 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
+    );
+    END component ila_3;
 
     component audio_input16 is
      Port ( 
@@ -201,6 +213,8 @@ architecture Behavioral of TXA_channel16 is
     signal linear_ovf : std_logic_vector(3 downto 0);
     signal ovr_mod : std_logic_vector(2 downto 0);
     signal overflow_reg : std_logic_vector(31 downto 0) := (others => '0');
+    signal overflow_debug : std_logic_vector(15 downto 0);
+    signal audio_cfg_tvalid : std_logic := '0';
 
 begin
 
@@ -209,7 +223,7 @@ begin
     debug_0 : ila_0
     PORT MAP (
         clk => aclk,
-        probe0 => overflow_reg(15 DOWNTO 0)
+        probe0 => overflow_debug
     );
     
 u_audio_input : audio_input16
@@ -221,7 +235,7 @@ u_audio_input : audio_input16
        m_axis_tvalid => audio_filtered_tvalid,
        s_axis_cfg_tdata => s_axis_cfg_tdata,
        s_axis_cfg_tdest => s_axis_cfg_tdest(0 downto 0),
-       s_axis_cfg_tvalid => '0',
+       s_axis_cfg_tvalid => audio_cfg_tvalid,
        overflow => open
     );
     
@@ -229,10 +243,11 @@ u_audio_input : audio_input16
     speech_in_tvalid <= audio_filtered_tvalid;
     
    cfg_wr <= s_axis_cfg_tvalid when s_axis_cfg_tdest(7 downto 5) = "000" else '0'; 
+   audio_cfg_tvalid <= s_axis_cfg_tvalid when s_axis_cfg_tdest(7 downto 1) = "0001111" else '0'; 
    lim_proc_cfg_tvalid <= s_axis_cfg_tvalid when s_axis_cfg_tdest(7 downto 5) = "001" else '0';
    modulator_cfg_tvalid <= s_axis_cfg_tvalid when s_axis_cfg_tdest(7 downto 5) = "010" else '0';
    resampler_cfg_tvalid <= s_axis_cfg_tvalid when s_axis_cfg_tdest(7 downto 5) = "011" else '0';
-   linear_cfg_tvalid <=  s_axis_cfg_tvalid when s_axis_cfg_tdest(7 downto 6) = "10" else '0';
+   linear_cfg_tvalid <= s_axis_cfg_tvalid when s_axis_cfg_tdest(7 downto 6) = "10" else '0';
 
    cfg_addr <= s_axis_cfg_tdest(3 downto 0);
 
@@ -247,6 +262,7 @@ begin
                 (ovr_mod & resampler_over & lim_over & linear_ovf),
                  overflow_reg'length));
         overflow_reg <= current_overflows;
+        overflow_debug <= current_overflows(15 downto 0);
         if aresetn = '0' then 
             txa_on <= '0';
             overflow_reg <= (others => '0');
@@ -316,7 +332,15 @@ u_resampler : TXA_resampler16
     );
     
     fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) + resize(signed(s_adc_data_rx1), 17));
-    linear_din2 <= fb_forward(16 downto 1); -- проверить там раньше было 14 бит  
+    linear_din2 <= fb_forward(16 downto 1);
+    
+debug_3 : ila_3
+    PORT MAP (
+        clk => aclk,
+        probe0 => s_adc_data_rx0,
+        probe1 => s_adc_data_rx1,
+        probe2 => linear_din2
+    );
            
 u_linear : linear_18
     PORT MAP  ( 
@@ -383,7 +407,10 @@ debug_1 : ila_2
         probe1  => resampler_q,
         probe2  => linear_out_i,
         probe3  => linear_out_q,
-        probe4  => dac_tdata
+        probe4  => dac_tdata,
+        probe5(0)  => resampler_in_tvalid,
+        probe6  => resampler_in_tdata,
+        probe7  => modulator_in_tdata
     );
 
 end Behavioral;

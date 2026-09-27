@@ -75,8 +75,8 @@ void hw_Init(void)
 	hw_device.TestMode = 0;
 	hw_device.lin_enable = 0;
 	hw_device.TXA_gain = 32767;
+	hw_device.TXA_AudioShift = 7;
 
-	linear.adc_shift = 0;
 	linear.agc_k = 5;
 	linear.phase_k = 5;
 	linear.diff = 0;
@@ -211,12 +211,14 @@ void hw_Init(void)
 	XGpioPs_WritePin(&hw_device.GpioInstance, GPIO_DAC_RESET, 0x0);
 
 	hw_device.xVrefEvents = xEventGroupCreate();
+
 	xTaskCreate( prvVrefTask, 					/* The function that implements the task. */
 					( const char * ) "Vref", 		/* Text name for the task, provided to assist debugging only. */
 					2048, 	/* The stack allocated to the task. */
 					NULL, 						/* The task parameter is not used, so set to NULL. */
 					tskIDLE_PRIORITY,			/* The task runs at the idle priority. */
 					&hw_device.xVrefTask );
+
 }
 
 void hw_Start(void)
@@ -234,13 +236,13 @@ void hw_Start(void)
 	hw_SetAGC(e_vars->AGCType);
 
 	fpga_LinearInit(&linear);
-	fpga_LinearSetShift(&linear);
 	fpga_LinearSetIQGain(&linear);
 	fpga_LinearSetIQDC(&linear);
 
 	fpga_LIM_Set(&limiter);
 
 	fpga_TXA_ResamplerGain(hw_device.TXA_gain);
+	fpga_TXA_AudioShift(hw_device.TXA_AudioShift);
 
 //	SendToCore1(SET_TXA_PS_RESTORE_CORR, sizeof(s_eeprom_iqc), eeprom_get_iqc(0));
 
@@ -452,12 +454,19 @@ void hw_SetAttMB2(uint8_t value)
 	}
 }
 
-void hw_SetFBAtt(uint8_t valueV, uint8_t valueC)
+void hw_SetFBAtt(uint8_t valueV, uint8_t valueC, uint16_t phase)
 {
+	s_adc adc;
+	adc.adc0_dc = 0;
+	adc.adc1_dc = 0;
+	adc.adc0_gain = 0x7FFF;
+	adc.adc1_phase = phase;
+
 	if(valueV > 63) valueV = 63;
 	hw_SetAttMB1(valueV);
 	if(valueC > 63) valueC = 63;
 	hw_SetAttMB2(valueC);
+	fpga_SetADC(&adc);
 }
 
 void hw_SetVREF(int16_t value)
@@ -765,7 +774,7 @@ void hw_SetTXAPower(float dBm)
 	if(deltaPWR > attMin) deltaPWR = attMin;
 	attV = adc.attV - deltaPWR;
 	attC = adc.attC - deltaPWR;
-	hw_SetFBAtt(attV, attC);
+	hw_SetFBAtt(attV, attC, adc.phase);
 
     sprintf(hw_device.InternalSend, "RT%02d;", value);
     uartPL_sendInternal((uint8_t*)hw_device.InternalSend, strlen(hw_device.InternalSend));
@@ -797,7 +806,11 @@ void hw_SetTXAMode(e_trx_mode mode)
 
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
+#if 0
 			fos_gain = 7;
+#else
+			fos_gain = 5;
+#endif
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
@@ -809,7 +822,11 @@ void hw_SetTXAMode(e_trx_mode mode)
 
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 1;
+#if 0
 			fos_gain = 7;
+#else
+			fos_gain = 5;
+#endif
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
@@ -820,7 +837,11 @@ void hw_SetTXAMode(e_trx_mode mode)
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_DIGU);
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
+#if 0
 			fos_gain = 7;
+#else
+			fos_gain = 6;
+#endif
 			fos_filter = fos_digital;
 			audio = AUDIO_IN_USB;
 			fpga_LIM_Enable(0);
@@ -830,7 +851,11 @@ void hw_SetTXAMode(e_trx_mode mode)
 		case TRX_MODE_AM:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_AM);
 			fpga_mode = FPGA_MOD_A3E;
+#if 0
 			fos_gain = 7;
+#else
+			fos_gain = 5;
+#endif
 			fos_filter = fos_am;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
@@ -840,7 +865,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_CWU);
 			fpga_mode = FPGA_MOD_A1A;
 			fpga_lsb = 0;
-			fos_gain = 5;
+			fos_gain = 3;
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_USB;
 			fpga_LIM_Enable(0);
@@ -849,7 +874,11 @@ void hw_SetTXAMode(e_trx_mode mode)
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_USB);
 			fpga_mode = FPGA_MOD_J3E;
 			fpga_lsb = 0;
+#if 0
 			fos_gain = 7;
+#else
+			fos_gain = 5;
+#endif
 			fos_filter = fos_ssb;
 			audio = AUDIO_IN_MIC;
 			fpga_LIM_Enable(1);
@@ -935,9 +964,9 @@ inline void hw_GetSWR(s_swr* swr)
 	swr->swr = (1.0 + swr->gamma) / (1.0 - swr->gamma);
 }
 
-inline void hw_GetMaxValues(s_max_values* data)
+inline uint32_t hw_GetMaxValues(void)
 {
-	fpga_GetMaxValues(data);
+	return fpga_GetMaxValues();
 }
 
 void hw_SetSpeech(int en)
@@ -993,15 +1022,13 @@ void hw_SetLinerDDSIn(double freq)
     fpga_LinearSetIQCorr(&linear);
 }
 
-void hw_SetLinerCorrect(uint8_t shift, uint32_t dci, uint32_t dcq, uint32_t gi, uint32_t gq)
+void hw_SetLinerCorrect(uint32_t dci, uint32_t dcq, uint32_t gi, uint32_t gq)
 {
-	linear.adc_shift = shift;
 	linear.dc_i = dci;
 	linear.dc_q = dcq;
 	linear.gain_i = gi;
 	linear.gain_q = gq;
 
-	fpga_LinearSetShift(&linear);
 	fpga_LinearSetIQGain(&linear);
 	fpga_LinearSetIQDC(&linear);
 }

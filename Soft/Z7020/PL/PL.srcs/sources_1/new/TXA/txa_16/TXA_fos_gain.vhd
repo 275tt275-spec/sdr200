@@ -41,7 +41,6 @@ process(aclk)
     variable i_rounded    : signed(48 downto 0); -- 49 бит для безопасного сложения
     variable q_rounded    : signed(48 downto 0);
     
-    -- ИСПРАВЛЕНО: Добавляем '1' в 24-й бит (половина веса 25-го бита)
     constant ROUND_ADD    : signed(48 downto 0) := to_signed(16777216, 49); -- 2^24
 begin
     if rising_edge(aclk) then
@@ -69,8 +68,17 @@ begin
         q_gain := shift_left(q_raw, shift_val);
 
         -- Выполняем округление на базе исходной сетки (добавление 2^24)
-        i_rounded := resize(i_gain, 49) + ROUND_ADD;
-        q_rounded := resize(q_gain, 49) + ROUND_ADD;
+        if i_gain(47) = '0' then
+            i_rounded := resize(i_gain, 49) + ROUND_ADD;
+        else
+            i_rounded := resize(i_gain, 49) - ROUND_ADD;
+        end if;
+        
+        if q_gain(47) = '0' then
+            q_rounded := resize(q_gain, 49) + ROUND_ADD;
+        else
+            q_rounded := resize(q_gain, 49) - ROUND_ADD;
+        end if;
 
         -- Проверяем биты с 47 по 40. Они обязаны дублировать знак (бит 48).
         if (i_rounded(48) = '0' and (i_rounded(47 downto 37) /= (47 downto 37 => '0'))) then

@@ -47,6 +47,8 @@
 #define IDC_EDIT_GAINI                  1027
 #define IDC_EDIT_GAINQ                  1028
 #define IDC_EDIT_PHI                    1029
+#define IDC_EDIT_KDIFF2                 1030
+#define IDC_EDIT_PHASE                  1030
 
 // Next default values for new objects
 // 

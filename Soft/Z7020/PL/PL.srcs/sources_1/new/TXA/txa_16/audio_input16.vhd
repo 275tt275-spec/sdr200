@@ -41,7 +41,7 @@ component fir_audio_16 IS
     end component fir_audio_16;
     
     -- Внутренние сигналы
-    signal gain_correct      : std_logic_vector(3 downto 0) := x"6";
+    signal gain_correct      : std_logic_vector(3 downto 0) := x"7";
     signal fir_in_tdata      : std_logic_vector(15 downto 0);
     signal fir_in_tvalid     : std_logic;
     signal fir_out_tdata     : std_logic_vector(39 downto 0);
@@ -67,8 +67,12 @@ begin
             in_extended := resize(signed(s_axis_tdata), 25);
             
             -- Округление: прибавляем половину веса отбрасываемых 8 бит (2^7 = 128)
-            in_rounded  := in_extended + 128;
-            
+            if in_rounded(24) = '0' then
+                in_rounded  := in_extended + 128;
+            else
+                in_rounded  := in_extended - 128;
+            end if; 
+                        
             -- Проверка на переполнение знака при округлении вверх в максимальной точке
             if (in_rounded(24) = '0' and in_rounded(23) = '1') then
                 fir_in_tdata <= x"7FFF"; -- Насыщение в плюс
@@ -142,7 +146,11 @@ audio_0 : fir_audio_16
             shifted  := shift_left(extended, shift_val);
             
             -- 3. Округление выхода: отбрасываем младшие 24 бита, прибавляем половину (2^23 = 8388608)
-            rounded  := shifted + 8388608;
+            if shifted(55) = '0' then
+                rounded  := shifted + 8388608;
+            else
+                rounded  := shifted - 8388608;
+            end if;
 
             -- 4. Контроль насыщения и усечение до целевых 16 бит.
             -- Забираем биты с 39 по 24 (целевые 16 бит звука).

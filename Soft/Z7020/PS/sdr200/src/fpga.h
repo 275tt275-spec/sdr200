@@ -11,8 +11,8 @@
 /* ADDR 10 bits * 4 */
 /* write */
 #define FPGA_HW_RESET 		0x0000  /* Global Reset */
-#define FPGA_ADC_SET 		0x0001  /* ADC1 phase = 0x0000, ADC0 gain = 0x7FFF */
-#define FPGA_ADC_DC 		0x0002  /* ADC1 dc offset, ADC0 dc offset */
+#define FPGA_ADC_SET 		0x0002  /* ADC1 phase = 0x0000, ADC0 gain = 0x7FFF */
+#define FPGA_ADC_DC 		0x0003  /* ADC1 dc offset, ADC0 dc offset */
 
 #define FPGA_RXA_DDS_NR 	0x0100  /* DDS NR */
 #define FPGA_RXA_MOD 		0x0101  /* MODULATION */
@@ -42,6 +42,7 @@
 #define FPGA_TXA_CTRL_ADC1 	( 1 << 2 ) /* adc1 inversion*/
 #define FPGA_TXA_GAIN	    0x0203  /* txa resampler out gain */
 #define FPGA_TXA_RESET_OVER	0x0204  /* reset overflow reg */
+#define FPGA_TXA_AUDIO_SHIFT 0x021F /* audio inpit gain shift */
 
 // 0x022_  /* limiter */
 #define FPGA_LIM_IN 		0x0220 /* lim_in_gain default "00" & x"3FFF" */
@@ -99,10 +100,6 @@
 // 0x01__  TXA_cfg
 // 0x02__  TXA_cfg
 #define FPGA_TXA_OVER 		0x0200  /* over bits */
-#define FPGA_TXA_AUDIO_ABS 	0x0201  /* audio_max_abs */
-#define FPGA_TXA_LINDIN_ABS 0x0202  /* linear_din_max_abs */
-#define FPGA_TXA_DAC_ABS 	0x0203  /* dac_tdata_max */
-#define FPGA_TXA_FLOAT_ABS 	0x0204  /* float_out_max */
 // 0x03__   SWR_cfg
 //#define FPGA_REG_SWR		0x0300  /* swr 16 bit inc & 16 bit ref (absolute) */
 #define FPGA_REG_MAG		0x0301  /* magnitude 16 bit chan A & 16 bit chan B (absolute) */
@@ -152,7 +149,6 @@ typedef struct tag_linear
 {
 	uint32_t agc_k;
 	uint32_t phase_k;
-	uint32_t adc_shift;
 	uint32_t prop;
 	uint32_t diff;
 	uint32_t stab;
@@ -175,14 +171,13 @@ typedef struct tag_limiter
 	uint32_t dds_phase;
 } s_limiter;
 
-typedef struct tag_max_values
+typedef struct tag_adc
 {
-	uint32_t over;
-	uint32_t audio;
-	uint32_t lin;
-	uint32_t dac;
-	uint32_t iq;
-} s_max_values;
+	uint16_t adc1_phase;
+	uint16_t adc0_gain;
+	uint16_t adc1_dc;
+	uint16_t adc0_dc;
+} s_adc;
 
 void fpga_init(void);
 void fpga_tick(void);
@@ -210,6 +205,7 @@ void fpga_TXA_LSB(uint32_t value);
 void fpga_TXA_AUDIOGAIN(uint32_t value);
 void fpga_TXA_FOS(const uint32_t* p);
 void fpga_TXA_FOSGAIN(uint32_t value);
+void fpga_TXA_AudioShift(uint32_t value);
 void fpga_TXA_ResamplerGain(uint32_t value);
 void fpga_GetSWR(s_swr* swr);
 void fpga_LIM_Enable(int enable);
@@ -221,11 +217,11 @@ void fpga_LinearEnable(s_linear* lin, int enable);
 void fpga_LinearSetIQGain(s_linear* lin);
 void fpga_LinearSetIQCorr(s_linear* lin);
 void fpga_LinearSetIQDC(s_linear* lin);
-void fpga_LinearSetShift(s_linear* lin);
 void fpga_LinearSetCoeff(s_linear* lin);
 void fpga_LinearSetIQPhi(s_linear* lin);
 uint32_t fpga_SetStatus(void);
-void fpga_GetMaxValues(s_max_values* data);
+uint32_t fpga_GetMaxValues(void);
+void fpga_SetADC(s_adc* adc);
 
 
 #endif /* SRC_FPGA_H_ */

@@ -90,9 +90,9 @@ begin
 
    -- Основной процесс симуляции
     stim_proc : process
-        file coe_file_ssb       : text open read_mode is "E:/Projects/sdr200/Soft/Z7020/PL/PL.srcs/sim_1/new/fos_ssb.coe";
-        file coe_file_am       : text open read_mode is "E:/Projects/sdr200/Soft/Z7020/PL/PL.srcs/sim_1/new/fos_am.coe";
-        file coe_file_dig       : text open read_mode is "E:/Projects/sdr200/Soft/Z7020/PL/PL.srcs/sim_1/new/fos_digital.coe";
+        file coe_file_ssb       : text open read_mode is "D:/Projects/sdr200/Soft/Z7020/PL/PL.srcs/sim_1/new/fos_ssb.coe";
+        file coe_file_am       : text open read_mode is "D:/Projects/sdr200/Soft/Z7020/PL/PL.srcs/sim_1/new/fos_am.coe";
+        file coe_file_dig       : text open read_mode is "D:/Projects/sdr200/Soft/Z7020/PL/PL.srcs/sim_1/new/fos_digital.coe";
         variable file_line  : line;
         variable char_buffer    : character;
         variable char       : character;
@@ -130,11 +130,11 @@ begin
         wait for 100 ns;
 
         -- Настройка режима J3E (SSB) через шину конфигурации
-        write_cfg(x"0", x"00000000", aclk, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid);        
+        write_cfg(x"0", x"00000002", aclk, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid);        
         write_cfg(x"4", x"00001799", aclk, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid); -- 1475 Hz  
         -- Настройка усиления (Gain)
         write_cfg(x"2", x"00007FFF", aclk, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid); -- 32767
-        write_cfg(x"9", x"00000005", aclk, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid); -- FOS gain
+        write_cfg(x"9", x"00000003", aclk, s_axis_cfg_tdest, s_axis_cfg_tdata, s_axis_cfg_tvalid); -- FOS gain
           
         -- 1. Пропускаем первые 4 строки заголовка (комментарии и параметры)
         for k in 1 to 5 loop
