@@ -79,9 +79,24 @@ begin
 	end if;
 end process;
 
-    m_axis_audio_tvalid <= s_axis_audio_tvalid when lim_en = '0' else lim_out_tvalid;
-    m_axis_audio_tdata <= s_axis_audio_tdata when lim_en = '0' else lim_out_tdata;
-    lim_over <= (others => '0') when lim_en = '0' else over; 
+--    m_axis_audio_tvalid <= s_axis_audio_tvalid when lim_en = '0' else lim_out_tvalid;
+--    m_axis_audio_tdata <= s_axis_audio_tdata when lim_en = '0' else lim_out_tdata;
+--    lim_over <= (others => '0') when lim_en = '0' else over; 
+    
+process(aclk)
+begin
+    if rising_edge(aclk) then
+        if lim_en = '0' then
+            m_axis_audio_tvalid <= s_axis_audio_tvalid;
+            m_axis_audio_tdata  <= s_axis_audio_tdata;
+            lim_over            <= (others => '0');
+        else
+            m_axis_audio_tvalid <= lim_out_tvalid;
+            m_axis_audio_tdata  <= lim_out_tdata;
+            lim_over            <= over;
+        end if;
+    end if;
+end process;
     
 limiter_0 : lim16_proc
     PORT MAP (  

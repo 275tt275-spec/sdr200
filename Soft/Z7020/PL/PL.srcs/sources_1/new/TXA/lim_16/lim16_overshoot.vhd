@@ -142,6 +142,18 @@ component lim16_translate_cordic
     signal ch_a_16_reg, ch_b_16_reg : std_logic_vector(15 downto 0) := (others => '0');
     signal out_valid_reg            : std_logic := '0';
     signal out_over_a, out_over_b   : std_logic := '0';
+    
+        -- Счетчик тактов для последовательного выполнения операций
+    signal calc_cycle : integer range 0 to 7 := 0;
+    
+    -- Промежуточные сигналы для дерева поиска максимума
+    signal max_p1, max_p2 : unsigned(15 downto 0) := (others => '0');
+    signal max_st2        : unsigned(15 downto 0) := (others => '0');
+    signal max_final      : unsigned(15 downto 0) := (others => '0');
+    
+    -- Локальные регистры для математики
+    signal v_corr         : unsigned(15 downto 0) := (others => '0');
+    signal v_corr1        : unsigned(15 downto 0) := (others => '0');
 
 begin
 
@@ -160,77 +172,117 @@ mag_cordic_0 : lim16_translate_cordic
     -- Вычисляем модуль амплитуды из выхода CORDIC
     magnitude <= std_logic_vector(abs(signed(cordic_out(15 downto 0))));  
     
-   -----------------------------------------------------------------
-    -- ЕДИНЫЙ ПРОЦЕСС ОБРАБОТКИ АУДИОСИГНАЛА С РАЗРЕШЕНИЕМ ТАКТИРОВАНИЯ (CE)
+       -----------------------------------------------------------------
+    -- РАСПРЕДЕЛЕННЫЙ ПО ТАКТАМ ПРОЦЕСС ВЫЧИСЛЕНИЯ DENOM (FSM/СЧЕТЧИК)
     -----------------------------------------------------------------
-    process(aclk)
-        -- Локальные переменные для мгновенного поиска максимума на частоте отсчетов
-        variable max_pair1  : unsigned(15 downto 0);
-        variable max_pair2  : unsigned(15 downto 0);
-        variable max_stage2 : unsigned(15 downto 0);
-        variable v_max      : unsigned(15 downto 0);
-        variable v_corr     : unsigned(15 downto 0);
-        variable v_corr1    : unsigned(15 downto 0);
+process(aclk)
     begin
         if rising_edge(aclk) then
-            -- Строб валидности для делителя держится ровно 1 такт aclk
+            -- Строб валидности для делителя держится строго 1 такт aclk
             delay_tvalid <= '0';
             
-            -- Логика активируется СТРОГО в момент готовности отсчета от CORDIC (16 кГц)
+            -- Шаг 0: Ожидание нового аудио-сэмпла от CORDIC (16 кГц)
             if cordic_tvalid = '1' then
+                -- 1. Сдвигаем историю амплитуд в самый первый такт
+                magnitude1   <= magnitude;
+                magnitude2   <= magnitude1;
+                magnitude3   <= magnitude2;
+                magnitude4   <= magnitude3;
                 
-                -- 1. Сдвиг истории амплитуд
-                magnitude1  <= magnitude;
-                magnitude2  <= magnitude1;
-                magnitude3  <= magnitude2;
-                magnitude4  <= magnitude3;
-                
-                -- 2. Дерево поиска максимума из 5 отсчетов (выполняется за 0 нс на кремнии)
-                if unsigned(magnitude4) < unsigned(magnitude3) then max_pair1 := unsigned(magnitude3); else max_pair1 := unsigned(magnitude4); end if;
-                if unsigned(magnitude2) < unsigned(magnitude1) then max_pair2 := unsigned(magnitude1); else max_pair2 := unsigned(magnitude2); end if;
-                if max_pair1 < max_pair2 then max_stage2 := max_pair2; else max_stage2 := max_pair1; end if;
-                if max_stage2 < unsigned(magnitude) then v_max := unsigned(magnitude); else v_max := max_stage2; end if;
-                max_reg <= std_logic_vector(v_max);
-                
-                -- 3. Вычисление отклонения (corr) относительно лимита
-                if v_max < unsigned(limit) then
-                    v_corr := x"0000";
-                else
-                    v_corr := v_max - unsigned(limit);
-                end if;
-                corr <= std_logic_vector(v_corr);
-                
-                -- 4. Масштабирование (умножение на 2 с насыщением)
-                if v_corr(15) = '1' then
-                    v_corr1 := x"FFFF";
-                else
-                    v_corr1 := v_corr(14 downto 0) & '0';
-                end if;
-                corr1 <= std_logic_vector(v_corr1);
-
-                -- 5. Формирование финального делителя denom
-                if ("0" & v_corr1) + ("0" & unsigned(limit)) > 65535 then
-                    denom <= x"FFFF";
-                else
-                    denom <= std_logic_vector(v_corr1 + unsigned(limit));
-                end if;
-                
-                -- 6. ТОЧНАЯ ФАЗОВАЯ СИНХРОНИЗАЦИЯ С УЧЕТОМ ОКНА:
-                -- Продвигаем аудиоданные по цепочке строго в темпе 16 кГц
+                -- 2. Сдвигаем историю аудио-сэмплов (строго в темпе 16 кГц)
                 delay_out_0  <= s_axis_data_tdata;
                 delay_out_1  <= delay_out_0;
                 delay_out_2  <= delay_out_1;
                 
-                -- Берем отсчет аудио из центра окна (задержка ровно 2 аудио-периода)
-                audio_sync   <= delay_out_2;
+                -- Запускаем последовательный вычислительный счетчик
+                calc_cycle   <= 1;
                 
-                -- Выставляем строб валидности строго на 1 такт aclk.
-                -- На этом такте на шине denom уже лежит актуальное значение, 
-                -- а на шине audio_sync - строго соответствующий ему отсчет звука!
-                delay_tvalid <= '1';
+            elsif calc_cycle > 0 then
+                -- Инкрементируем счетчик тактов aclk
+                if calc_cycle < 7 then
+                    calc_cycle <= calc_cycle + 1;
+                else
+                    calc_cycle <= 0; -- Вычисления завершены, уходим в ожидание
+                end if;
+                
+                -- Пошаговый автомат вычислений (1 операция за 1 такт aclk)
+                case calc_cycle is
+                    
+                    when 1 =>
+                        -- ТАКТ aclk 1: Первый ярус сравнения (параллельные независимые пары)
+                        if unsigned(magnitude4) < unsigned(magnitude3) then 
+                            max_p1 <= unsigned(magnitude3); 
+                        else 
+                            max_p1 <= unsigned(magnitude4); 
+                        end if;
+                        
+                        if unsigned(magnitude2) < unsigned(magnitude1) then 
+                            max_p2 <= unsigned(magnitude1); 
+                        else 
+                            max_p2 <= unsigned(magnitude2); 
+                        end if;
+                        
+                    when 2 =>
+                        -- ТАКТ aclk 2: Второй ярус сравнения
+                        if max_p1 < max_p2 then 
+                            max_st2 <= max_p2; 
+                        else 
+                            max_st2 <= max_p1; 
+                        end if;
+                        
+                    when 3 =>
+                        -- ТАКТ aclk 3: Финальный ярус сравнения (поиск максимума из 5 точек)
+                        if max_st2 < unsigned(magnitude) then 
+                            max_final <= unsigned(magnitude); 
+                        else 
+                            max_final <= max_st2; 
+                        end if;
+                        
+                    when 4 =>
+                        -- ТАКТ aclk 4: Сохранение максимума в регистр и расчет отклонения (corr)
+                        max_reg <= std_logic_vector(max_final);
+                        
+                        if max_final < unsigned(limit) then
+                            v_corr <= x"0000";
+                        else
+                            v_corr <= max_final - unsigned(limit);
+                        end if;
+                        
+                    when 5 =>
+                        -- ТАКТ aclk 5: Масштабирование отклонения (corr1) с насыщением
+                        corr <= std_logic_vector(v_corr);
+                        
+                        if v_corr(15) = '1' then
+                            v_corr1 <= x"FFFF";
+                        else
+                            v_corr1 <= v_corr(14 downto 0) & '0';
+                        end if;
+                        
+                    when 6 =>
+                        -- ТАКТ aclk 6: Формирование финального делителя (denom) с насыщением
+                        corr1 <= std_logic_vector(v_corr1);
+                        
+                        if ("0" & v_corr1) + ("0" & unsigned(limit)) > 65535 then
+                            denom <= x"FFFF";
+                        else
+                            denom <= std_logic_vector(v_corr1 + unsigned(limit));
+                        end if;
+                        
+                        -- Фиксируем аудиоданные из центра скользящего окна
+                        audio_sync <= delay_out_2;
+                        
+                    when 7 =>
+                        -- ТАКТ aclk 7: Выставляем строб валидности на 1 такт для делителей.
+                        -- На этом такте шины denom и audio_sync стабильны и синхронны!
+                        delay_tvalid <= '1';
+                        
+                    when others => 
+                        null;
+                end case;
             end if;
         end if;
     end process;
+
     
 div_0 : lim16_div
     generic map (
