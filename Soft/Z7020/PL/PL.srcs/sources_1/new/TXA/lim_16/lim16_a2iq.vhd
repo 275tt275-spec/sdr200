@@ -81,11 +81,28 @@ COMPONENT lim16_lpf_fir IS
         s_axis_reload_tlast : IN STD_LOGIC;
         s_axis_reload_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
         m_axis_data_tvalid : OUT STD_LOGIC;
-        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(79 DOWNTO 0);
+        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(95 DOWNTO 0);
         event_s_reload_tlast_missing : OUT STD_LOGIC;
         event_s_reload_tlast_unexpected : OUT STD_LOGIC
     );
 END COMPONENT  lim16_lpf_fir;
+
+COMPONENT signed_round_sat is
+    generic (
+        IWID       : integer := 37; -- Исходная разрядность данных
+        OWID       : integer := 24; -- Выходная разрядность после округления
+        SHIFT_LEFT : integer := 0   -- Параметр сдвига данных вверх перед округлением (0, 1, 2 и т.д.)
+    );
+    port (
+        aclk    : in  std_logic;
+        aresetn : in  std_logic;
+        i_data  : in  std_logic_vector(IWID-1 downto 0);
+        i_valid : in  std_logic;
+        o_data  : out std_logic_vector(OWID-1 downto 0);
+        o_valid : out std_logic;
+        ovf     : out std_logic -- Флаг фиксации переполнения (сатурации)
+    );
+END COMPONENT  signed_round_sat;
 
     signal dds_config_tdata_reg  : STD_LOGIC_VECTOR(31 DOWNTO 0) := (others => '0');
     signal dds_config_tvalid_reg : STD_LOGIC := '0';
@@ -97,32 +114,17 @@ END COMPONENT  lim16_lpf_fir;
     signal mult_in_data          : STD_LOGIC_VECTOR(31 DOWNTO 0);
     
     -- Выход умножителя / Вход FIR-фильтра
+    constant GAIN_SHIFT : integer := 15; 
     signal firin_tdata           : STD_LOGIC_VECTOR(31 DOWNTO 0);
-    signal firin_tvalid          : STD_LOGIC;
-    
-    -- Выход FIR-фильтра (79 downto 40 = Q, 39 downto 0 = I)
-    signal firout_tdata          : STD_LOGIC_VECTOR(79 DOWNTO 0);
+    signal firin_tvalid          : STD_LOGIC;    
+    signal firout_tdata          : STD_LOGIC_VECTOR(95 DOWNTO 0);
     signal firout_tvalid         : STD_LOGIC;
     
     -- Сигналы генератора псевдослучайной последовательности (LFSR)
     signal lfsr_reg              : STD_LOGIC_VECTOR(31 downto 0) := x"A5A5A5A5";
     signal ctrl_tdata            : STD_LOGIC_VECTOR(7 downto 0)  := (others => '0');
-
-    -----------------------------------------------------------------
-    -- Сигналы для конвейера Округления и Насыщения (Rounding & Saturation)
-    -----------------------------------------------------------------
-    -- Выделенные из FIR 40-битные знаковые каналы I и Q
-    signal fir_i_raw, fir_q_raw     : signed(39 downto 0);
-    
-    -- Шаг 1 конвейера: Результат добавления округления (+0.5 младшего бита)
-    -- Константа x"1000" (добавление 1 в 12-й бит для сохранения сетки 28 downto 13)
-    constant C_ROUND_VAL : signed(39 downto 0) := x"0000008000"; -- единица в 15-м бите
-    signal fir_i_round, fir_q_round : signed(39 downto 0) := (others => '0');
-    signal fir_valid_pipe1          : std_logic := '0';
-    
-    -- Шаг 2 конвейера: Выходные 16-битные регистры после проверки на переполнение
+    signal fir_valid_pipe1, fir_valid_pipe2         : std_logic := '0';
     signal i_out_reg, q_out_reg     : std_logic_vector(15 downto 0) := (others => '0');
-    signal fir_valid_pipe2          : std_logic := '0';
 
 begin
 
@@ -199,58 +201,38 @@ end process;
         event_s_reload_tlast_missing    => open,
         event_s_reload_tlast_unexpected => open
     );
-
-    -- Разделяем шину фильтра на индивидуальные компоненты I и Q
-    fir_q_raw <= signed(firout_tdata(79 downto 40));
-    fir_i_raw <= signed(firout_tdata(39 downto 0));
-
-    -- Двухстадийный процесс конвейерной обработки сигналов IQ
-    process(aclk)
-    begin
-        if rising_edge(aclk) then
-            -----------------------------------------------------------------
-            -- СТАДИЯ 1: Математическое округление (Rounding)
-            -- Прибавляем единицу в 12-й бит для округления сетки (28 downto 13)
-            -----------------------------------------------------------------
-            if fir_i_raw(39) = '0' then
-                fir_i_round <= fir_i_raw + C_ROUND_VAL;
-            else
-                fir_i_round <= fir_i_raw - C_ROUND_VAL;
-            end if;
-
-            if fir_q_raw(39) = '0' then
-                fir_q_round <= fir_q_raw + C_ROUND_VAL;
-            else
-                fir_q_round <= fir_q_raw - C_ROUND_VAL;
-            end if;
-            
-            fir_valid_pipe1 <= firout_tvalid;
-
-            -----------------------------------------------------------------
-            -- СТАДИЯ 2: Сатурация (Saturation) и ограничение до 16 бит
-            -----------------------------------------------------------------
-            fir_valid_pipe2 <= fir_valid_pipe1;
-
-            -- Обработка канала I (Синхронная проверка переполнения)
-            if fir_i_round(39 downto 31) = "111111111" or fir_i_round(39 downto 31) = "000000000" then
-                i_out_reg <= std_logic_vector(fir_i_round(31 downto 16));
-            elsif fir_i_round(39) = '0' then
-                i_out_reg <= x"7FFF"; -- Положительное ограничение
-            else
-                i_out_reg <= x"8000"; -- Отрицательное ограничение
-            end if;
-
-            -- Обработка канала Q (Синхронная проверка переполнения)
-            if fir_q_round(39 downto 31) = "111111111" or fir_q_round(39 downto 31) = "000000000" then
-                q_out_reg <= std_logic_vector(fir_q_round(31 downto 16));
-            elsif fir_q_round(39) = '0' then
-                q_out_reg <= x"7FFF"; -- Положительное ограничение
-            else
-                q_out_reg <= x"8000"; -- Отрицательное ограничение
-            end if;
-            
-        end if;
-    end process;
+    
+    signed_round_sat_0 : signed_round_sat
+    generic map(
+        IWID       => 48,
+        OWID       => 16,
+        SHIFT_LEFT => GAIN_SHIFT
+    )
+    port map (
+        aclk    => aclk,
+        aresetn => '1',
+        i_data  => firout_tdata(95 downto 48),
+        i_valid => firout_tvalid,
+        o_data  => q_out_reg,
+        o_valid => fir_valid_pipe1,
+        ovf     => open
+    );
+    
+    signed_round_sat_1 : signed_round_sat
+    generic map(
+        IWID       => 48,
+        OWID       => 16,
+        SHIFT_LEFT => GAIN_SHIFT
+    )
+    port map (
+        aclk    => aclk,
+        aresetn => '1',
+        i_data  => firout_tdata(47 downto 0),
+        i_valid => firout_tvalid,
+        o_data  => i_out_reg,
+        o_valid => fir_valid_pipe2,
+        ovf     => open
+    );
 
     -----------------------------------------------------------------
     -- Назначение выходных портов модуля

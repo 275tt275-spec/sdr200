@@ -49,11 +49,28 @@ architecture Behavioral of lim16_limiter is
             s_axis_reload_tlast : IN STD_LOGIC;
             s_axis_reload_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
             m_axis_data_tvalid : OUT STD_LOGIC;
-            m_axis_data_tdata : OUT STD_LOGIC_VECTOR(79 DOWNTO 0);
+            m_axis_data_tdata : OUT STD_LOGIC_VECTOR(95 DOWNTO 0);
             event_s_reload_tlast_missing : OUT STD_LOGIC;
             event_s_reload_tlast_unexpected : OUT STD_LOGIC
         );
     END COMPONENT  lim16_lpf_fir;
+    
+    COMPONENT signed_round_sat is
+    generic (
+        IWID       : integer := 37; -- Исходная разрядность данных
+        OWID       : integer := 24; -- Выходная разрядность после округления
+        SHIFT_LEFT : integer := 0   -- Параметр сдвига данных вверх перед округлением (0, 1, 2 и т.д.)
+    );
+    port (
+        aclk    : in  std_logic;
+        aresetn : in  std_logic;
+        i_data  : in  std_logic_vector(IWID-1 downto 0);
+        i_valid : in  std_logic;
+        o_data  : out std_logic_vector(OWID-1 downto 0);
+        o_valid : out std_logic;
+        ovf     : out std_logic -- Флаг фиксации переполнения (сатурации)
+    );
+    END COMPONENT  signed_round_sat;
     
     component lim16_div is
     generic (
@@ -91,25 +108,14 @@ architecture Behavioral of lim16_limiter is
     signal div_over_1     : std_logic;
     signal fir_in_tdata   : std_logic_vector(31 downto 0);
     signal fir_in_tvalid  : std_logic;
-    signal fir_out_tdata  : std_logic_vector(79 downto 0);
+    signal fir_out_tdata  : std_logic_vector(95 downto 0);
     signal fir_out_tvalid : std_logic;
     signal inv_div0, inv_div1 : signed(15 downto 0);
-
-    -----------------------------------------------------------------
-    -- Сигналы для конвейера Округления и Насыщения (Rounding & Saturation)
-    -----------------------------------------------------------------
-    -- Выделенные из FIR 40-битные знаковые каналы А и Б
-    signal fir_a_raw, fir_b_raw     : signed(39 downto 0);
     
-    constant GAIN_SHIFT : integer := 5;     
-    constant C_ROUND_VAL : signed(39 downto 0) := shift_left(to_signed(1, 40), 23 - GAIN_SHIFT);
-    signal fir_a_round, fir_b_round : signed(39 downto 0) := (others => '0');
-    signal fir_valid_pipe1          : std_logic := '0';
-    
-    -- СТАДИЯ 2: Выходные регистры каналов после Сатурации
+    constant GAIN_SHIFT : integer := 13;     
     signal ch_a_16_reg, ch_b_16_reg : std_logic_vector(15 downto 0) := (others => '0');
     signal out_valid_reg            : std_logic := '0';
-    signal out_over_reg             : std_logic := '0';
+    signal out_over_a, out_over_b   : std_logic := '0';
 
 begin
 
@@ -207,91 +213,38 @@ end process;
         event_s_reload_tlast_missing    => open,
         event_s_reload_tlast_unexpected => open
     );
-
-    -- Разделяем выход шины фильтра на индивидуальные каналы А и Б по 40 бит
-    fir_a_raw <= signed(fir_out_tdata(79 downto 40));
-    fir_b_raw <= signed(fir_out_tdata(39 downto 0));
-
-    -- Двухстадийный процесс конвейерной обработки выходных сигналов IQ
-    process(aclk)
-        -- Переменные-флаги переполнения знакового расширения
-        variable overflow_a : boolean;
-        variable overflow_b : boolean;
-    begin
-        if rising_edge(aclk) then
-            -----------------------------------------------------------------
-            -- СТАДИЯ 1: Конвейерное округление (Rounding)
-            -----------------------------------------------------------------
-            if fir_a_raw(39) = '0' then
-                fir_a_round <= fir_a_raw + C_ROUND_VAL;
-            else
-                fir_a_round <= fir_a_raw - C_ROUND_VAL;
-            end if;
-
-            if fir_b_raw(39) = '0' then
-                fir_b_round <= fir_b_raw + C_ROUND_VAL;
-            else
-                fir_b_round <= fir_b_raw - C_ROUND_VAL;
-            end if;
-
-            fir_valid_pipe1 <= fir_out_tvalid;
-
-            -----------------------------------------------------------------
-            -- СТАДИЯ 2: Сатурация (Saturation) и проверка знакового расширения
-            -----------------------------------------------------------------
-            out_valid_reg <= fir_valid_pipe1;
-
-            if fir_valid_pipe1 = '1' then
-                -- По умолчанию считаем, что переполнения нет
-                overflow_a := false;
-                overflow_b := false;
-                out_over_reg <= '0';
-
-                -- ИСПРАВЛЕННЫЙ ЦИКЛ КАНАЛА А: 
-                -- При GAIN_SHIFT = 7 полезный срез равен (32 downto 17). Значит, 32-й бит - знаковый.
-                -- Проверяем биты расширения строго ВЫШЕ старшего полезного бита (от 39 до 33)
-                for i in 39 downto (39 - GAIN_SHIFT) loop
-                    if fir_a_round(i) /= fir_a_round(39) then
-                        overflow_a := true;
-                    end if;
-                end loop;
-
-                if overflow_a then
-                    out_over_reg <= '1';
-                    if fir_a_round(39) = '0' then
-                        ch_a_16_reg <= x"7FFF"; -- Положительное насыщение
-                    else
-                        ch_a_16_reg <= x"8000"; -- Отрицательное насыщение
-                    end if;
-                else
-                    -- Ошибки нет, забираем 16 бит округленной полезной части со сдвигом усиления
-                    ch_a_16_reg <= std_logic_vector(fir_a_round((39 - GAIN_SHIFT) downto (24 - GAIN_SHIFT)));
-                end if;
-
-                -- ИСПРАВЛЕННЫЙ ЦИКЛ КАНАЛА Б:
-                -- Проверяем биты знакового расширения строго выше полезного 32-го бита (от 39 до 33)
-                for i in 39 downto (39 - GAIN_SHIFT) loop
-                    if fir_b_round(i) /= fir_b_round(39) then
-                        overflow_b := true;
-                    end if;
-                end loop;
-
-                if overflow_b then
-                    out_over_reg <= '1';
-                    if fir_b_round(39) = '0' then
-                        ch_b_16_reg <= x"7FFF"; -- Положительное насыщение
-                    else
-                        ch_b_16_reg <= x"8000"; -- Отрицательное насыщение
-                    end if;
-                else
-                    -- Ошибки нет, забираем 16 бит округленной полезной части со сдвигом усиления
-                    ch_b_16_reg <= std_logic_vector(fir_b_round((39 - GAIN_SHIFT) downto (24 - GAIN_SHIFT)));
-                end if;
-            else
-                out_over_reg <= '0'; -- Сбрасываем флаг, если данные невалидны
-            end if;
-        end if;
-    end process;
+    
+signed_round_sat_0 : signed_round_sat
+    generic map(
+        IWID       => 48,
+        OWID       => 16,
+        SHIFT_LEFT => GAIN_SHIFT
+    )
+    port map (
+        aclk    => aclk,
+        aresetn => '1',
+        i_data  => fir_out_tdata(95 downto 48),
+        i_valid => fir_out_tvalid,
+        o_data  => ch_a_16_reg,
+        o_valid => out_valid_reg,
+        ovf     => out_over_a
+    );
+    
+    signed_round_sat_1 : signed_round_sat
+    generic map(
+        IWID       => 48,
+        OWID       => 16,
+        SHIFT_LEFT => GAIN_SHIFT
+    )
+    port map (
+        aclk    => aclk,
+        aresetn => '1',
+        i_data  => fir_out_tdata(47 downto 0),
+        i_valid => fir_out_tvalid,
+        o_data  => ch_b_16_reg,
+        o_valid => open,
+        ovf     => out_over_b
+    );
 
     -----------------------------------------------------------------
     -- Назначение выходных портов модуля из стабильных регистров
@@ -299,7 +252,7 @@ end process;
     -- Теперь переключение шины данных и валида строго синхронизировано на Stage 2
     m_axis_data_tdata  <= ch_a_16_reg & ch_b_16_reg;
     m_axis_data_tvalid <= out_valid_reg;
-    over(1)            <= out_over_reg;
+    over(1)            <= out_over_a or out_over_b;
 
 end Behavioral;
 

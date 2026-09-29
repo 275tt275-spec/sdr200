@@ -334,13 +334,13 @@ u_resampler : TXA_resampler16
     fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) + resize(signed(s_adc_data_rx1), 17));
     linear_din2 <= fb_forward(16 downto 1);
     
-debug_3 : ila_3
-    PORT MAP (
-        clk => aclk,
-        probe0 => s_adc_data_rx0,
-        probe1 => s_adc_data_rx1,
-        probe2 => linear_din2
-    );
+--debug_3 : ila_3
+--    PORT MAP (
+--        clk => aclk,
+--        probe0 => s_adc_data_rx0,
+--        probe1 => s_adc_data_rx1,
+--        probe2 => linear_din2
+--    );
            
 u_linear : linear_18
     PORT MAP  ( 
@@ -400,17 +400,17 @@ mux_0 : conv16x24
     m_daci_tdata <= dac_tdata;  
     m_dacq_tdata <= dac_tdata; 
     
-debug_1 : ila_2
-    Port map (
-        clk     => aclk,
-        probe0  => resampler_i,
-        probe1  => resampler_q,
-        probe2  => linear_out_i,
-        probe3  => linear_out_q,
-        probe4  => dac_tdata,
-        probe5(0)  => resampler_in_tvalid,
-        probe6  => resampler_in_tdata,
-        probe7  => modulator_in_tdata
-    );
+--debug_1 : ila_2
+--    Port map (
+--        clk     => aclk,
+--        probe0  => resampler_i,
+--        probe1  => resampler_q,
+--        probe2  => linear_out_i,
+--        probe3  => linear_out_q,
+--        probe4  => dac_tdata,
+--        probe5(0)  => resampler_in_tvalid,
+--        probe6  => resampler_in_tdata,
+--        probe7  => modulator_in_tdata
+--    );
 
 end Behavioral;

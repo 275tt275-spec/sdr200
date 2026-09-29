@@ -68,11 +68,28 @@ component lim16_translate_cordic
             s_axis_reload_tlast : IN STD_LOGIC;
             s_axis_reload_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
             m_axis_data_tvalid : OUT STD_LOGIC;
-            m_axis_data_tdata : OUT STD_LOGIC_VECTOR(79 DOWNTO 0);
+            m_axis_data_tdata : OUT STD_LOGIC_VECTOR(95 DOWNTO 0);
             event_s_reload_tlast_missing : OUT STD_LOGIC;
             event_s_reload_tlast_unexpected : OUT STD_LOGIC
         );
     END COMPONENT  lim16_lpf_fir;
+    
+    COMPONENT signed_round_sat is
+    generic (
+        IWID       : integer := 37; -- Исходная разрядность данных
+        OWID       : integer := 24; -- Выходная разрядность после округления
+        SHIFT_LEFT : integer := 0   -- Параметр сдвига данных вверх перед округлением (0, 1, 2 и т.д.)
+    );
+    port (
+        aclk    : in  std_logic;
+        aresetn : in  std_logic;
+        i_data  : in  std_logic_vector(IWID-1 downto 0);
+        i_valid : in  std_logic;
+        o_data  : out std_logic_vector(OWID-1 downto 0);
+        o_valid : out std_logic;
+        ovf     : out std_logic -- Флаг фиксации переполнения (сатурации)
+    );
+    END COMPONENT  signed_round_sat;
 
     component lim16_div is
     generic (
@@ -90,19 +107,6 @@ component lim16_translate_cordic
     );
     end component lim16_div;
     
-    signal delay_out_0, delay_out_1, audio_sync : std_logic_vector(31 downto 0) := (others => '0');        
-    signal cordic_in       : std_logic_vector(31 downto 0);
-    signal cordic_out      : std_logic_vector(31 downto 0);
-    signal cordic_tvalid   : std_logic;
-    signal magnitude       : std_logic_vector(15 downto 0) := (others => '0');
-    signal magnitude1      : std_logic_vector(15 downto 0) := (others => '0');  
-    signal magnitude2      : std_logic_vector(15 downto 0) := (others => '0');  
-    signal magnitude3      : std_logic_vector(15 downto 0) := (others => '0');  
-    signal magnitude4      : std_logic_vector(15 downto 0) := (others => '0');  
-    signal max_reg         : std_logic_vector(15 downto 0) := (others => '0');
-    signal corr            : std_logic_vector(15 downto 0) := x"0000";
-    signal corr1           : std_logic_vector(15 downto 0) := x"0000";
-    signal denom           : std_logic_vector(15 downto 0) := x"0001";
     signal divout_0        : std_logic_vector(15 downto 0); 
     signal divout_1        : std_logic_vector(15 downto 0); 
     signal divout_valid_0  : std_logic;
@@ -112,26 +116,32 @@ component lim16_translate_cordic
     signal fir_in_tdata    : std_logic_vector(31 downto 0);
     signal fir_in_tvalid   : std_logic;
     
+    -- Регистры хранения истории амплитуд (работают на частоте 16 кГц)
+    signal audio_sync    : std_logic_vector(31 downto 0) := (others => '0');        
+    signal delay_out_0, delay_out_1, delay_out_2   : std_logic_vector(31 downto 0) := (others => '0');        
+    
+    signal cordic_in     : std_logic_vector(31 downto 0);
+    signal cordic_out    : std_logic_vector(31 downto 0);
+    signal cordic_tvalid : std_logic;
+    signal magnitude     : std_logic_vector(15 downto 0) := (others => '0');
+    signal magnitude1    : std_logic_vector(15 downto 0) := (others => '0');  
+    signal magnitude2    : std_logic_vector(15 downto 0) := (others => '0');  
+    signal magnitude3    : std_logic_vector(15 downto 0) := (others => '0');  
+    signal magnitude4    : std_logic_vector(15 downto 0) := (others => '0');  
+    signal max_reg       : std_logic_vector(15 downto 0) := (others => '0');
+    signal corr          : std_logic_vector(15 downto 0) := x"0000";
+    signal corr1         : std_logic_vector(15 downto 0) := x"0000";
+    signal denom         : std_logic_vector(15 downto 0) := x"0001";
+    signal delay_tvalid  : std_logic := '0';
+    
     -- ИСПРАВЛЕНО: Выход FIR-фильтра должен быть строго 80 бит (79 downto 0)
-    signal fir_out_tdata   : std_logic_vector(79 downto 0);
+    signal fir_out_tdata   : std_logic_vector(95 downto 0);
     signal fir_out_tvalid  : std_logic;
-    signal delay_tvalid    : std_logic := '0';
-        
-    -----------------------------------------------------------------
-    -- Сигналы для конвейера Округления и Насыщения (Rounding & Saturation)
-    -----------------------------------------------------------------
-    -- Выделенные из FIR 40-битные знаковые каналы А и Б
-    signal fir_a_raw, fir_b_raw     : signed(39 downto 0);
     
-    constant GAIN_SHIFT : integer := 6;     
-    constant C_ROUND_VAL : signed(39 downto 0) := shift_left(to_signed(1, 40), 23 - GAIN_SHIFT);
-    signal fir_a_round, fir_b_round : signed(39 downto 0) := (others => '0');
-    signal fir_valid_pipe1          : std_logic := '0';
-    
-    -- СТАДИЯ 2: Выходные регистры каналов после Сатурации
+    constant GAIN_SHIFT : integer := 13;     
     signal ch_a_16_reg, ch_b_16_reg : std_logic_vector(15 downto 0) := (others => '0');
     signal out_valid_reg            : std_logic := '0';
-    signal out_over_reg             : std_logic := '0';
+    signal out_over_a, out_over_b   : std_logic := '0';
 
 begin
 
@@ -150,72 +160,77 @@ mag_cordic_0 : lim16_translate_cordic
     -- Вычисляем модуль амплитуды из выхода CORDIC
     magnitude <= std_logic_vector(abs(signed(cordic_out(15 downto 0))));  
     
-process(aclk)
-begin
-    if rising_edge(aclk) then  
-        if cordic_tvalid = '1' then
-            magnitude1  <= magnitude;
-            magnitude2  <= magnitude1;
-            magnitude3  <= magnitude2;
-            magnitude4  <= magnitude3;
-            delay_out_0 <= s_axis_data_tdata;
-            delay_out_1 <= delay_out_0;
-        end if;    
-    end if;
-end process;
+   -----------------------------------------------------------------
+    -- ЕДИНЫЙ ПРОЦЕСС ОБРАБОТКИ АУДИОСИГНАЛА С РАЗРЕШЕНИЕМ ТАКТИРОВАНИЯ (CE)
+    -----------------------------------------------------------------
+    process(aclk)
+        -- Локальные переменные для мгновенного поиска максимума на частоте отсчетов
+        variable max_pair1  : unsigned(15 downto 0);
+        variable max_pair2  : unsigned(15 downto 0);
+        variable max_stage2 : unsigned(15 downto 0);
+        variable v_max      : unsigned(15 downto 0);
+        variable v_corr     : unsigned(15 downto 0);
+        variable v_corr1    : unsigned(15 downto 0);
+    begin
+        if rising_edge(aclk) then
+            -- Строб валидности для делителя держится ровно 1 такт aclk
+            delay_tvalid <= '0';
+            
+            -- Логика активируется СТРОГО в момент готовности отсчета от CORDIC (16 кГц)
+            if cordic_tvalid = '1' then
+                
+                -- 1. Сдвиг истории амплитуд
+                magnitude1  <= magnitude;
+                magnitude2  <= magnitude1;
+                magnitude3  <= magnitude2;
+                magnitude4  <= magnitude3;
+                
+                -- 2. Дерево поиска максимума из 5 отсчетов (выполняется за 0 нс на кремнии)
+                if unsigned(magnitude4) < unsigned(magnitude3) then max_pair1 := unsigned(magnitude3); else max_pair1 := unsigned(magnitude4); end if;
+                if unsigned(magnitude2) < unsigned(magnitude1) then max_pair2 := unsigned(magnitude1); else max_pair2 := unsigned(magnitude2); end if;
+                if max_pair1 < max_pair2 then max_stage2 := max_pair2; else max_stage2 := max_pair1; end if;
+                if max_stage2 < unsigned(magnitude) then v_max := unsigned(magnitude); else v_max := max_stage2; end if;
+                max_reg <= std_logic_vector(v_max);
+                
+                -- 3. Вычисление отклонения (corr) относительно лимита
+                if v_max < unsigned(limit) then
+                    v_corr := x"0000";
+                else
+                    v_corr := v_max - unsigned(limit);
+                end if;
+                corr <= std_logic_vector(v_corr);
+                
+                -- 4. Масштабирование (умножение на 2 с насыщением)
+                if v_corr(15) = '1' then
+                    v_corr1 := x"FFFF";
+                else
+                    v_corr1 := v_corr(14 downto 0) & '0';
+                end if;
+                corr1 <= std_logic_vector(v_corr1);
 
-process(aclk)
-    -- Переменные для мгновенного расчета дерева максимумов без задержек на такты
-    variable max_pair1  : std_logic_vector(15 downto 0);
-    variable max_pair2  : std_logic_vector(15 downto 0);
-    variable max_stage2 : std_logic_vector(15 downto 0);
-    variable v_max      : std_logic_vector(15 downto 0);
-    variable v_corr     : std_logic_vector(15 downto 0);
-    variable v_corr1    : std_logic_vector(15 downto 0);
-begin
-    if rising_edge(aclk) then
-        delay_tvalid <= '0';
-        
-        if cordic_tvalid = '1' then
-            -- Шаг 1 дерева: Сравниваем пары параллельно
-            if unsigned(magnitude4) < unsigned(magnitude3) then max_pair1 := magnitude3; else max_pair1 := magnitude4; end if;
-            if unsigned(magnitude2) < unsigned(magnitude1) then max_pair2 := magnitude1; else max_pair2 := magnitude2; end if;
-            
-            -- Шаг 2 дерева: Находим максимум из пар
-            if unsigned(max_pair1) < unsigned(max_pair2) then max_stage2 := max_pair2; else max_stage2 := max_pair1; end if;
-            
-            -- Шаг 3: Находим финальный максимум с учетом текущего отсчета
-            if unsigned(max_stage2) < unsigned(magnitude) then v_max := magnitude; else v_max := max_stage2; end if;
-            max_reg <= v_max;
-            
-            -- Шаг 4: Вычисление отклонения (corr) относительно лимита
-            if unsigned(v_max) < unsigned(limit) then
-                v_corr := x"0000";
-            else
-                v_corr := std_logic_vector(unsigned(v_max) - unsigned(limit));
+                -- 5. Формирование финального делителя denom
+                if ("0" & v_corr1) + ("0" & unsigned(limit)) > 65535 then
+                    denom <= x"FFFF";
+                else
+                    denom <= std_logic_vector(v_corr1 + unsigned(limit));
+                end if;
+                
+                -- 6. ТОЧНАЯ ФАЗОВАЯ СИНХРОНИЗАЦИЯ С УЧЕТОМ ОКНА:
+                -- Продвигаем аудиоданные по цепочке строго в темпе 16 кГц
+                delay_out_0  <= s_axis_data_tdata;
+                delay_out_1  <= delay_out_0;
+                delay_out_2  <= delay_out_1;
+                
+                -- Берем отсчет аудио из центра окна (задержка ровно 2 аудио-периода)
+                audio_sync   <= delay_out_2;
+                
+                -- Выставляем строб валидности строго на 1 такт aclk.
+                -- На этом такте на шине denom уже лежит актуальное значение, 
+                -- а на шине audio_sync - строго соответствующий ему отсчет звука!
+                delay_tvalid <= '1';
             end if;
-            corr <= v_corr;
-            
-            -- Шаг 5: Конвейерное масштабирование corr1 (умножение на 2 с насыщением)
-            if v_corr(15) = '1' then
-                v_corr1 := x"FFFF";
-            else
-                v_corr1 := v_corr(14 downto 0) & '0';
-            end if;
-            corr1 <= v_corr1;
-
-            -- Шаг 6: Формирование финального делителя denom
-            if ("0" & unsigned(v_corr1)) + ("0" & unsigned(limit)) > 65535 then
-                denom <= x"FFFF";
-            else
-                denom <= std_logic_vector(unsigned(v_corr1) + unsigned(limit));
-            end if;
-            
-            audio_sync   <= delay_out_1;
-            delay_tvalid <= '1';
         end if;
-    end if;
-end process;
+    end process;
     
 div_0 : lim16_div
     generic map (
@@ -269,98 +284,46 @@ fir_0 : lim16_lpf_fir
         event_s_reload_tlast_missing    => open,
         event_s_reload_tlast_unexpected => open
     );
-    -- Разделяем выход шины фильтра на индивидуальные каналы А и Б по 40 бит
-    fir_a_raw <= signed(fir_out_tdata(79 downto 40));
-    fir_b_raw <= signed(fir_out_tdata(39 downto 0));
-
-    -- Двухстадийный процесс конвейерной обработки выходных сигналов IQ
-    process(aclk)
-        -- Переменные-флаги переполнения знакового расширения
-        variable overflow_a : boolean;
-        variable overflow_b : boolean;
-    begin
-        if rising_edge(aclk) then
-            -----------------------------------------------------------------
-            -- СТАДИЯ 1: Конвейерное округление (Rounding)
-            -----------------------------------------------------------------
-            if fir_a_raw(39) = '0' then
-                fir_a_round <= fir_a_raw + C_ROUND_VAL;
-            else
-                fir_a_round <= fir_a_raw - C_ROUND_VAL;
-            end if;
-
-            if fir_b_raw(39) = '0' then
-                fir_b_round <= fir_b_raw + C_ROUND_VAL;
-            else
-                fir_b_round <= fir_b_raw - C_ROUND_VAL;
-            end if;
-
-            fir_valid_pipe1 <= fir_out_tvalid;
-
-            -----------------------------------------------------------------
-            -- СТАДИЯ 2: Сатурация (Saturation) и проверка знакового расширения
-            -----------------------------------------------------------------
-            out_valid_reg <= fir_valid_pipe1;
-
-            if fir_valid_pipe1 = '1' then
-                -- По умолчанию считаем, что переполнения нет
-                overflow_a := false;
-                overflow_b := false;
-                out_over_reg <= '0';
-
-                -- ИСПРАВЛЕННЫЙ ЦИКЛ КАНАЛА А: 
-                -- При GAIN_SHIFT = 7 полезный срез равен (32 downto 17). Значит, 32-й бит - знаковый.
-                -- Проверяем биты расширения строго ВЫШЕ старшего полезного бита (от 39 до 33)
-                for i in 39 downto (39 - GAIN_SHIFT) loop
-                    if fir_a_round(i) /= fir_a_round(39) then
-                        overflow_a := true;
-                    end if;
-                end loop;
-
-                if overflow_a then
-                    out_over_reg <= '1';
-                    if fir_a_round(39) = '0' then
-                        ch_a_16_reg <= x"7FFF"; -- Положительное насыщение
-                    else
-                        ch_a_16_reg <= x"8000"; -- Отрицательное насыщение
-                    end if;
-                else
-                    -- Ошибки нет, забираем 16 бит округленной полезной части со сдвигом усиления
-                    ch_a_16_reg <= std_logic_vector(fir_a_round((39 - GAIN_SHIFT) downto (24 - GAIN_SHIFT)));
-                end if;
-
-                -- ИСПРАВЛЕННЫЙ ЦИКЛ КАНАЛА Б:
-                -- Проверяем биты знакового расширения строго выше полезного 32-го бита (от 39 до 33)
-                for i in 39 downto (39 - GAIN_SHIFT) loop
-                    if fir_b_round(i) /= fir_b_round(39) then
-                        overflow_b := true;
-                    end if;
-                end loop;
-
-                if overflow_b then
-                    out_over_reg <= '1';
-                    if fir_b_round(39) = '0' then
-                        ch_b_16_reg <= x"7FFF"; -- Положительное насыщение
-                    else
-                        ch_b_16_reg <= x"8000"; -- Отрицательное насыщение
-                    end if;
-                else
-                    -- Ошибки нет, забираем 16 бит округленной полезной части со сдвигом усиления
-                    ch_b_16_reg <= std_logic_vector(fir_b_round((39 - GAIN_SHIFT) downto (24 - GAIN_SHIFT)));
-                end if;
-            else
-                out_over_reg <= '0'; -- Сбрасываем флаг, если данные невалидны
-            end if;
-        end if;
-    end process;
+    
+    signed_round_sat_0 : signed_round_sat
+    generic map(
+        IWID       => 48,
+        OWID       => 16,
+        SHIFT_LEFT => GAIN_SHIFT
+    )
+    port map (
+        aclk    => aclk,
+        aresetn => '1',
+        i_data  => fir_out_tdata(95 downto 48),
+        i_valid => fir_out_tvalid,
+        o_data  => ch_a_16_reg,
+        o_valid => out_valid_reg,
+        ovf     => out_over_a
+    );
+    
+    signed_round_sat_1 : signed_round_sat
+    generic map(
+        IWID       => 48,
+        OWID       => 16,
+        SHIFT_LEFT => GAIN_SHIFT
+    )
+    port map (
+        aclk    => aclk,
+        aresetn => '1',
+        i_data  => fir_out_tdata(47 downto 0),
+        i_valid => fir_out_tvalid,
+        o_data  => ch_b_16_reg,
+        o_valid => open,
+        ovf     => out_over_b
+    );
 
     -----------------------------------------------------------------
     -- Назначение выходных портов модуля из стабильных регистров
     -----------------------------------------------------------------
-    -- Данные и валид переключаются строго синхронно в одной старт-стопной точке конвейера Stage 2
+    -- Теперь переключение шины данных и валида строго синхронизировано на Stage 2
     m_axis_data_tdata  <= ch_a_16_reg & ch_b_16_reg;
     m_axis_data_tvalid <= out_valid_reg;
-    over(1)            <= out_over_reg;
-
+    over(1)            <= out_over_a or out_over_b;
+    
 end Behavioral;
 
