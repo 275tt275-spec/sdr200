@@ -56,4 +56,6 @@ public:
 	afx_msg void OnCbnSelchangeComboFbv();
 	afx_msg void OnCbnSelchangeComboFbc();
 	afx_msg void OnCbnSelchangeComboFbv2();
+	CSliderCtrl m_wndPwr;
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };

@@ -91,9 +91,9 @@ void hw_Init(void)
 
 	limiter.in_gain = 0x37FF;
 //	limiter.out_gain = 0x2b00;
-	limiter.out_gain = 0x5000;
-	limiter.limit = 0x0500;
-	limiter.overshoot = 0x1000;
+	limiter.out_gain = 0x4E00;
+	limiter.limit = 0x0400;
+	limiter.overshoot = 0x2010;
 	limiter.dds_phase = 0x1D9A;
 
 	SpiConfig = XSpiPs_LookupConfig(SPI_DEVICE_ID);
@@ -762,8 +762,8 @@ void hw_SetTXAPower(float dBm)
     sprintf(hw_device.InternalSend, "RT%02d;", value);
     uartPL_sendInternal((uint8_t*)hw_device.InternalSend, strlen(hw_device.InternalSend));
 
+	if(isTuneMode == 1) dBm = TXA_TUNE_PWR;
 	value = (uint8_t)((53 - dBm) * 2);
-	if(isTuneMode == 1) value = TXA_TUNE_PWR;
 	if(value > 63) value = 63;
 	adc.freq = e_vars->vfoA;
 	eeprom_get_adc(&adc);

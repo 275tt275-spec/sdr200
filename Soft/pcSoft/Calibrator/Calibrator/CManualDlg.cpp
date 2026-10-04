@@ -39,6 +39,7 @@ void CManualDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_FBV, m_wndFBV);
 	DDX_Control(pDX, IDC_COMBO_FBC, m_wndFBC);
 	DDX_Control(pDX, IDC_COMBO_FBV2, m_wndCorr);
+	DDX_Control(pDX, IDC_SLIDER_PWR, m_wndPwr);
 }
 
 
@@ -50,6 +51,7 @@ BEGIN_MESSAGE_MAP(CManualDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBO_FBV, &CManualDlg::OnCbnSelchangeComboFbv)
 	ON_CBN_SELCHANGE(IDC_COMBO_FBC, &CManualDlg::OnCbnSelchangeComboFbc)
 	ON_CBN_SELCHANGE(IDC_COMBO_FBV2, &CManualDlg::OnCbnSelchangeComboFbv2)
+	ON_WM_HSCROLL()
 END_MESSAGE_MAP()
 
 
@@ -91,11 +93,17 @@ BOOL CManualDlg::OnInitDialog()
 		m_wndCorr.AddString(str);
 	}
 
+	m_wndPwr.SetRange(0, 200, TRUE);
+	m_wndPwr.SetLineSize(1);
+	m_wndPwr.SetPageSize(10);
+
 	ini = iniparser_load(szSwrFileName);
 	if (ini != NULL) {
 		iniparser_dump(ini, stderr);
 		m_nComPort = iniparser_getint(ini, "TXA:COM", 8);
 		TXApwr = iniparser_getint(ini, "TXA:PWR", 10);
+
+		m_wndPwr.SetPos(TXApwr);
 
 		snprintf(send_rxa, 64, "ID;");
 		com_send_read(send_rxa, rcv_rxa, 6);
@@ -152,6 +160,8 @@ void CManualDlg::OnBnClickedButtonTune()
 	CMFCButton* pButton = (CMFCButton*)GetDlgItem(IDC_BUTTON_TUNE);
 	if (m_isTune == FALSE)
 	{
+		TXApwr = m_wndPwr.GetPos();
+
 		snprintf(send_rxa, 64, "MD3;");
 		com_send(send_rxa);
 		snprintf(send_rxa, 64, "FA%011d;", (int)freq);
@@ -209,10 +219,16 @@ void CManualDlg::OnTimer(UINT_PTR nIDEvent)
 
 		snprintf(send_rxa, 64, "SW;");
 		com_send_read(send_rxa, rcv_rxa, 33);
-		sscanf(rcv_rxa, "SW%05d%05d%05d%05d%05d%05d;",
-			&m_swr.inc, &m_swr.ref, &m_swr.magA, &m_swr.magB, &m_swr.angA, &m_swr.angB);
 
-		strT.Format(L"inc = %d, ref = %d, magA = %d, magB = %d\n", m_swr.inc, m_swr.ref, m_swr.magA, m_swr.magB);
+		sscanf(rcv_rxa, "SW%05d%05d%05d%05d;",
+			&m_swr.magA, &m_swr.magB, &m_swr.angA, &m_swr.angB);
+
+		float angleA = (float)(int16_t)m_swr.angA * 180 / 16384;
+		float angleB = (float)(int16_t)m_swr.angB * 180 / 16384;
+		float delta_phi = angleB - angleA;  // FIXME:
+
+		strT.Format(L"magA = %d, magB = %d, angA = %d, angB = %d, delta_phi = %.2f\n",
+			m_swr.magA, m_swr.magB, m_swr.angA, m_swr.angB, delta_phi);
 		str += strT;
 
 		snprintf(send_rxa, 64, "SZ;");
@@ -238,7 +254,8 @@ void CManualDlg::OnCbnSelchangeComboFbv()
 {
 	int attV = m_wndFBV.GetCurSel();
 	int attC = m_wndFBC.GetCurSel();
-	snprintf(send_rxa, 64, "AT%03d%03d;", attV, attC);
+	int phase = GetDlgItemInt(IDC_EDIT_PHASE);
+	snprintf(send_rxa, 64, "AT%03d%03d%05d;", attV, attC, phase);
 	com_send(send_rxa);
 }
 
@@ -247,7 +264,8 @@ void CManualDlg::OnCbnSelchangeComboFbc()
 {
 	int attV = m_wndFBV.GetCurSel();
 	int attC = m_wndFBC.GetCurSel();
-	snprintf(send_rxa, 64, "AT%03d%03d;", attV, attC);
+	int phase = GetDlgItemInt(IDC_EDIT_PHASE);
+	snprintf(send_rxa, 64, "AT%03d%03d%05d;", attV, attC, phase);
 	com_send(send_rxa);
 }
 
@@ -258,4 +276,19 @@ void CManualDlg::OnCbnSelchangeComboFbv2()
 	float fDBm = 10 * log10(TXApwr) + 30;  //  (1 - 200W)
 	snprintf(send_rxa, 64, "XV%03d%03d;", (int)fDBm, att2);
 	com_send(send_rxa);
+}
+
+
+void CManualDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	// Проверяем, что сообщение пришло именно от нашего слайдера
+	if (pScrollBar != NULL && pScrollBar->GetDlgCtrlID() == IDC_SLIDER_PWR)
+	{
+		// Получаем текущую позицию ползунка
+		TXApwr = m_wndPwr.GetPos();
+		snprintf(send_rxa, 64, "PC%03d;", TXApwr);
+		com_send(send_rxa);
+	}
+
+	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
 }

@@ -112,6 +112,9 @@ architecture Behavioral of TXA_modulator16 is
     signal ctrl_tdata : std_logic_vector(7 downto 0);
     signal j3e_data_valid_reg : std_logic := '0';
     signal ovr_reg : STD_LOGIC_VECTOR (2 downto 0) := (others => '0');
+    -- Переносим переменные в сигналы конвейера, чтобы Vivado создал физические регистры
+    signal mult_res_reg   : signed(33 downto 0) := (others => '0');
+    signal audio_valid_r1 : std_logic := '0';
 
 begin
 
@@ -143,30 +146,36 @@ begin
 	end if;
 end process;
 
-process(aclk)
-    -- Оптимизировано: разрядность снижена до физических 34 бит (33 downto 0)
-    variable mult_res    : signed(33 downto 0);
-    variable round_add   : signed(33 downto 0) := (14 => '1', others => '0');
-    variable res_rounded : signed(33 downto 0);
+process(aclk)    
+    -- Константа округления
+    constant round_add    : signed(33 downto 0) := (14 => '1', others => '0');
+    variable res_rounded  : signed(33 downto 0);
 begin
     if rising_edge(aclk) then
-        -- Задержка валидности ровно на 1 такт - в строгом соответствии с audio_data!
-        audio_data_valid <= s_axis_audio_tvalid; 
-        lfsr_reg <= (lfsr_reg(0) xor lfsr_reg(1) xor lfsr_reg(2) xor lfsr_reg(22)) & lfsr_reg(31 downto 1);
+        ------------------------------------------------------------------
+        -- ШАГ Конвейера №1: Перемножение и задержка флага валидности
+        ------------------------------------------------------------------
+        mult_res_reg   <= signed(s_axis_audio_tdata) * signed(audio_gain);
+        audio_valid_r1 <= s_axis_audio_tvalid; 
+
+        ------------------------------------------------------------------
+        -- ШАГ Конвейера №2: Математика округления и сатурация (на такт позже)
+        ------------------------------------------------------------------
+        audio_data_valid <= audio_valid_r1; -- Выходная валидность строго выровнена с audio_data!
         
-        ovr_reg(1)       <= '0'; -- Исключаем неопределенность 'U' на незадействованном бите
-        mult_res := signed(s_axis_audio_tdata) * signed(audio_gain);
-        -- Симметричное округление (Sign-Magnitude) по знаку текущего mult_res
-        if mult_res(33) = '0' then
-            res_rounded := mult_res + round_add;
+        lfsr_reg   <= (lfsr_reg(0) xor lfsr_reg(1) xor lfsr_reg(2) xor lfsr_reg(22)) & lfsr_reg(31 downto 1);
+        ovr_reg(1) <= '0';
+
+        -- Работаем с зарегистрированным на прошлом такте результатом умножения
+        if mult_res_reg(33) = '0' then
+            res_rounded := mult_res_reg + round_add;
         else
-            res_rounded := mult_res - round_add;
+            res_rounded := mult_res_reg - round_add;
         end if;    
 
-        -- Проверка переполнения по старшим битам (33 downto 30 вместо прежних 41 downto 38)
+        -- Проверка переполнения
         if (res_rounded(33 downto 30) = "1111") or (res_rounded(33 downto 30) = "0000") then
             ovr_reg(0) <= '0';
-            -- Отрезаем целевые 16 бит звука (смещено на 8 бит вниз из-за уменьшения разрядности)
             audio_data <= std_logic_vector(res_rounded(30 downto 15));
         elsif res_rounded(33) = '0' then
             ovr_reg(0) <= '1';
@@ -177,6 +186,7 @@ begin
         end if;
     end if;
 end process;
+
 
 dds_0 : dds_16_16
     PORT MAP (

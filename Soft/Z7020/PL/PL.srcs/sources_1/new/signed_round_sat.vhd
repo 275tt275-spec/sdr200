@@ -21,8 +21,7 @@ end signed_round_sat;
 
 architecture Behavioral of signed_round_sat is
 
-    -- Абсолютно статические константы индексов (вычисляются один раз при компиляции)
-    -- Сдвиг данных ВЛЕВО эквивалентен смещению окна считывания (округления) ВПРАВО
+    -- Абсолютно статические константы индексов
     constant LSB_IDX   : integer := (IWID - OWID) - SHIFT_LEFT;
     constant ROUND_IDX : integer := (IWID - OWID - 1) - SHIFT_LEFT;
 
@@ -44,13 +43,13 @@ begin
         variable round_bit     : std_logic;
         variable has_tail      : boolean;
         variable shift_ovf     : boolean;
+        variable math_ovf      : boolean;
         
-        -- Расширенная переменная для безопасного сложения без потери знака при перегрузе
-        variable rounded_val   : signed(OWID downto 0); 
+        -- ИСПРАВЛЕНО: Расширенная переменная до OWID+2 бит для безопасного контроля знака (индексы от OWID+1 до 0)
+        variable rounded_val   : signed(OWID+1 downto 0); 
         
         -- Константы для контроля переполнения от сдвига
         constant SIGN_BIT_IDX  : integer := IWID - 1;
-        constant CHECK_LOW_IDX : integer := IWID - OWID - SHIFT_LEFT;
     begin
         if rising_edge(aclk) then
             if aresetn = '0' then
@@ -67,11 +66,15 @@ begin
                 o_valid_reg <= i_valid;
 
                 -- 2. Выделяем составные части числа напрямую из data_in_reg.
-                -- Поскольку мы убрали промежуточную переменную shifted_data, сдвиг 
-                -- реализуется путем смещения индексов выборки окна. Никакого умножения!
                 base_val  := data_in_reg(LSB_IDX + OWID - 1 downto LSB_IDX);
                 lsb_bit   := data_in_reg(LSB_IDX);
-                round_bit := data_in_reg(ROUND_IDX);
+                
+                -- Защита от ухода в отрицательную зону, если ROUND_IDX равен -1 (когда округлять нечего)
+                if ROUND_IDX >= 0 then
+                    round_bit := data_in_reg(ROUND_IDX);
+                else
+                    round_bit := '0';
+                end if;
                 
                 -- 3. Проверяем наличие «хвоста» младших бит для алгоритма Round to Nearest Even
                 has_tail := false;
@@ -81,30 +84,39 @@ begin
                     end if;
                 end if;
 
-                -- 4. Математика Round to Nearest Even
+                -- 4. Математика Round to Nearest Even (теперь ресайз до OWID+2)
                 if round_bit = '1' then
                     if has_tail or (lsb_bit = '1') then
-                        rounded_val := resize(base_val, OWID+1) + 1;
+                        rounded_val := resize(base_val, OWID+2) + 1;
                     else
-                        rounded_val := resize(base_val, OWID+1);
+                        rounded_val := resize(base_val, OWID+2);
                     end if;
                 else
-                    rounded_val := resize(base_val, OWID+1);
+                    rounded_val := resize(base_val, OWID+2);
                 end if;
-
-                -- 5. Контроль переполнения из-за сдвига
+                
+                -- 5. ИСПРАВЛЕНО: Безопасный контроль переполнения из-за левого сдвига (SHIFT_LEFT)
+                -- Стабильно компилируется в Vivado при любых значениях generic параметров
                 shift_ovf := false;
                 if SHIFT_LEFT > 0 then
-                    -- Проверяем биты ВЫШЕ окна base_val: от LSB_IDX+OWID до IWID-2
-                    for i in (LSB_IDX + OWID) to (SIGN_BIT_IDX - 1) loop
-                        if data_in_reg(i) /= data_in_reg(SIGN_BIT_IDX) then
-                            shift_ovf := true;
+                    for i in 0 to IWID-1 loop
+                        if (i >= LSB_IDX + OWID) and (i < SIGN_BIT_IDX) then
+                            if data_in_reg(i) /= data_in_reg(SIGN_BIT_IDX) then
+                                shift_ovf := true;
+                            end if;
                         end if;
                     end loop;
                 end if;
 
-                -- 6. Финальная сатурация (Защита от переполнения)
-                if (rounded_val(OWID) /= rounded_val(OWID-1)) or shift_ovf then
+                -- 6. ИСПРАВЛЕНО: Теперь индексы OWID+1 и OWID существуют и полностью легальны
+                if rounded_val(OWID+1) /= rounded_val(OWID) then
+                    math_ovf := true;
+                else
+                    math_ovf := false;
+                end if;
+
+                -- 7. Финальная сатурация (Защита от переполнения)
+                if math_ovf or shift_ovf then
                     ovf_reg <= '1';
                     if data_in_reg(SIGN_BIT_IDX) = '0' then
                         o_data_reg <= std_logic_vector(MAX_VAL);

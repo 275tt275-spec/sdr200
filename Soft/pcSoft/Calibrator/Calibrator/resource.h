@@ -45,9 +45,10 @@
 #define IDC_CHECK_ON                    1025
 #define IDC_BUTTON_CSET                 1026
 #define IDC_EDIT_GAINI                  1027
+#define IDC_SLIDER_PWR                  1027
 #define IDC_EDIT_GAINQ                  1028
+#define IDC_EDIT1                       1028
 #define IDC_EDIT_PHI                    1029
-#define IDC_EDIT_KDIFF2                 1030
 #define IDC_EDIT_PHASE                  1030
 
 // Next default values for new objects
@@ -56,7 +57,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1027
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -266,6 +266,10 @@ void CSwrDlg::OnBnClickedButtonTune()
 		com_send(send_rxa);
 		snprintf(send_rxa, 64, "PC%03d;", iniparser_getint(ini, "TXA:PWR", 50));
 		com_send(send_rxa);
+		snprintf(send_rxa, 64, "PA0;"); // Выключим линеализатор
+		com_send(send_rxa);
+//		snprintf(send_rxa, 64, "TX0;");
+//		com_send(send_rxa);
 		snprintf(send_rxa, 64, "TX2;");
 		com_send(send_rxa);
 		m_isTune = TRUE;
@@ -366,6 +370,7 @@ void CSwrDlg::GetSwr(void)
 
 	snprintf(send_rxa, 64, "SW;");
 	com_send_read(send_rxa, rcv_rxa, 33);
+
 	sscanf(rcv_rxa, "SW%05d%05d%05d%05d;",
 		&m_swr.magA, &m_swr.magB, &m_swr.angA, &m_swr.angB);
 

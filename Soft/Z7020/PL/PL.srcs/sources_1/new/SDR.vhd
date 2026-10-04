@@ -347,26 +347,26 @@ adc_0 : adc_2ch
         aclk_out => aclk
     );
     
-    u_adc_corr : adc_corr
-    Port map (
-        aclk => aclk,
-        aresetn => aresetn,
-        adc0_in => axis_adc0_tdata,
-        adc1_in => axis_adc1_tdata,
-        cfg_addra => cfg_addra(0 downto 0),
-        cfg_dina => bram_dina,
-        cfg_wr => adc_cfg_wr,
-        adc0_out => adc_corr_0,
-        adc1_out => adc_corr_1
-    );
+--    u_adc_corr : adc_corr
+--    Port map (
+--        aclk => aclk,
+--        aresetn => aresetn,
+--        adc0_in => axis_adc0_tdata,
+--        adc1_in => axis_adc1_tdata,
+--        cfg_addra => cfg_addra(0 downto 0),
+--        cfg_dina => bram_dina,
+--        cfg_wr => adc_cfg_wr,
+--        adc0_out => adc_corr_0,
+--        adc1_out => adc_corr_1
+--    );
     
 RXA_0: RXA
     port map ( 
         aclk => aclk,
         aresetn => aresetn,
-        s_axis_adc0_tdata => adc_corr_0,
+        s_axis_adc0_tdata => axis_adc0_tdata,
         s_axis_adc0_tvalid => '1',
-        s_axis_adc1_tdata => adc_corr_1,
+        s_axis_adc1_tdata => axis_adc1_tdata,
         s_axis_adc1_tvalid => '1',
         m_axis_wb_tdata => axis_wb_tdata,
         m_axis_wb_tvalid => axis_wb_tvalid,
