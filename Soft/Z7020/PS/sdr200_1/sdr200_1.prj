@@ -4,8 +4,9 @@
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
     <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>
-  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.769199407" dirty="true">
+  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.769199407">
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
+    <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>
   <template appTemplateName="hello_world"/>
 </sdkproject:SdkProject>

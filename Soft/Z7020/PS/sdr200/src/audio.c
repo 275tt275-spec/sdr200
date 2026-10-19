@@ -61,6 +61,8 @@ will be to unmute any outputs, and then begin normal operation.
 	audio_dac_volume(255, 255);
 
 	nau8822_register_write(NAU8822_REG_DAC_CONTROL, (1 << 3)); /* 128x oversampling */
+	nau8822_register_write(NAU8822_REG_ALC_CONTROL_2, 13);  /* ALCSL = -3.0dB FS */
+	nau8822_register_write(NAU8822_REG_ALC_CONTROL_3, (3 << 4) | 0);
 }
 
 void audio_speaker_volume(uint8_t left, uint8_t right)
@@ -91,7 +93,7 @@ void audio_set_input(e_audio_input in)
 {
 	if(in == AUDIO_IN_USB)
 	{
-		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, 0x038);
+//		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, 0x038);
 		nau8822_register_write(NAU8822_REG_INPUT_CONTROL, 0);
 		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, 0);
 //		nau8822_register_write(NAU8822_REG_LEFT_MIXER_CONTROL, (0 << 6) | ( 1 << 5));
@@ -105,7 +107,7 @@ void audio_set_input(e_audio_input in)
 	}
 	else
 	{
-		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, 0x038 | (3 << 7));
+		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, (3 << 7) | (4 << 3) | (0 << 0));
 //		nau8822_register_write(NAU8822_REG_ALC_CONTROL_1, ( 3 << 3) | (3 << 7));
 		nau8822_register_write(NAU8822_REG_INPUT_CONTROL, (3 << 4) | (3 << 0));
 		nau8822_register_write(NAU8822_REG_LEFT_MIXER_CONTROL, 0);

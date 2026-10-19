@@ -929,6 +929,7 @@ char* kenwood_RcvCmd(char* in)
         {
         	vars.m_pa = (in[2] == 0x30) ? 0 : 1;
         	hw_SetLiner(vars.m_pa == 1);
+        	e_vars->linear_en = (vars.m_pa == 1);
         }
     }
     else if(memcmp(in, "PB", 2) == 0) /* Sets or reads the VGS-1 or electric keyer playback status */

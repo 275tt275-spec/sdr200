@@ -27,7 +27,11 @@ architecture Behavioral of TXA_channel16 is
     component ila_0 IS
     Port (
         clk : IN STD_LOGIC;
-        probe0 : IN STD_LOGIC_VECTOR(15 DOWNTO 0)
+        probe0 : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+        probe1 : IN STD_LOGIC_VECTOR(6 DOWNTO 0);
+        probe2 : IN STD_LOGIC_VECTOR(2 DOWNTO 0);
+        probe3 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+        probe4 : IN STD_LOGIC_VECTOR(3 DOWNTO 0)
     );
     end component ila_0;
     
@@ -64,7 +68,7 @@ architecture Behavioral of TXA_channel16 is
        s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
        s_axis_cfg_tdest : in STD_LOGIC_VECTOR (0 downto 0);
        s_axis_cfg_tvalid : in STD_LOGIC;
-       overflow : out STD_LOGIC
+       overflow : out STD_LOGIC_VECTOR (1 downto 0)
     );
     end component audio_input16;
     
@@ -205,25 +209,29 @@ architecture Behavioral of TXA_channel16 is
     signal lim_proc_cfg_tvalid : STD_LOGIC;
     signal modulator_cfg_tvalid : STD_LOGIC;
     signal resampler_cfg_tvalid : STD_LOGIC;
-    signal lim_over : STD_LOGIC_VECTOR(6 DOWNTO 0) := (others => '0');
     signal cfg_addr : std_logic_vector(3 downto 0);
     signal cfg_wr : std_logic := '0';    
     signal resampler_i, resampler_q : STD_LOGIC_VECTOR (17 downto 0);        
-    signal resampler_over : std_logic;
-    signal linear_ovf : std_logic_vector(3 downto 0);
-    signal ovr_mod : std_logic_vector(2 downto 0);
     signal overflow_reg : std_logic_vector(31 downto 0) := (others => '0');
-    signal overflow_debug : std_logic_vector(15 downto 0);
     signal audio_cfg_tvalid : std_logic := '0';
+    signal overflow_input : STD_LOGIC_VECTOR (1 downto 0);
+    signal overflow_limiter : STD_LOGIC_VECTOR (6 downto 0);
+    signal overflow_modulator : std_logic_vector(2 downto 0);
+    signal overflow_resampler : std_logic;
+    signal overflow_linear : std_logic_vector(3 downto 0);
 
 begin
 
     cfg_data_out <= overflow_reg;
     
-    debug_0 : ila_0
+    overflow_inst : ila_0
     PORT MAP (
         clk => aclk,
-        probe0 => overflow_debug
+        probe0 => overflow_input,
+        probe1 => overflow_limiter,
+        probe2 => overflow_modulator,
+        probe3(0) => overflow_resampler,
+        probe4  => overflow_linear
     );
     
 u_audio_input : audio_input16
@@ -236,7 +244,7 @@ u_audio_input : audio_input16
        s_axis_cfg_tdata => s_axis_cfg_tdata,
        s_axis_cfg_tdest => s_axis_cfg_tdest(0 downto 0),
        s_axis_cfg_tvalid => audio_cfg_tvalid,
-       overflow => open
+       overflow => overflow_input
     );
     
     speech_in_tdata <= audio_filtered_tdata;
@@ -259,10 +267,9 @@ begin
         dds_cfg_tvalid <= '0'; 
         -- 1. Формируем вектор текущих переполнений (выравниваем по длине)
         current_overflows := std_logic_vector(resize(unsigned
-                (ovr_mod & resampler_over & lim_over & linear_ovf),
+                (overflow_linear & overflow_resampler & overflow_modulator & overflow_limiter & overflow_input),
                  overflow_reg'length));
         overflow_reg <= current_overflows;
-        overflow_debug <= current_overflows(15 downto 0);
         if aresetn = '0' then 
             txa_on <= '0';
             overflow_reg <= (others => '0');
@@ -294,7 +301,7 @@ u_audio_proc : audio_proc16
         s_axis_cfg_tdata => s_axis_cfg_tdata,
         s_axis_cfg_tdest => s_axis_cfg_tdest(2 downto 0),
         s_axis_cfg_tvalid => lim_proc_cfg_tvalid,
-        lim_over => lim_over,
+        lim_over => overflow_limiter,
         aclk => aclk
     );
  
@@ -311,7 +318,7 @@ u_modulator : TXA_modulator16
         s_axis_cfg_tdest => s_axis_cfg_tdest(3 downto 0),
         s_axis_cfg_tvalid => modulator_cfg_tvalid,
         tx_on => txa_on,
-        ovr => ovr_mod,
+        ovr => overflow_modulator,
         aclk => aclk
     );
 
@@ -326,14 +333,13 @@ u_resampler : TXA_resampler16
         s_axis_modulator_tvalid => resampler_in_tvalid,
         s_axis_modulator_tready => resampler_in_tready,
         gain => gain,
-        out_over => resampler_over,
+        out_over => overflow_resampler,
         aresetn => aresetn,
         aclk => aclk
     );
     
     fb_forward <= std_logic_vector(resize(signed(s_adc_data_rx0), 17) + resize(signed(s_adc_data_rx1), 17));
     linear_din2 <= fb_forward(16 downto 1);
-    
 --debug_3 : ila_3
 --    PORT MAP (
 --        clk => aclk,
@@ -346,7 +352,7 @@ u_linear : linear_18
     PORT MAP  ( 
         din1_i => resampler_i,
         din1_q => resampler_q,
-        din2 => linear_din2,
+        din2 =>  linear_din2,
         aclk => aclk,
         ce => txa_on,
         s_axis_cfg_tdata => s_axis_cfg_tdata,
@@ -355,7 +361,7 @@ u_linear : linear_18
         s_axis_dds_tdata => dds_tdata,
         dout_i => linear_out_i,
         dout_q => linear_out_q,
-        m_ovf => linear_ovf
+        m_ovf => overflow_linear
     ); 
     
 --u_hf_dpd: hf_dpd
@@ -400,17 +406,17 @@ mux_0 : conv16x24
     m_daci_tdata <= dac_tdata;  
     m_dacq_tdata <= dac_tdata; 
     
---debug_1 : ila_2
---    Port map (
---        clk     => aclk,
---        probe0  => resampler_i,
---        probe1  => resampler_q,
---        probe2  => linear_out_i,
---        probe3  => linear_out_q,
---        probe4  => dac_tdata,
---        probe5(0)  => resampler_in_tvalid,
---        probe6  => resampler_in_tdata,
---        probe7  => modulator_in_tdata
---    );
+debug_1 : ila_2
+    Port map (
+        clk     => aclk,
+        probe0  => resampler_i,
+        probe1  => resampler_q,
+        probe2  => linear_out_i,
+        probe3  => linear_out_q,
+        probe4  => dac_tdata,
+        probe5(0)  => resampler_in_tvalid,
+        probe6  => resampler_in_tdata,
+        probe7  => modulator_in_tdata
+    );
 
 end Behavioral;

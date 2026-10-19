@@ -20,7 +20,7 @@ entity audio_input16 is
        s_axis_cfg_tdata : in STD_LOGIC_VECTOR (31 downto 0);
        s_axis_cfg_tdest : in STD_LOGIC_VECTOR (0 downto 0);
        s_axis_cfg_tvalid : in STD_LOGIC;
-       overflow : out STD_LOGIC
+       overflow : out STD_LOGIC_VECTOR (1 downto 0)
     );
 end audio_input16;
 
@@ -31,63 +31,30 @@ component fir_audio_16 IS
         aclk : IN STD_LOGIC;
         s_axis_data_tvalid : IN STD_LOGIC;
         s_axis_data_tready : OUT STD_LOGIC;
-        s_axis_data_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
---        s_axis_config_tvalid : IN STD_LOGIC;
---        s_axis_config_tready : OUT STD_LOGIC;
---        s_axis_config_tdata : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+        s_axis_data_tdata : IN STD_LOGIC_VECTOR(23 DOWNTO 0);
         m_axis_data_tvalid : OUT STD_LOGIC;
-        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(39 DOWNTO 0)
+        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
     );
     end component fir_audio_16;
     
     -- Внутренние сигналы
-    signal gain_correct      : std_logic_vector(3 downto 0) := x"7";
-    signal fir_in_tdata      : std_logic_vector(15 downto 0);
-    signal fir_in_tvalid     : std_logic;
-    signal fir_out_tdata     : std_logic_vector(39 downto 0);
+    signal gain_correct      : std_logic_vector(3 downto 0) := x"6";
+    signal fir_out_tdata     : std_logic_vector(47 downto 0);
     signal fir_out_tvalid    : std_logic;
     
     -- Выходные регистры конвейера
     signal out_rounded       : signed(15 downto 0) := (others => '0');
     signal m_axis_tvalid_reg : std_logic := '0';
     signal gain_overflow_reg : std_logic := '0';
+    signal audio_overflow_reg : std_logic := '0';
 
 begin
-
-    -- Процесс корректного округления 24-битного входа до 16-битного знакового числа
-    -- Предотвращает появление постоянной составляющей (DC offset) от грубого усечения бит
-    proc_input : process(aclk)
-        variable in_extended : signed(24 downto 0);
-        variable in_rounded  : signed(24 downto 0);
-    begin
-        if rising_edge(aclk) then
-            fir_in_tvalid <= s_axis_tvalid;
-            
-            -- Знаковое расширение до 25 бит для безопасного сложения
-            in_extended := resize(signed(s_axis_tdata), 25);
-            
-            -- Округление: прибавляем половину веса отбрасываемых 8 бит (2^7 = 128)
-            if in_rounded(24) = '0' then
-                in_rounded  := in_extended + 128;
-            else
-                in_rounded  := in_extended - 128;
-            end if; 
-                        
-            -- Проверка на переполнение знака при округлении вверх в максимальной точке
-            if (in_rounded(24) = '0' and in_rounded(23) = '1') then
-                fir_in_tdata <= x"7FFF"; -- Насыщение в плюс
-            elsif (in_rounded(24) = '1' and in_rounded(23) = '0') then
-                fir_in_tdata <= x"8000"; -- Насыщение в минус
-            else
-                fir_in_tdata <= std_logic_vector(in_rounded(23 downto 8));
-            end if;
-        end if;
-    end process proc_input;
 
     -- Процесс фиксации настроек усиления из AXIS Config
     proc_config : process(aclk)
     begin
         if rising_edge(aclk) then
+            -- 1. Приоритет отдается конфигурации извне
             if s_axis_cfg_tvalid = '1' then
                 if s_axis_cfg_tdest = "1" then
                     gain_correct <= s_axis_cfg_tdata(3 downto 0);
@@ -99,23 +66,21 @@ begin
 audio_0 : fir_audio_16
     PORT MAP (
         aclk => aclk,
-        s_axis_data_tvalid => fir_in_tvalid,
+        s_axis_data_tvalid => s_axis_tvalid,
         s_axis_data_tready => open,
-        s_axis_data_tdata => fir_in_tdata,
---        s_axis_config_tvalid => config_tvalid,
---        s_axis_config_tready => open,
---        s_axis_config_tdata => config_tdata,
+        s_axis_data_tdata => s_axis_tdata,
         m_axis_data_tvalid => fir_out_tvalid,
         m_axis_data_tdata => fir_out_tdata
     );
     
  -- Процесс коррекции усиления, округления результата и защиты от насыщения
-    proc_dsp : process(aclk)
+ proc_dsp : process(aclk)
         variable shift_val : integer range 0 to 15;
-        -- Расширяем сетку до 56 бит (40 бит FIR + 15 бит макс. сдвига + 1 бит под знак)
-        variable extended  : signed(55 downto 0); 
-        variable shifted   : signed(55 downto 0);
-        variable rounded   : signed(55 downto 0);
+        -- Расширяем разрядность сетки до 64 бит (48 бит FIR + 15 бит макс. сдвига + 1 бит под знак)
+        variable extended  : signed(63 downto 0); 
+        variable shifted   : signed(63 downto 0);
+        variable rounded   : signed(63 downto 0);
+        constant ROUND_VAL : signed(63 downto 0) := shift_left(to_signed(1, 64), 31);
     begin
         if rising_edge(aclk) then
             m_axis_tvalid_reg <= fir_out_tvalid;
@@ -139,35 +104,38 @@ audio_0 : fir_audio_16
                 when others   => shift_val := 0;
             end case;
 
-            -- 1. Знаковое расширение 40-битного выхода FIR до 56 бит
-            extended := resize(signed(fir_out_tdata), 56);
+            -- 1. Знаковое расширение 48-битного выхода FIR до 64 бит
+            extended := resize(signed(fir_out_tdata), 64);
             
-            -- 2. Арифметический сдвиг влево (усиление)
+            -- 2. Арифметический сдвиг влево (усиление сигнала)
             shifted  := shift_left(extended, shift_val);
             
-            -- 3. Округление выхода: отбрасываем младшие 24 бита, прибавляем половину (2^23 = 8388608)
-            if shifted(55) = '0' then
-                rounded  := shifted + 8388608;
+            -- 3. Строгое Symmetric Rounding to Infinity для отбрасываемых 32 бит:
+            -- Половина веса - это 2^31 = 2147483648 (в двоичном виде: "1" и 31 ноль)
+            if (shifted(63) = '1' and shifted(31 downto 0) = "10000000000000000000000000000000") then
+                rounded := shifted; -- Для отрицательной середины шкалы оставляем усечение (-inf)
             else
-                rounded  := shifted - 8388608;
+                rounded := shifted + ROUND_VAL; -- Для остальных случаев прибавляем половину веса
             end if;
 
-            -- 4. Контроль насыщения и усечение до целевых 16 бит.
-            -- Забираем биты с 39 по 24 (целевые 16 бит звука).
-            -- Старшие биты с 55 по 39 проверяем на идентичность знаку.
-            
-            if (rounded(55) = '0' and rounded(54 downto 39) /= "0000000000000000") then
-                -- Положительное переполнение
-                out_rounded <= x"7FFF"; 
-                gain_overflow_reg <= '1';
-            elsif (rounded(55) = '1' and rounded(54 downto 39) /= "1111111111111111") then
-                -- Отрицательное переполнение
-                out_rounded <= x"8000"; 
-                gain_overflow_reg <= '1';
+            -- 4. Контроль насыщения и усечение до целевых 16 бит (разряды 47 downto 32).
+            -- Проверяем знаковые разряды выше полезного сигнала (биты 62 downto 48).
+            if rounded(63) = '0' then
+                if rounded(62 downto 48) /= (62 downto 48 => '0') then
+                    out_rounded       <= x"7FFF"; -- Положительное переполнение
+                    gain_overflow_reg <= '1';
+                else
+                    out_rounded       <= rounded(47 downto 32);
+                    gain_overflow_reg <= '0';
+                end if;
             else
-                -- Итоговый округленный результат без переполнения
-                out_rounded <= rounded(39 downto 24);
-                gain_overflow_reg <= '0';
+                if rounded(62 downto 48) /= (62 downto 48 => '1') then
+                    out_rounded       <= x"8000"; -- Отрицательное переполнение
+                    gain_overflow_reg <= '1';
+                else
+                    out_rounded       <= rounded(47 downto 32);
+                    gain_overflow_reg <= '0';
+                end if;
             end if;
         end if;
     end process proc_dsp;
@@ -175,6 +143,6 @@ audio_0 : fir_audio_16
     -- Назначение выходных портов
     m_axis_tdata  <= std_logic_vector(out_rounded);
     m_axis_tvalid <= m_axis_tvalid_reg;
-    overflow      <= gain_overflow_reg;
+    overflow      <= gain_overflow_reg & audio_overflow_reg;
     
 end Behavioral;

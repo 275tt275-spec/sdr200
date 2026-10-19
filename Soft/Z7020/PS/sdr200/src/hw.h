@@ -31,7 +31,8 @@
 #define VREF_CORR_MULT	    322.98
 #define VREF_CORR_OFFSET	24881
 #define VREF_UPDATE_MS  	10000
-#define LINEAR_SET_DELAY	50
+#define LINEAR_SET_DELAY	20
+#define LINEAR_ON_DELAY		50
 #define TXA_TUNE_PWR		43
 
 typedef enum tag_trx_mode {

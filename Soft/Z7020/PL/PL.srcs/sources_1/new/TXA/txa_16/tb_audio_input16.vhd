@@ -23,7 +23,7 @@ architecture Behavioral of tb_audio_input16 is
     -- Выходные сигналы из тестируемого модуля (UUT)
     signal m_axis_tdata      : std_logic_vector(15 downto 0);
     signal m_axis_tvalid     : std_logic;
-    signal overflow          : std_logic;
+    signal overflow          : std_logic_vector (1 downto 0);
 
     -- Внутренний таймер для строба аудио частоты
     signal audio_clk_cnt     : integer range 0 to AUDIO_DIVIDER := 0;
