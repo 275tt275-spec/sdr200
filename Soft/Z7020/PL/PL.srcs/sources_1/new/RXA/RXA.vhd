@@ -21,14 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.std_logic_signed.all;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
+use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.VComponents.all;
 
@@ -62,6 +55,16 @@ end RXA;
 
 architecture Behavioral of RXA is
 
+    component dds16a
+    Port (
+        aclk : IN STD_LOGIC;
+        s_axis_config_tvalid : IN STD_LOGIC;
+        s_axis_config_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        m_axis_data_tvalid : OUT STD_LOGIC;
+        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+    );
+    end component dds16a;
+
    COMPONENT RXA_wide is
      Port ( 
         m_axis_wb_tdata : out STD_LOGIC_VECTOR (31 downto 0);
@@ -82,8 +85,7 @@ architecture Behavioral of RXA is
         m_axis_data_tuser : out STD_LOGIC_VECTOR (0 downto 0);
         m_axis_data_tvalid : out STD_LOGIC;
         s_axis_signal_tdata : in STD_LOGIC_VECTOR (15 downto 0);
-        dds_value : in STD_LOGIC_VECTOR (31 downto 0);
-        dds_valid : in STD_LOGIC;
+        dds_sincos: in STD_LOGIC_VECTOR (31 downto 0);
         aresetn : in STD_LOGIC;
         aclk : in STD_LOGIC
     );
@@ -213,6 +215,9 @@ architecture Behavioral of RXA is
     signal real_rssi_tdata : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
     signal agc_cfg_wr : STD_LOGIC := '0';
     signal audio_clk : STD_LOGIC;
+    signal fb_forward : STD_LOGIC_VECTOR (16 downto 0);
+    signal wide_din : STD_LOGIC_VECTOR (15 downto 0);
+    signal dds_out : std_logic_vector(31 downto 0);  
     
 begin
 
@@ -253,13 +258,16 @@ begin
         end if;
    end if;
 end process cmd_process;
+
+    fb_forward <= std_logic_vector(resize(signed(s_axis_adc0_tdata), 17) + resize(signed(s_axis_adc1_tdata), 17));
+    wide_din <= fb_forward(16 downto 1);
     
 wide_0 : RXA_wide
     PORT MAP  (
         m_axis_wb_tdata => wide_out_tdata,
         m_axis_wb_tvalid => wide_out_tvalid,
         m_axis_wb_tready => m_axis_wb_tready,
-        s_axis_signal_tdata => s_axis_adc0_tdata,
+        s_axis_signal_tdata => wide_din,
         dds_value => dds_wf,
         dds_valid => dds_wf_valid,
         ovr => open,
@@ -270,6 +278,15 @@ wide_0 : RXA_wide
     m_axis_wb_tdata <= wide_out_tdata;
     m_axis_wb_tvalid <= wide_out_tvalid;
     m_axis_wb_tlast <= '1';
+    
+    dds_0 : dds16a
+    PORT MAP (
+        aclk => aclk, 
+        s_axis_config_tvalid => dds_nr_valid,
+        s_axis_config_tdata => dds_nr,
+        m_axis_data_tvalid => open,
+        m_axis_data_tdata => dds_out
+    );
 
 -- input 122.88 MZz output 16 KSamples
 narrow_0 : RXA_channel
@@ -278,8 +295,7 @@ narrow_0 : RXA_channel
         m_axis_data_tuser => narrow_out0_tuser,
         m_axis_data_tvalid => narrow_out0_tvalid,
         s_axis_signal_tdata => s_axis_adc0_tdata,
-        dds_value => dds_nr,
-        dds_valid => dds_nr_valid,
+        dds_sincos => dds_out,
         aresetn => aresetn,
         aclk => aclk
     );
@@ -290,8 +306,7 @@ narrow_1 : RXA_channel
         m_axis_data_tuser => narrow_out1_tuser,
         m_axis_data_tvalid => narrow_out1_tvalid,
         s_axis_signal_tdata => s_axis_adc1_tdata,
-        dds_value => dds_nr,
-        dds_valid => dds_nr_valid,
+        dds_sincos => dds_out,
         aresetn => aresetn,
         aclk => aclk
     );
@@ -350,12 +365,6 @@ rssi_0 : cordic_rssi
         m_axis_dout_tdata => m_axis_dout_tdata
     );
     
---BUFG_inst : BUFH
---port map (
---   O => audio_clk,
---   I => aclk
---);
-
     audio_clk <= aclk;
 
 clock_0 : clock_converter_4
@@ -388,9 +397,7 @@ agc_0 : agc
         cfg_addra => cfg_addra(2 downto 0),
         cfg_dina => cfg_dina,
         cfg_wr => agc_cfg_wr
-    );
-
---    gain_data <= fos_out_tdata * agc_gain(17 downto 2);                 
+    );            
                     
 demodulator_0 : RXA_demod
     PORT MAP  (

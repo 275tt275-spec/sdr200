@@ -297,7 +297,7 @@ void fpga_LinearReset(void)
 
 void fpga_LinearEnable(s_linear* lin, int enable)
 {
-    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_CLR);
+//    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_CLR);
 
     if(enable == 1)
     {
@@ -308,6 +308,7 @@ void fpga_LinearEnable(s_linear* lin, int enable)
     }
     else
     {
+        fpga_write(FPGA_LIN_CTRL, FPGA_LINER_CLR);
         fpga_write(FPGA_LIN_CTRL, 0);
     }
 }

@@ -82,6 +82,7 @@ void hw_Init(void)
 	linear.diff = 0;
 	linear.prop = 2000;
 	linear.stab = 500;
+
 	linear.dc_i = 0;
 	linear.dc_q = 0;
 	linear.gain_i = 32767;

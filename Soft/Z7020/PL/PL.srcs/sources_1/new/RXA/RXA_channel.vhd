@@ -38,8 +38,7 @@ entity RXA_channel is
         m_axis_data_tuser : out STD_LOGIC_VECTOR (0 downto 0);
         m_axis_data_tvalid : out STD_LOGIC;
         s_axis_signal_tdata : in STD_LOGIC_VECTOR (15 downto 0);
-        dds_value : in STD_LOGIC_VECTOR (31 downto 0);
-        dds_valid : in STD_LOGIC;
+        dds_sincos: in STD_LOGIC_VECTOR (31 downto 0);
         aresetn : in STD_LOGIC;
         aclk : in STD_LOGIC
     );
@@ -93,16 +92,6 @@ architecture Behavioral of RXA_channel is
     signal m_tvalid_reg : std_logic := '0';  
     signal m_tuser_reg : std_logic_vector(0 DOWNTO 0) := (others => '0');
     signal m_tdata_reg : std_logic_vector(31 DOWNTO 0) := (others => '0');
-        
-    component dds16a
-    Port (
-        aclk : IN STD_LOGIC;
-        s_axis_config_tvalid : IN STD_LOGIC;
-        s_axis_config_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-        m_axis_data_tvalid : OUT STD_LOGIC;
-        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
-    );
-    end component dds16a;
     
     COMPONENT cmpy_16x16 IS
     PORT (
@@ -185,15 +174,6 @@ begin
 	end if;
 end process;
     
-dds_0 : dds16a
-    PORT MAP (
-      aclk => aclk, 
-        s_axis_config_tvalid => dds_valid,
-        s_axis_config_tdata => dds_value,
-        m_axis_data_tvalid => open,
-        m_axis_data_tdata => dds_out
-    );
-    
     mult_in <= s_axis_signal_tdata & s_axis_signal_tdata;
     
 mult_0 : cmpy_16x16
@@ -202,7 +182,7 @@ mult_0 : cmpy_16x16
         s_axis_a_tvalid => '1',
         s_axis_a_tdata => mult_in,
         s_axis_b_tvalid => '1',
-        s_axis_b_tdata => dds_out,
+        s_axis_b_tdata => dds_sincos,
         m_axis_dout_tvalid => open,
         m_axis_dout_tdata => mult_out
     );

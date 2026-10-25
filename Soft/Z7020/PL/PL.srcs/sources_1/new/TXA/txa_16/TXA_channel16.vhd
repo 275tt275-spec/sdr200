@@ -416,7 +416,7 @@ debug_1 : ila_2
         probe4  => dac_tdata,
         probe5(0)  => resampler_in_tvalid,
         probe6  => resampler_in_tdata,
-        probe7  => modulator_in_tdata
+        probe7  => linear_din2
     );
 
 end Behavioral;

@@ -105,3 +105,4 @@ platform active {StationVT}
 platform config -updatehw {D:/projects/sdr200/Soft/Z7020/PL/XC7Z020_wrapper.xsa}
 platform clean
 platform generate
+platform generate
