@@ -204,7 +204,7 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [Document10]
-DocumentPath=MB_v1.PcbDoc
+DocumentPath=MB_v3.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -286,6 +286,10 @@ DItemRevisionGUID=
 
 [GeneratedDocument2]
 DocumentPath=Project Outputs for MB\Design Rule Check - MB_v1.html
+DItemRevisionGUID=
+
+[GeneratedDocument3]
+DocumentPath=Project Outputs for MB\Design Rule Check - MB_v3.html
 DItemRevisionGUID=
 
 [Configuration1]
