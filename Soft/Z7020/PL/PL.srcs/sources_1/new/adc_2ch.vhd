@@ -79,14 +79,27 @@ architecture Behavioral of adc_2ch is
     );
     end COMPONENT adc_sync;
     
+    component clk_122 
+    Port ( 
+        clk_out1 : out STD_LOGIC;
+        clk_in1 : in STD_LOGIC
+    );
+    end component;
+    
     signal adc_data_in_0, adc_data_in_1 : STD_LOGIC_VECTOR (15 downto 0);
-    signal aclk_0, aclk_1 : STD_LOGIC;
+    signal aclk_0, aclk_1, aclk_g : STD_LOGIC;
     signal aresetn : std_logic := '1';
     signal rst_sig : std_logic := '0';
     signal rst_shift : std_logic_vector(3 downto 0) := (others => '1');
     signal adc1_out_reg : STD_LOGIC_VECTOR (15 downto 0);
 
 begin
+
+clk_inst : clk_122 
+    Port map( 
+        clk_out1 => aclk_g,
+        clk_in1 => aclk_0
+    );
 
 adc_input_0: component adc_input
     port map (
@@ -123,19 +136,19 @@ adc_sync_0 : adc_sync
         adc0_out => adc0_out,
         adc1_out => adc1_out_reg,
         aresetn => aresetn,
-        aclk => aclk_0
+        aclk => aclk_g
     );
     
     adc1_out <= adc1_out_reg when adc1_inv = '0' else 
                 std_logic_vector(-signed(adc1_out_reg));
     
-p_synchronous_reset : process (aclk_0, rst_async) is
+p_synchronous_reset : process (aclk_g, rst_async) is
 begin
     if rst_async = '1' then
         -- При асинхронном сбросе немедленно заполняем регистр единицами
         rst_shift <= (others => '1');
         aresetn   <= '0';
-    elsif rising_edge(aclk_0) then
+    elsif rising_edge(aclk_g) then
         -- Синхронно сдвигаем ноль в регистр, создавая задержку отпускания
         rst_shift <= rst_shift(2 downto 0) & '0';
         
@@ -148,7 +161,7 @@ begin
     end if;
 end process p_synchronous_reset;
 
-    aclk_out <= aclk_0;
+    aclk_out <= aclk_g;
     aresetn_out <= aresetn;
 
 

@@ -304,7 +304,7 @@ void fpga_LinearEnable(s_linear* lin, int enable)
 		vTaskDelay(pdMS_TO_TICKS( LINEAR_ON_DELAY ));
         fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON);
 		vTaskDelay(pdMS_TO_TICKS( LINEAR_SET_DELAY ));
-	    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON | FPGA_LINER_AGC | FPGA_LIN_PHASE_SLOW);
+	    fpga_write(FPGA_LIN_CTRL, FPGA_LINER_ON | FPGA_LIN_PHASE_SLOW);
     }
     else
     {

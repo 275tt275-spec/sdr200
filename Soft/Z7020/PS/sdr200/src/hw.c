@@ -80,8 +80,8 @@ void hw_Init(void)
 	linear.agc_k = 5;
 	linear.phase_k = 5;
 	linear.diff = 0;
-	linear.prop = 2000;
-	linear.stab = 500;
+	linear.prop = 1000;
+	linear.stab = 50;
 
 	linear.dc_i = 0;
 	linear.dc_q = 0;
@@ -373,6 +373,19 @@ void hw_SetTXAFreq(uint32_t hz)
 
     uint8_t txaNewCorr = eeprom_txa_att(hz);
     uint8_t LPFNew;
+
+    switch(e_vars->mode)
+    {
+	case TRX_MODE_USB:
+	case TRX_MODE_LSB:
+		if(txaNewCorr >= (TXA_SSB_POWER_OFFSET * 2))
+			txaNewCorr -= (TXA_SSB_POWER_OFFSET * 2);
+		else
+			txaNewCorr = 0;
+		break;
+	default:
+		break;
+    }
 
 	if(txaNewCorr != hw_device.txaCorr)
 	{
@@ -777,6 +790,20 @@ void hw_SetTXAPower(float dBm)
 	if(deltaPWR > attMin) deltaPWR = attMin;
 	attV = adc.attV - deltaPWR;
 	attC = adc.attC - deltaPWR;
+
+    switch(e_vars->mode)
+    {
+	case TRX_MODE_USB:
+	case TRX_MODE_LSB:
+		attV += (TXA_SSB_FB_OFFSET * 2);
+		attC += (TXA_SSB_FB_OFFSET * 2);
+		if(attV > 63) attV = 63;
+		if(attC > 63) attC = 63;
+		break;
+	default:
+		break;
+    }
+
 	hw_SetFBAtt(attV, attC, adc.phase);
 
     sprintf(hw_device.InternalSend, "RT%02d;", value);
@@ -802,6 +829,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 		uint32_t freq_offset = 0;
 		uint32_t audio_gain = 16383;
 		uint32_t audio_shift = 6;
+		uint32_t rf_gain = hw_device.TXA_gain;
 
 		switch (mode)
 		{
@@ -817,6 +845,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			freq_offset = 6041; // 1475 Hz
 			audio_gain = 32767;
 			audio_shift = 6;
+			rf_gain = hw_device.TXA_gain / 2;
 			break;
 		case TRX_MODE_LSB:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_LSB);
@@ -830,6 +859,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 			freq_offset = 6041; // 1475 Hz
 			audio_gain = 32767;
 			audio_shift = 6;
+			rf_gain = hw_device.TXA_gain / 2;
 			break;
 		case TRX_MODE_DIGITAL:
 			SendToCore1Uint32(SET_TXA_MODE, MODE_TXA_DIGU);
@@ -883,6 +913,7 @@ void hw_SetTXAMode(e_trx_mode mode)
 		fpga_TXA_FOS(fos_filter);
 		fpga_TXA_OFFSET(freq_offset);
 		fpga_TXA_AUDIOGAIN(audio_gain);
+		fpga_TXA_ResamplerGain(rf_gain);
 	}
 }
 

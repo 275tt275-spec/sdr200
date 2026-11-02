@@ -112,6 +112,7 @@ entity SDR is
         m_axis_ser0_tlast : out STD_LOGIC;
         TX_ON : out std_logic;
         TX_FAIL : in std_logic;
+        clk_200 : in std_logic;
 		aclk_122 : out std_logic
   );
 end SDR;
@@ -450,7 +451,7 @@ audio_0 : i2s
 IDELAYCTRL_inst : IDELAYCTRL
    port map (
       RDY => open,       -- 1-bit output: Ready output
-      REFCLK => aclk, -- 1-bit input: Reference clock input
+      REFCLK => clk_200, -- 1-bit input: Reference clock input
       RST => '0'        -- 1-bit input: Active high reset input
    );
 

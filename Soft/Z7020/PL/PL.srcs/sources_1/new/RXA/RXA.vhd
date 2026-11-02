@@ -260,8 +260,14 @@ begin
 end process cmd_process;
 
     fb_forward <= std_logic_vector(resize(signed(s_axis_adc0_tdata), 17) + resize(signed(s_axis_adc1_tdata), 17));
-    wide_din <= fb_forward(16 downto 1);
     
+process(aclk)
+begin
+	if rising_edge(aclk) then	
+        wide_din <= fb_forward(16 downto 1);
+	end if;
+end process;    
+
 wide_0 : RXA_wide
     PORT MAP  (
         m_axis_wb_tdata => wide_out_tdata,

@@ -26,14 +26,14 @@ set_input_delay -clock [get_clocks ADC0_CLK] -min 1.300 [get_ports {ADC0_OUT_P[*
 set_input_delay -clock [get_clocks ADC1_CLK] -max 2.700 [get_ports {ADC1_OUT_P[*]}]
 set_input_delay -clock [get_clocks ADC1_CLK] -min 1.300 [get_ports {ADC1_OUT_P[*]}]
 
-# Разрешаем Vivado фиксировать данные на следующем периоде клока
-set_multicycle_path -setup -from [get_ports {ADC0_OUT_P[*]}] 2
-set_multicycle_path -hold  -from [get_ports {ADC0_OUT_P[*]}] 1
-# Разрешаем Vivado фиксировать данные на следующем периоде клока
-set_multicycle_path -setup -from [get_ports {ADC1_OUT_P[*]}] 2
-set_multicycle_path -hold  -from [get_ports {ADC1_OUT_P[*]}] 1
+## Разрешаем Vivado фиксировать данные на следующем периоде клока
+#set_multicycle_path -setup -from [get_ports {ADC0_OUT_P[*]}] 2
+#set_multicycle_path -hold  -from [get_ports {ADC0_OUT_P[*]}] 1
+## Разрешаем Vivado фиксировать данные на следующем периоде клока
+#set_multicycle_path -setup -from [get_ports {ADC1_OUT_P[*]}] 2
+#set_multicycle_path -hold  -from [get_ports {ADC1_OUT_P[*]}] 1
 
-set_input_jitter ADC1_CLK 0.100
+#set_input_jitter ADC1_CLK 0.100
 create_clock -period 8.138 -name DAC_DCO -waveform {0.000 4.069} [get_ports DAC_DCO_P]
 set_clock_groups -asynchronous -group [get_clocks ADC1_CLK] -group [get_clocks DAC_DCO]
 #False path constraints to async inputs coming directly to synchronizer

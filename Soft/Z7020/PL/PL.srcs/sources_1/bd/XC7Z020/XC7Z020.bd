@@ -3930,7 +3930,7 @@
       },
       "SDR_0": {
         "vlnv": "xilinx.com:module_ref:SDR:1.0",
-        "ip_revision": "1792309096",
+        "ip_revision": "1793375608",
         "xci_name": "XC7Z020_SDR_1_0",
         "xci_path": "ip\\XC7Z020_SDR_1_0_1\\XC7Z020_SDR_1_0.xci",
         "inst_hier_path": "SDR_0",
@@ -4247,6 +4247,23 @@
           },
           "TX_FAIL": {
             "direction": "I"
+          },
+          "clk_200": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "200000000",
+                "value_src": "user_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "default_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "XC7Z020_processing_system7_0_0_FCLK_CLK1",
+                "value_src": "default_prop"
+              }
+            }
           },
           "aclk_122": {
             "type": "clk",
@@ -4820,7 +4837,8 @@
       "processing_system7_0_FCLK_CLK1": {
         "ports": [
           "processing_system7_0/FCLK_CLK1",
-          "gmii_to_rgmii_0/clkin"
+          "gmii_to_rgmii_0/clkin",
+          "SDR_0/clk_200"
         ]
       },
       "processing_system7_0_FCLK_RESET0_N": {

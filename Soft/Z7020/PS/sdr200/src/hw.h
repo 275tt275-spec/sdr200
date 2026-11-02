@@ -21,19 +21,21 @@
 #include "xscugic.h"
 #include "fpga.h"
 
-#define HW_ADC_SAMPLERATE	122880000
+#define HW_ADC_SAMPLERATE		122880000
 
-#define GPIO_ATT_LE0		22
-#define GPIO_ATT_LE1		23
-#define GPIO_DAC_RESET		33
-#define IIC_DAC_SLAVE_ADDR  0x4C
-#define IIC_LM75_SLAVE_ADDR (0x90 >> 1)
-#define VREF_CORR_MULT	    322.98
-#define VREF_CORR_OFFSET	24881
-#define VREF_UPDATE_MS  	10000
-#define LINEAR_SET_DELAY	20
-#define LINEAR_ON_DELAY		80
-#define TXA_TUNE_PWR		43
+#define GPIO_ATT_LE0			22
+#define GPIO_ATT_LE1			23
+#define GPIO_DAC_RESET			33
+#define IIC_DAC_SLAVE_ADDR 	 	0x4C
+#define IIC_LM75_SLAVE_ADDR 	(0x90 >> 1)
+#define VREF_CORR_MULT	    	322.98
+#define VREF_CORR_OFFSET		24881
+#define VREF_UPDATE_MS  		10000
+#define LINEAR_SET_DELAY		20
+#define LINEAR_ON_DELAY			80
+#define TXA_TUNE_PWR			43
+#define TXA_SSB_POWER_OFFSET	12	/* ATT TXA VALUE SUB */
+#define TXA_SSB_FB_OFFSET		12   /* ATT FB VALUE ADD */
 
 typedef enum tag_trx_mode {
 	TRX_MODE_USB,

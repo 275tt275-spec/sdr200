@@ -24,10 +24,11 @@ architecture Behavioral of adc_input is
     signal adc_data : std_logic_vector(15 downto 0);
     signal adc_data_buf : std_logic_vector(15 downto 0);
     signal adc_out_data : std_logic_vector(15 downto 0);
+    signal adc_data_delayed : std_logic_vector(15 downto 0);
     signal rxa_tdata_rand : STD_LOGIC_VECTOR (15 downto 0);
     signal adc_max : signed(15 downto 0) := x"0000"; 
     signal adc_abs : signed(15 downto 0) := x"0000"; 
-    signal adc_clk, adc_clk0 : STD_LOGIC;
+    signal adc_clk0 : STD_LOGIC;
     
     signal adc_clk_global : STD_LOGIC;
     signal adc_clk_local : STD_LOGIC;
@@ -89,6 +90,32 @@ lbl : for k in 0 to 15 generate
           IB => din_n(k)
        );
        
+   delay_inst : IDELAYE2
+    generic map (
+        CINVCTRL_SEL => "FALSE",          -- Enable dynamic clock inversion (FALSE, TRUE)
+        DELAY_SRC => "IDATAIN",           -- Delay input (IDATAIN, DATAIN)
+        HIGH_PERFORMANCE_MODE => "TRUE", -- Reduced jitter ("TRUE"), Reduced power ("FALSE")
+        IDELAY_TYPE => "FIXED",           -- FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
+        IDELAY_VALUE => 16,                -- Input delay tap setting (0-31)
+        PIPE_SEL => "FALSE",              -- Select pipelined mode, FALSE, TRUE
+        REFCLK_FREQUENCY => 200.0,        -- IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
+        SIGNAL_PATTERN => "DATA"          -- DATA, CLOCK input signal
+    )
+    port map (
+       CNTVALUEOUT => open,
+       DATAOUT     => adc_data_delayed(k),
+       C           => '0',
+       CE          => '0',
+       CNTVALUEIN  => (others => '0'), -- Задаем 5 бит нулей для компилятора
+       CINVCTRL    => '0',
+       DATAIN      => '0',
+       IDATAIN     => adc_data(k),
+       INC         => '0',
+       LD          => '0',
+       LDPIPEEN    => '0',
+       REGRST      => '0'
+    );
+       
     IDDR_inst : IDDR
     generic map (
        DDR_CLK_EDGE => "SAME_EDGE_PIPELINED", -- "OPPOSITE_EDGE", "SAME_EDGE"
@@ -101,7 +128,7 @@ lbl : for k in 0 to 15 generate
        Q2 => open, -- 1-bit output for negative edge of clock
        C => adc_clk_io, -- Идеальный быстрый клок периферии
        CE => '1', -- 1-bit clock enable input
-       D => adc_data(k),   -- 1-bit DDR data input
+       D => adc_data_delayed(k),   -- 1-bit DDR data input
        R => '0',   -- 1-bit reset
        S => '0'    -- 1-bit set
        );
@@ -118,9 +145,9 @@ end generate;
     m_axis_data_tdata <= adc_out_data;    
     adc_max_value <= std_logic_vector(adc_max);
 
-process(adc_clk_local)
+process(adc_clk_global)
 begin
-	if rising_edge(adc_clk) then
+	if rising_edge(adc_clk_global) then
 	   adc_abs <= abs(signed(adc_out_data));
 	   if adc_max_rst = '1' then
 	       adc_max <= x"0000";
