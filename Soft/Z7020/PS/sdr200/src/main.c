@@ -82,6 +82,7 @@ int main( void )
  	SetupIntrSystem(&IntcInstance);
 
 	eeprom_init();
+	fpga_init();
 
 	xil_printf( "SDR200 Start\r\n" );
 //	StartCore1();
@@ -114,7 +115,7 @@ static void prvMainTask( void *pvParameters )
 	eeprom_read_vars();
 
 	uartPL_init();
-	fpga_init();
+
 	ethernet_init();
 	hw_Init();
 	audio_init();

@@ -106,3 +106,10 @@ platform config -updatehw {D:/projects/sdr200/Soft/Z7020/PL/XC7Z020_wrapper.xsa}
 platform clean
 platform generate
 platform generate
+platform active {StationVT}
+domain active {freertos10_xilinx_domain}
+bsp reload
+bsp reload
+domain active {freertos10_xilinx_domain}
+bsp reload
+bsp reload
